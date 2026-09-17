@@ -22,9 +22,9 @@ This file documents the repeatable CI-only portion of the Phase 0 browser gate. 
 - `WEBGL_lose_context` propagates to `deviceLost: true`, restoration returns to `deviceLost: false`, and the runtime remains healthy;
 - three production reloads each return to exactly one live canvas/runtime with no failure/device-loss state.
 
-`npm run smoke:webgpu` exercises the default PlayCanvas renderer-preference path under runner Chrome with Dawn/Vulkan SwiftShader candidates. GitHub Actions run `35206022276` succeeded with Chrome `152.0.7977.82` using the `vulkan-swiftshader` probe. The page reported `WEBGPU · Foundation running`, diagnostics reported `renderer: webgpu`, `failed: false` and `deviceLost: false`. The captured diagnostic snapshot occurred at tick `0`, so this check is intentionally classified as WebGPU initialization/render-path evidence rather than simulation-timing or performance evidence.
+`npm run smoke:webgpu` exercises the default PlayCanvas renderer-preference path under runner Chrome with Dawn/Vulkan SwiftShader candidates. The first one-shot `--dump-dom` probe proved that the software WebGPU path can initialize, but a later runner captured the page while it was still at `Starting the renderer…`; no application failure state was reported. The probe was therefore changed to Chrome DevTools Protocol polling so asynchronous WebGPU startup is observed directly rather than sampled once.
 
-GitHub Actions run `35206022276` passed the full validation, WebGL2 browser smoke, interaction smoke and software-WebGPU smoke sequence on Ubuntu 24.04 / Node 24.20.0 / Chrome 152.0.7977.82.
+With the stabilized CDP probe, GitHub Actions run `35206528366` passed on Ubuntu 24.04 / Node 24.20.0 / Chrome 152.0.7977.82 using `vulkan-swiftshader`. The application reported `WEBGPU · Foundation running`, diagnostics reported `renderer: webgpu`, `failed: false`, and `deviceLost: false`, and the simulation advanced from `initialTick: 0` to `tick: 1` during the observation window.
 
 The screenshot and software-renderer results are technical evidence only. They are not commercial-art review and they are not hardware performance results.
 
