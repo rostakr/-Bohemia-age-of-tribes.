@@ -59,12 +59,14 @@ test('sediment margins overlap the water edge and extend outward on both banks',
   const rows = 221;
   for (let row = 0; row < rows; row += 22) {
     const offset = row * rowVertices * 3;
-    const marginLeftOuter = margin.positions[offset]!;
-    const marginLeftInner = margin.positions[offset + 3]!;
-    const marginRightInner = margin.positions[offset + 6]!;
-    const marginRightOuter = margin.positions[offset + 9]!;
-    const waterLeft = water.positions[offset]!;
-    const waterRight = water.positions[offset + 9]!;
+    const marginLeftOuter = margin.positions[offset];
+    const marginLeftInner = margin.positions[offset + 3];
+    const marginRightInner = margin.positions[offset + 6];
+    const marginRightOuter = margin.positions[offset + 9];
+    const waterLeft = water.positions[offset];
+    const waterRight = water.positions[offset + 9];
+    assert.ok(Number.isFinite(marginLeftOuter) && Number.isFinite(marginLeftInner) && Number.isFinite(marginRightInner)
+      && Number.isFinite(marginRightOuter) && Number.isFinite(waterLeft) && Number.isFinite(waterRight), `row ${row}: invalid bank sample`);
     assert.ok(marginLeftOuter < waterLeft, `row ${row}: left sediment does not extend beyond water`);
     assert.ok(marginLeftInner > waterLeft, `row ${row}: left sediment should overlap water edge slightly`);
     assert.ok(marginRightInner < waterRight, `row ${row}: right sediment should overlap water edge slightly`);
