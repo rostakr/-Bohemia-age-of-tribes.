@@ -17,8 +17,7 @@ const candidates = [
   {
     label: 'Boii adult worker',
     path: 'public/assets/characters/boii_adult_worker.glb',
-    // RTS inhabitants are repeated assets: prefer a clean silhouette over an arbitrary polygon floor.
-    // 12k still rejects trivial/failed reconstructions while admitting the current 14k candidate for render QA.
+    // Repeated RTS inhabitants benefit from efficient geometry. 12k still rejects trivial/failed reconstructions.
     min: 12000,
     max: 50000,
   },
@@ -38,6 +37,8 @@ for (const candidate of candidates) {
     candidate.path,
     '--min-tris', String(candidate.min),
     '--max-tris', String(candidate.max),
+    '--require-normals',
+    '--require-uv0',
   ], { stdio: 'inherit' });
   if (result.status !== 0) failed = true;
 }
