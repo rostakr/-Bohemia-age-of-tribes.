@@ -14,14 +14,16 @@
   "phase_0_5_pr": 9,
   "phase_0_5_merge_sha": "1b1b28bbfea91689d22455b117d12f412f5a24c2",
   "phase_0_5_final_state_sha": "1a080e9bced13c13dbf73e47e45279569ac54a5f",
-  "active_milestone": "PHASE_1_VISUAL_BENCHMARK_ITERATION",
+  "active_milestone": "PHASE_1_VISUAL_AND_CONTENT_BENCHMARK",
   "phase_1_authorized": true,
   "phase_1_source_pr": 8,
   "phase_1_reconciliation_pr": 14,
   "phase_1_reconciliation_branch": "integrate/phase1-on-phase0_5",
-  "phase_1_validated_runtime_sha": "6ad76483cde4e2cf5c18e41c930af8cd347573f1",
-  "phase_1_status": "RECONCILED_CI_PASS_VISUAL_GATE_BLOCKED_HISTORICAL_REAL_GPU_QA_PENDING",
+  "phase_1_visual_pass_runtime_sha": "44867f7b847282b47213b14ff2d0b03fcca831b4",
+  "phase_1_visual_pass_test_sync_sha": "f90efc1bd60b75e967844bfebc2c4b8f9e6ec4f4",
+  "phase_1_status": "VISUAL_PASS_V2_CI_PASS_CONTENT_GATE_BLOCKED_HISTORICAL_REAL_GPU_QA_PENDING",
   "phase_1_visual_blocker_issue": 16,
+  "phase_1_content_issue": 17,
   "hosting_strategy": "Vite/GitHub Pages reference build; no Floot migration performed",
   "deployment": {
     "provider": "github_pages",
@@ -31,7 +33,7 @@
     "deployed_build_sha": "aacc1317504d09832eb6a9eeeab16234e89de7ef",
     "deployment_workflow_run": 35250435890,
     "publishing_mode": "manual_only",
-    "phase_1_reconciliation_deployed": false
+    "phase_1_deployed": false
   },
   "production_deployment_validation": {
     "workflow": "Verify published foundation",
@@ -43,13 +45,13 @@
     "published_css": "HTTP 200",
     "published_webgl2_runtime": "Foundation running"
   },
-  "phase_1_reconciliation_validation": {
-    "workflow_run": 35262530231,
+  "phase_1_visual_pass_validation": {
+    "workflow_run": 35267593823,
     "result": "passed",
     "node": "24.20.0",
     "npm_ci": "passed; 0 vulnerabilities",
     "typescript": "passed",
-    "node_tests": "11/11 passed",
+    "node_tests": "14/14 passed",
     "production_build": "passed",
     "phase_0_webgl2": "passed",
     "phase_0_interactions": "passed",
@@ -59,101 +61,121 @@
     "phase_1_structures": 1,
     "phase_1_inhabitants": 0,
     "phase_1_trees": 0,
-    "phase_1_grass_clumps": 4678,
-    "phase_1_draw_calls": 124,
+    "phase_1_grass_clumps": 1161,
+    "phase_1_draw_calls": 126,
     "phase_1_ci_fps_swiftshader": 15.003750937734413,
     "phase_1_ci_frame_ms_swiftshader": 66.65000000000009,
-    "static_build_artifact_id": 10515331207,
-    "phase_0_evidence_artifact_id": 10515136710,
-    "phase_1_evidence_artifact_id": 10515106681
+    "phase_1_evidence_artifact_id": 10517456076,
+    "phase_1_evidence_zip_sha256": "5f55bcdb62bd2fc3e7cf131eb324778f7e8a488c26a9a862aff9f8ebedb91300"
   },
   "phase_1_visual_evidence_review": {
-    "source_artifact_id": 10515106681,
     "resolution": "1920x1080",
     "technical_runtime": "passed",
+    "environment_v2": "materially_improved",
     "professional_visual_gate": "not_accepted",
+    "dominant_blocker": "missing historical settlement/inhabitant/tree production content",
+    "remaining_environment_risk": "macro ground repetition in sparse areas",
     "blocking_document": "docs/PHASE_1_VISUAL_QA.md",
-    "implementation_issue": 16,
     "actual_gpu_review": "pending",
     "historical_review": "pending"
+  },
+  "phase_1_asset_intake": {
+    "dwelling": "integrated_evaluation_candidate_99298_tris_no_lod",
+    "storehouse": "missing",
+    "workshop": "candidate_rejected_89778_tris_over_budget",
+    "worker": "candidate_rejected_texture_projection_failure_14106_tris",
+    "trees": "missing",
+    "receipt": "assets/source/phase1/TO3D_INTAKE_2026-09-17.md"
   }
 }
 ```
 
 ## COMPLETED
 
-- Phase 0 remains complete and accepted as the historical foundation baseline.
-- Phase 0.5 is complete, verified, deployed and documented. PlayCanvas remains the sole game/render engine; the host-neutral lifecycle, central asset resolver, fixed-step simulation and WebGPU/WebGL2 paths are preserved.
-- The old Phase 1 checkpoint from PR #8 has been reconstructed on a fresh branch from verified Phase 0.5 rather than merged over it.
-- The exact checkpoint binary assets were reused by Git blob SHA, including the 5.6 MB dwelling GLB and nine terrain texture maps.
-- The Phase 1 benchmark is integrated with the Phase 0.5 lifecycle. The default route renders the benchmark; `?scene=calibration` preserves the Phase 0 reference scene.
-- Phase 1 scene assets load through the central `resolveAsset()` pipeline rather than bypassing it with scattered base-URL concatenation.
-- Scene diagnostics are exposed through the existing `GameRuntime.snapshot()` without transferring browser event or game-loop ownership into scene code.
-- CI run `35262530231` passed strict TypeScript, 11/11 Node tests, production build, all Phase 0 browser regressions, software WebGPU and the Phase 1 benchmark WebGL2 smoke.
-- The Phase 1 evidence screenshot was reviewed. Technical rendering succeeded, but the professional visual gate was not accepted; detailed blockers are recorded in `docs/PHASE_1_VISUAL_QA.md` and GitHub Issue #16.
+- Phase 0 remains complete and accepted.
+- Phase 0.5 is complete, verified and deployed. PlayCanvas remains the sole game/render engine; host-neutral lifecycle, fixed-step simulation, central asset resolver and WebGPU/WebGL2 fallback are preserved.
+- The stale Phase 1 checkpoint was reconciled onto Phase 0.5 in draft PR #14 rather than merged directly.
+- The Phase 1 benchmark uses the Phase 0.5 lifecycle and central resolver. `?scene=calibration` preserves the Phase 0 regression scene.
+- The environment visual pass v2 reduced terrain repetition, softened/varied the path, added stream sediment shoulders and shallow/channel water variation, neutralized the palette and reduced meadow noise.
+- The final v2 geometry regression test was copied bit-for-bit from the successful child validation PR into the authoritative Phase 1 branch.
+- A generic GLB admission checker and generated-asset intake gate now prevent over-budget candidates from being treated as production assets.
+- First to3D workshop and worker candidates were structurally inspected and rejected for specific production-quality reasons rather than silently integrated.
 
 ## CURRENT REPOSITORY STATE
 
-- `main` remains the verified Phase 0.5 reference and public deployment source.
-- Draft PR #14 is the authoritative Phase 1 reconciliation candidate. Its first validated runtime head is `6ad76483cde4e2cf5c18e41c930af8cd347573f1`.
-- Draft PR #8 is stale relative to Phase 0.5 and must not be merged directly. It remains useful only as source/audit history until PR #14 is accepted or superseded.
-- The public GitHub Pages URL still serves the verified Phase 0.5 release. Phase 1 has not been promoted to the public reference deployment.
-- Pages publishing remains manual-only.
-- GitHub Issue #16 is the isolated implementation task for the next Phase 1 visual iteration.
+- `main` remains the verified Phase 0.5 public reference.
+- Draft PR #14 / `integrate/phase1-on-phase0_5` is the only authoritative Phase 1 integration line.
+- Old PR #8 must not be merged directly; it remains audit/source history only.
+- Validation-only PRs #18 and #19 are closed without merge after their evidence/tests were incorporated or recorded.
+- Pages remains manual-only and still serves Phase 0.5, not Phase 1.
+- Issue #16 tracks remaining environment/professional visual acceptance.
+- Issue #17 tracks storehouse/workshop/worker production assets.
 - No React/Floot migration has been performed or demonstrated as necessary.
 
-## PHASE 1 CHECKPOINT CONTENT
+## PHASE 1 CURRENT CONTENT
 
-- 220 m rolling landscape study with stream, earth path, textured terrain and procedural meadow.
-- Terrain-aware inspection camera with orbit/pan/zoom and preset views.
+- 220 m rolling landscape benchmark with stream, worn path, textured terrain and clustered procedural meadow.
+- Terrain-aware inspection camera and preset views.
 - Three Poly Haven CC0 terrain material sets (9 textures total).
-- One generated rectangular Boii dwelling candidate.
-- Missing production model slots: storehouse, workshop, inhabitant and tree.
+- One rectangular Boii dwelling evaluation candidate.
+- Empty admitted slots: storehouse, workshop, inhabitant and tree.
 - No navigation, economy, combat, AI or production gameplay systems are accepted by this checkpoint.
 
-## PHASE 1 VALIDATION EVIDENCE
+## PHASE 1 VISUAL PASS V2
 
-- `npm ci`: PASS; 0 vulnerabilities reported.
-- `npm run typecheck`: PASS.
-- `npm test`: **11/11 PASS**, combining fixed-step/telemetry, asset resolver and landscape geometry tests.
-- `npm run build`: PASS with Vite 8.3.0.
+Run `35267593823` is the current visual-pass evidence baseline:
+
+- `npm ci`: PASS, 0 vulnerabilities.
+- strict TypeScript: PASS.
+- Node tests: **14/14 PASS**.
+- production Vite build: PASS.
 - Phase 0 WebGL2/fallback/failure UI: PASS.
 - Phase 0 interactions: PASS.
 - Phase 0 lifecycle remount: PASS, 3/3 cycles.
 - Phase 0 software WebGPU: PASS.
-- Phase 1 WebGL2 benchmark browser smoke: PASS.
-- Phase 1 evidence capture reported 1 structure, 0 inhabitants, 0 trees, 4,678 grass clumps and 124 draw calls.
-- Software SwiftShader capture reported ~15.0 FPS / ~66.65 ms frame time. This is CI instrumentation only and is not an actual-hardware performance result.
-- Phase 1 screenshot evidence: artifact `10515106681` from workflow run `35262530231`.
+- Phase 1 WebGL2 benchmark smoke: PASS.
+- Evidence: 1 structure, 0 inhabitants, 0 trees, **1,161 grass clumps**, **126 draw calls**.
+- Evidence artifact: `10517456076`, ZIP SHA-256 `5f55bcdb62bd2fc3e7cf131eb324778f7e8a488c26a9a862aff9f8ebedb91300`.
 
-## VISUAL QA RESULT
+SwiftShader ~15 FPS / ~66.65 ms is CI-only instrumentation, not real-GPU performance evidence.
 
-The 1920×1080 CI evidence is technically healthy but still reads as an environment study rather than a professional historical RTS benchmark. Blocking findings:
+## ASSET INTAKE STATUS
 
-- immediately visible terrain texture repetition / insufficient macro breakup;
-- stream reads as a hard cut trench with overly uniform teal water;
-- procedural grass reads as high-frequency needle noise;
-- path is too dark, straight and constant-width;
-- palette/lighting is overly yellow-green and lacks local landscape variation;
-- settlement composition remains sparse because required production assets are not yet present;
-- dwelling remains an evaluation candidate and requires close/historical/optimization review.
+### Dwelling
 
-Full evidence review: `docs/PHASE_1_VISUAL_QA.md`. Implementation task: GitHub Issue #16.
+Integrated for evaluation only. 99,298 triangles, no LOD, above the 25k–60k brief target. Requires optimization/LOD or replacement and historical review.
+
+### Storehouse
+
+No GLB candidate yet. Target 15k–35k tris.
+
+### Workshop
+
+First to3D candidate visually reads as the correct open shelter but has 89,778 tris. Rejected as-is against the 20k–45k budget. It must be regenerated/decimated cleanly and revalidated.
+
+### Adult worker
+
+First to3D candidate has an efficient 14,106 tris and intact silhouette, but local textured preview exposed severe patchwork/mis-projected texture regions on face/clothing/rear surfaces. Rejected for production. Regenerate for clean texture projection; do not inflate polygon count unnecessarily. Worker intake budget is now 12k–50k tris.
+
+Detailed receipt: `assets/source/phase1/TO3D_INTAKE_2026-09-17.md`.
+
+### Trees
+
+Production Central-European tree assets remain missing.
 
 ## CURRENT LIMITS / RISKS
 
-- Professional Phase 1 visual acceptance is currently blocked by the issues above.
-- Historical acceptance remains pending.
+- Professional Phase 1 acceptance remains blocked primarily by missing production content/composition.
+- Some macro terrain repetition remains visible in sparse areas and should be reassessed after real buildings/trees are present rather than hidden by more procedural grass.
+- Historical acceptance is pending.
 - Actual-hardware GPU performance is unmeasured; no 60 FPS claim is supported.
-- The current dwelling candidate has 99,298 triangles and no LOD, exceeding its 25k–60k asset-brief target. Optimization or replacement is required before production acceptance.
-- Storehouse, workshop, inhabitants and trees are still absent.
-- Vegetation batching/instancing/LOD cannot be finalized before actual tree assets exist.
+- The dwelling remains over budget and lacks LOD.
+- Tree batching/instancing/LOD cannot be finalized before actual tree assets exist.
 - Known non-blocking build advisories remain: Vite large-chunk warning and optional PlayCanvas `node:worker_threads` browser-externalization warnings.
-- PR #14 is not deployed; the live Pages verification continues to cover the Phase 0.5 calibration release.
 
 ## NEXT TASK
 
-Implement GitHub Issue #16 on the reconciled Phase 1 branch or a child branch: improve terrain macro variation, stream/banks, meadow presentation, path and lighting/composition while preserving every Phase 0.5 architecture and QA invariant. Then rerun the combined CI suite, capture updated Phase 1 evidence, compare it against the current baseline, and only after that proceed to actual-GPU and historical acceptance. Do not merge old PR #8 directly.
+Continue Issue #17 first: obtain a clean storehouse, ≤45k-triangle workshop and clean-textured efficient adult worker. Then add production Central-European trees, wire only admitted models into `ADMITTED_MODELS`, target at least 3 structures + ~5 inhabitants, rerun the complete combined CI suite and reassess the professional visual gate. Issue #16 should remain open until that content-filled evidence is reviewed. Do not merge old PR #8 directly.
 
 ## PHASE GATE
 
@@ -161,6 +183,6 @@ Implement GitHub Issue #16 on the reconciled Phase 1 branch or a child branch: i
 
 **PHASE 0.5: PASS / COMPLETE_VERIFIED / DEPLOYED.**
 
-**PHASE 1: RECONCILED / CI PASS / PROFESSIONAL VISUAL GATE BLOCKED / HISTORICAL + ACTUAL-GPU QA PENDING.**
+**PHASE 1: VISUAL PASS V2 CI PASS / CONTENT GATE BLOCKED / PROFESSIONAL VISUAL + HISTORICAL + ACTUAL-GPU QA PENDING.**
 
 **PHASE 2: NOT YET RELEASED BY PHASE 1 ACCEPTANCE.**
