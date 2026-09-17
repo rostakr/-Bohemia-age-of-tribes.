@@ -1,6 +1,17 @@
-import test from 'node:test';
+import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
-import { createStorehouseGeometry, storehouseStats } from '../src/render/storehouse.ts';
+import { readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+// Production source uses bundler-style extensionless runtime imports. Node's native
+// strip-types loader does not resolve those to .ts, so create a temporary test-only
+// copy with the one runtime import made explicit. Production source is not rewritten.
+const sourceUrl = new URL('../src/render/storehouse.ts', import.meta.url);
+const testModuleUrl = new URL('../src/render/storehouse.node-test.ts', import.meta.url);
+const source = readFileSync(sourceUrl, 'utf8').replace("from './landscape';", "from './landscape.ts';");
+writeFileSync(testModuleUrl, source, 'utf8');
+after(() => rmSync(fileURLToPath(testModuleUrl), { force: true }));
+const { createStorehouseGeometry, storehouseStats } = await import(testModuleUrl.href);
 
 test('procedural Boii storehouse geometry stays finite, indexed and within the Phase 1 candidate budget', () => {
   const geometry = createStorehouseGeometry();
