@@ -52,11 +52,39 @@ test('worn path has restrained but meaningful width variation', () => {
   assert.ok(max - min > 0.25, `path width variation too small: ${max - min}`);
 });
 
-test('sediment margins stay outside the rendered water strip and remain terrain-following', () => {
+test('sediment margins overlap the water edge and extend outward on both banks', () => {
   const margin = riverMarginMesh();
   const water = riverMesh();
-  assert.ok(margin.positions.length > water.positions.length, 'margin should contain inner and outer bank vertices');
+  const rowVertices = 4;
+  const rows = 221;
+  for (let row = 0; row < rows; row += 22) {
+    const offset = row * rowVertices * 3;
+    const marginLeftOuter = margin.positions[offset];
+    const marginLeftInner = margin.positions[offset + 3];
+    const marginRightInner = margin.positions[offset + 6];
+    const marginRightOuter = margin.positions[offset + 9];
+    const waterLeft = water.positions[offset];
+    const waterRight = water.positions[offset + 9];
+    assert.ok(Number.isFinite(marginLeftOuter) && Number.isFinite(marginLeftInner) && Number.isFinite(marginRightInner)
+      && Number.isFinite(marginRightOuter) && Number.isFinite(waterLeft) && Number.isFinite(waterRight), `row ${row}: invalid bank sample`);
+    assert.ok(marginLeftOuter < waterLeft, `row ${row}: left sediment does not extend beyond water`);
+    assert.ok(marginLeftInner > waterLeft, `row ${row}: left sediment should overlap water edge slightly`);
+    assert.ok(marginRightInner < waterRight, `row ${row}: right sediment should overlap water edge slightly`);
+    assert.ok(marginRightOuter > waterRight, `row ${row}: right sediment does not extend beyond water`);
+  }
   const alphas = margin.colors?.filter((_value, index) => index % 4 === 3) ?? [];
   assert.ok(alphas.some(value => value === 0), 'margin needs transparent outer shoulders');
-  assert.ok(alphas.some(value => value > 0.5), 'margin needs visible inner sediment');
+  assert.ok(alphas.some(value => value > 0.4), 'margin needs visible inner sediment');
+});
+
+test('river water carries a shallow-edge to channel opacity gradient', () => {
+  const river = riverMesh();
+  assert.equal(river.colors?.length, river.positions.length / 3 * 4, 'river vertex colors must match vertex count');
+  const alphas = river.colors?.filter((_value, index) => index % 4 === 3) ?? [];
+  assert.ok(alphas.length > 0, 'river needs opacity vertex data');
+  const min = Math.min(...alphas);
+  const max = Math.max(...alphas);
+  assert.ok(min >= 0.35 && min <= 0.55, `unexpected shallow alpha ${min}`);
+  assert.ok(max >= 0.65 && max <= 0.8, `unexpected channel alpha ${max}`);
+  assert.ok(max - min >= 0.18, `water opacity gradient too weak: ${max - min}`);
 });
