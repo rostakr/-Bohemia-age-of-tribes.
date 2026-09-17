@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { spawn, spawnSync } from 'node:child_process';
 import { once } from 'node:events';
 import { tmpdir } from 'node:os';
@@ -9,6 +9,8 @@ const previewPort = 4176;
 const debugPort = 9226;
 const baseUrl = `http://${host}:${previewPort}/?renderer=webgl2&debug=1`;
 const debugBase = `http://${host}:${debugPort}`;
+const artifactsDir = resolve('artifacts', 'phase1');
+mkdirSync(artifactsDir, { recursive: true });
 const sleep = ms => new Promise(resolvePromise => setTimeout(resolvePromise, ms));
 
 function findChrome() {
@@ -118,10 +120,12 @@ try {
   cdp = await connectCdp(page.webSocketDebuggerUrl);
   await cdp.send('Runtime.enable');
   await cdp.send('Page.enable');
+  await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1920, height: 1080, deviceScaleFactor: 1, mobile: false });
   await cdp.send('Page.navigate', { url: baseUrl });
 
   const deadline = Date.now() + 30_000;
   let state;
+  let healthyState;
   while (Date.now() < deadline) {
     state = await evaluate(cdp, stateExpression);
     if (state?.errorHidden === false || state?.status === 'Renderer unavailable') {
@@ -135,22 +139,46 @@ try {
       diagnostics.renderer === 'webgl2' &&
       diagnostics.failed === false &&
       diagnostics.deviceLost === false &&
+      Number(diagnostics.tick) >= 1 &&
+      Number(diagnostics.drawCalls) >= 1 &&
       Number(diagnostics.structures) >= 1 &&
       Number(diagnostics.grassClumps) >= 1
     ) {
-      console.log('Phase 1 browser smoke passed.');
-      console.log(JSON.stringify({
-        tick: diagnostics.tick,
-        structures: diagnostics.structures,
-        grassClumps: diagnostics.grassClumps,
-        drawCalls: diagnostics.drawCalls,
-      }, null, 2));
-      state = null;
+      healthyState = state;
       break;
     }
     await sleep(250);
   }
-  if (state) throw new Error(`Timed out waiting for healthy Phase 1 scene: ${JSON.stringify(state)}`);
+  if (!healthyState) throw new Error(`Timed out waiting for rendered Phase 1 scene: ${JSON.stringify(state)}`);
+
+  await sleep(500);
+  const finalState = await evaluate(cdp, stateExpression);
+  const diagnostics = finalState?.diagnostics;
+  if (
+    finalState?.status !== 'WEBGL2 · Scene running' ||
+    finalState.canvasCount !== 1 ||
+    diagnostics?.failed !== false || diagnostics?.deviceLost !== false ||
+    Number(diagnostics?.tick) < 1 || Number(diagnostics?.drawCalls) < 1
+  ) {
+    throw new Error(`Phase 1 scene became unhealthy before evidence capture: ${JSON.stringify(finalState)}`);
+  }
+
+  const capture = await cdp.send('Page.captureScreenshot', { format: 'png', fromSurface: true, captureBeyondViewport: false });
+  const screenshotPath = resolve(artifactsDir, 'phase1-webgl2-1920x1080.png');
+  writeFileSync(screenshotPath, Buffer.from(capture.data, 'base64'));
+
+  console.log('Phase 1 browser smoke passed.');
+  console.log(JSON.stringify({
+    tick: diagnostics.tick,
+    structures: diagnostics.structures,
+    inhabitants: diagnostics.inhabitants,
+    trees: diagnostics.trees,
+    grassClumps: diagnostics.grassClumps,
+    drawCalls: diagnostics.drawCalls,
+    fps: diagnostics.fps,
+    frameMs: diagnostics.frameMs,
+    screenshot: screenshotPath,
+  }, null, 2));
 } finally {
   cdp?.close();
   await stopProcess(chrome);
