@@ -7,12 +7,13 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test scripts/check-core.mjs",
+    "test": "node --experimental-strip-types --test scripts/check-core.mjs scripts/check-landscape.mjs",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
     "smoke:webgl2": "node scripts/browser-smoke.mjs",
     "smoke:interactions": "node scripts/browser-interactions.mjs",
     "smoke:webgpu": "node scripts/browser-webgpu-smoke.mjs",
+    "smoke:phase1": "node scripts/browser-phase1-smoke.mjs",
     "validate": "npm run typecheck && npm test && npm run build"
   },
   "dependencies": { "playcanvas": "2.22.1" },
