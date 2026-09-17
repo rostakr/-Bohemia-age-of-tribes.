@@ -5,12 +5,13 @@ const COMPONENT_BYTES = new Map([[5120,1],[5121,1],[5122,2],[5123,2],[5125,4],[5
 const TYPE_COMPONENTS = new Map([['SCALAR',1],['VEC2',2],['VEC3',3],['VEC4',4],['MAT2',4],['MAT3',9],['MAT4',16]]);
 
 function usage() {
-  console.log('Usage: node scripts/check-glb.mjs <file.glb> [more.glb ...] [--min-tris N] [--max-tris N]');
+  console.log('Usage: node scripts/check-glb.mjs <file.glb> [more.glb ...] [--min-tris N] [--max-tris N] [--require-normals] [--require-uv0]');
 }
 
 function parseArgs(argv) {
   const files = [];
   let minTris = null, maxTris = null;
+  let requireNormals = false, requireUv0 = false;
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === '--min-tris' || arg === '--max-tris') {
@@ -18,9 +19,15 @@ function parseArgs(argv) {
       const value = Number(raw);
       if (!Number.isInteger(value) || value < 0) throw new Error(`${arg} requires a non-negative integer`);
       if (arg === '--min-tris') minTris = value; else maxTris = value;
+    } else if (arg === '--require-normals') {
+      requireNormals = true;
+    } else if (arg === '--require-uv0') {
+      requireUv0 = true;
+    } else if (arg.startsWith('--')) {
+      throw new Error(`unknown option ${arg}`);
     } else files.push(arg);
   }
-  return { files, minTris, maxTris };
+  return { files, minTris, maxTris, requireNormals, requireUv0 };
 }
 
 function parseGlb(buffer) {
@@ -88,6 +95,25 @@ function readComponent(bin, offset, componentType) {
   }
 }
 
+function validateFiniteAccessor(gltf, bin, accessorIndex, label, semantic, expectedType, expectedCount, allowedComponentTypes) {
+  const reader = accessorReader(gltf, bin, accessorIndex);
+  if (reader.accessor.type !== expectedType) throw new Error(`${label}: ${semantic} accessor must be ${expectedType}`);
+  if (reader.accessor.count !== expectedCount) throw new Error(`${label}: ${semantic} count ${reader.accessor.count} != POSITION count ${expectedCount}`);
+  if (!allowedComponentTypes.includes(reader.accessor.componentType)) {
+    throw new Error(`${label}: ${semantic} has unsupported component type ${reader.accessor.componentType}`);
+  }
+  if (reader.accessor.componentType !== 5126 && !reader.accessor.normalized) {
+    throw new Error(`${label}: integer ${semantic} accessor must be normalized`);
+  }
+  for (let i = 0; i < reader.accessor.count; i++) {
+    const row = reader.base + i * reader.stride;
+    for (let c = 0; c < reader.components; c++) {
+      const value = readComponent(bin, row + c * reader.bytes, reader.accessor.componentType);
+      if (!Number.isFinite(value)) throw new Error(`${label}: non-finite ${semantic} at element ${i}`);
+    }
+  }
+}
+
 function validatePositions(gltf, bin, accessorIndex, label) {
   const reader = accessorReader(gltf, bin, accessorIndex);
   if (reader.accessor.type !== 'VEC3') throw new Error(`${label}: POSITION accessor must be VEC3`);
@@ -124,7 +150,7 @@ function validateDocument(gltf, bin, limits) {
   for (const [i, image] of (gltf.images ?? []).entries()) if (externalUri(image.uri)) external.push(`image[${i}] ${image.uri}`);
   if (external.length) throw new Error(`external dependencies are not admitted: ${external.join(', ')}`);
 
-  let triangles = 0, vertices = 0, primitives = 0;
+  let triangles = 0, vertices = 0, primitives = 0, normalPrimitives = 0, uv0Primitives = 0;
   const modes = new Set();
   for (const [meshIndex, mesh] of (gltf.meshes ?? []).entries()) {
     for (const [primitiveIndex, primitive] of (mesh.primitives ?? []).entries()) {
@@ -137,6 +163,23 @@ function validateDocument(gltf, bin, limits) {
       if (!Number.isInteger(positionAccessor)) throw new Error(`${label}: missing POSITION accessor`);
       const vertexCount = validatePositions(gltf, bin, positionAccessor, label);
       vertices += vertexCount;
+
+      const normalAccessor = primitive.attributes?.NORMAL;
+      if (Number.isInteger(normalAccessor)) {
+        validateFiniteAccessor(gltf, bin, normalAccessor, label, 'NORMAL', 'VEC3', vertexCount, [5120, 5122, 5126]);
+        normalPrimitives++;
+      } else if (limits.requireNormals) {
+        throw new Error(`${label}: missing required NORMAL accessor`);
+      }
+
+      const uv0Accessor = primitive.attributes?.TEXCOORD_0;
+      if (Number.isInteger(uv0Accessor)) {
+        validateFiniteAccessor(gltf, bin, uv0Accessor, label, 'TEXCOORD_0', 'VEC2', vertexCount, [5121, 5123, 5126]);
+        uv0Primitives++;
+      } else if (limits.requireUv0) {
+        throw new Error(`${label}: missing required TEXCOORD_0 accessor`);
+      }
+
       let indexCount = vertexCount;
       if (Number.isInteger(primitive.indices)) indexCount = validateIndices(gltf, bin, primitive.indices, vertexCount, label);
       if (indexCount % 3 !== 0) throw new Error(`${label}: triangle index/vertex count ${indexCount} is not divisible by 3`);
@@ -148,13 +191,15 @@ function validateDocument(gltf, bin, limits) {
   if (limits.maxTris !== null && triangles > limits.maxTris) throw new Error(`triangle count ${triangles} exceeds maximum ${limits.maxTris}`);
 
   for (const [i, image] of (gltf.images ?? []).entries()) {
-    if (!image.bufferView && !image.uri) throw new Error(`image[${i}] has neither bufferView nor URI`);
+    if (!Number.isInteger(image.bufferView) && !image.uri) throw new Error(`image[${i}] has neither bufferView nor URI`);
   }
 
   return {
     triangles,
     vertices,
     primitives,
+    normalPrimitives,
+    uv0Primitives,
     meshes: gltf.meshes?.length ?? 0,
     materials: gltf.materials?.length ?? 0,
     images: gltf.images?.length ?? 0,
@@ -173,7 +218,14 @@ async function validateFile(path, limits) {
   console.log(JSON.stringify({ file: basename(path), bytes: file.length, ...result }, null, 2));
 }
 
-const limits = parseArgs(process.argv.slice(2));
+let limits;
+try {
+  limits = parseArgs(process.argv.slice(2));
+} catch (error) {
+  console.error(error instanceof Error ? error.message : String(error));
+  usage();
+  process.exit(2);
+}
 if (!limits.files.length) {
   usage();
   process.exit(0);
