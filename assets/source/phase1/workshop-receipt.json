@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "asset": "Boii carpentry workshop procedural candidate",
+  "project": "BOHEMIA: AGE OF TRIBES",
+  "created": "2026-09-18",
+  "source": {
+    "type": "original_project_code",
+    "path": "src/render/workshop.ts",
+    "initial_source_commit": "47ae73bab90fa613de08080378c3ceba38c8838a",
+    "third_party_art": false,
+    "external_generator": null,
+    "cost": 0,
+    "license_note": "Internal project work; no third-party mesh or texture is incorporated."
+  },
+  "design_basis": {
+    "brief": "assets/source/PHASE1_ASSET_REQUESTS.md#boii_carpentry_shed_open.glb",
+    "intended_culture": "Boii / Late La Tene",
+    "intended_use": "open-sided carpentry/work shelter on the prepared craft-site pad",
+    "features": [
+      "six-post open-sided timber frame with eave beams, ridge and diagonal braces",
+      "rough workbench and two portable trestles",
+      "split timber and rough stock",
+      "steep straw-thatch gable canopy",
+      "restrained axe, socketed-chisel and gouge-like woodworking silhouettes",
+      "no masonry, medieval sawmill machinery, fantasy ornament or modern workshop equipment"
+    ],
+    "historical_acceptance": "pending"
+  },
+  "generation": {
+    "method": "deterministic procedural PlayCanvas mesh generation at runtime",
+    "deterministic_seed": 20260918,
+    "material_groups": 4,
+    "material_names": [
+      "Workshop weathered oak",
+      "Workshop straw thatch",
+      "Workshop packed earth",
+      "Workshop worked iron"
+    ],
+    "external_textures": false,
+    "lod": false
+  },
+  "validated_geometry": {
+    "workflow_run": 35284934879,
+    "node_tests": "15/15 passed",
+    "triangles": 22480,
+    "vertices": 22876,
+    "bounds_metres": {
+      "width": 5.24,
+      "height": 3.6067583786255244,
+      "depth": 3.6746754628474325
+    },
+    "finite_attributes": true,
+    "valid_indices": true,
+    "non_degenerate_triangles": true,
+    "target_triangle_budget": "20000-45000",
+    "budget_passed": true
+  },
+  "runtime_validation": {
+    "workflow_run": 35284934879,
+    "renderer": "software WebGL2 via ANGLE/SwiftShader",
+    "structures_observed": 3,
+    "workshop_diagnostic": "procedural-project-owned",
+    "workshop_triangles_observed": 22480,
+    "phase1_draw_calls_observed": 160,
+    "lifecycle_remount_cycles": "3/3 passed",
+    "phase0_webgpu_regression": "passed",
+    "screenshot_artifact_id": 10523633183,
+    "screenshot_review": "visible and readable as an open-sided third settlement structure with workbench/props under the roof; WIP candidate only"
+  },
+  "admission": {
+    "admitted_models_workshop": null,
+    "candidate_integrated": true,
+    "art_gate_passed": false,
+    "visual_acceptance": "pending",
+    "historical_acceptance": "pending",
+    "actual_hardware_performance": "pending",
+    "production_asset_status": "candidate_not_final"
+  }
+}
