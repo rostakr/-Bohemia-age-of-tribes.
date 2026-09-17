@@ -4,19 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#141e20" />
-    <title>BOHEMIA: AGE OF TRIBES — Foundation</title>
+    <title>BOHEMIA: AGE OF TRIBES — The Stream Valley</title>
     <link rel="icon" href="data:," />
   </head>
   <body>
-    <canvas id="viewport" aria-label="Phase zero calibration scene with a 20 metre floor and a 1.8 metre scale marker"></canvas>
+    <canvas id="viewport" tabindex="0" aria-label="Bohemian stream valley. Drag to orbit, Shift-drag to pan, mouse wheel to zoom. W A S D to move, Q E to rotate, keys 1 to 3 for preset views."></canvas>
     <main class="shell">
-      <header><p class="eyebrow">BOHEMIA</p><h1>AGE OF TRIBES</h1><p>Forge a tribe. Rule the land. Shape Bohemia.</p></header>
-      <section class="panel" aria-labelledby="phase-title">
-        <p class="eyebrow">Production milestone 00</p>
-        <h2 id="phase-title">Foundation</h2>
-        <p>Technical calibration scene. The floor and scale marker are temporary engineering aids.</p>
-        <p class="muted">Production environment and RTS controls follow after foundation QA.</p>
-        <p id="status" role="status">Starting the renderer…</p>
+      <header><p class="eyebrow">BOHEMIA</p><h1>AGE OF TRIBES</h1><p class="tagline">Forge a tribe. Rule the land. Shape Bohemia.</p></header>
+      <section class="panel overview" aria-labelledby="phase-title">
+        <p class="eyebrow">Environment study · 01</p>
+        <h2 id="phase-title">The Stream Valley</h2>
+        <p>A clearing above the water.<br>A place for the first settlement.</p>
+        <p class="muted">Work in progress: first dwelling integrated; workshop, storehouse, inhabitants and trees pending.</p>
+        <p id="status" role="status">Preparing the landscape…</p>
         <button id="pause" type="button" aria-pressed="false" disabled>Pause simulation</button>
       </section>
       <section id="error" class="panel error" role="alert" hidden>
@@ -25,7 +25,14 @@
         <button id="compatibility" type="button">Use WebGL2</button>
       </section>
       <pre id="diagnostics" aria-label="Runtime diagnostics" hidden></pre>
-      <footer>PHASE 0 · DESKTOP DEVELOPMENT BUILD</footer>
+      <footer>
+        <nav aria-label="Scene viewpoints">
+          <button data-view="settlement" type="button" aria-pressed="true"><span>01</span> Settlement</button>
+          <button data-view="craft" type="button" aria-pressed="false"><span>02</span> Workshop site</button>
+          <button data-view="river" type="button" aria-pressed="false"><span>03</span> Stream</button>
+        </nav>
+        <p>DRAG · ORBIT &nbsp; / &nbsp; SHIFT + DRAG · PAN &nbsp; / &nbsp; SCROLL · ZOOM</p>
+      </footer>
     </main>
     <noscript>JavaScript is required to run BOHEMIA: AGE OF TRIBES.</noscript>
     <script type="module" src="/src/main.ts"></script>
