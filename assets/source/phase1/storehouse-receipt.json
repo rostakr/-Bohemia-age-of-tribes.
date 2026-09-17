@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "asset": "Boii storehouse procedural candidate",
+  "project": "BOHEMIA: AGE OF TRIBES",
+  "created": "2026-09-17",
+  "source": {
+    "type": "original_project_code",
+    "path": "src/render/storehouse.ts",
+    "initial_source_commit": "15f3f5559b68ca961743d8adeba9e3137e8482ef",
+    "third_party_art": false,
+    "external_generator": null,
+    "cost": 0,
+    "license_note": "Internal project work; no third-party mesh or texture is incorporated."
+  },
+  "design_basis": {
+    "brief": "assets/source/PHASE1_ASSET_REQUESTS.md#boii_storehouse_small.glb",
+    "intended_culture": "Boii / Late La Tene",
+    "intended_use": "small raised or moisture-protected settlement storehouse candidate",
+    "features": [
+      "raised timber platform and joists",
+      "stout timber posts and rails",
+      "wattle with restrained clay/earth daub",
+      "simple plank door and two-step access",
+      "compact steep thatch roof",
+      "no masonry, Roman ornament, medieval half-timbering or fantasy shorthand"
+    ],
+    "historical_acceptance": "pending"
+  },
+  "generation": {
+    "method": "deterministic procedural PlayCanvas mesh generation at runtime",
+    "deterministic_seed": 20260917,
+    "material_groups": 5,
+    "material_names": [
+      "Storehouse weathered oak",
+      "Storehouse hazel wattle",
+      "Storehouse pale clay daub",
+      "Storehouse straw thatch",
+      "Storehouse packed earth"
+    ],
+    "external_textures": false,
+    "lod": false
+  },
+  "validated_geometry": {
+    "workflow_run": 35275629712,
+    "node_tests": "13/13 passed",
+    "triangles": 15550,
+    "vertices": 15910,
+    "bounds_metres": {
+      "width": 3.8559228910382988,
+      "height": 3.3762917082335404,
+      "depth": 3.795
+    },
+    "finite_attributes": true,
+    "valid_indices": true,
+    "non_degenerate_triangles": true,
+    "target_triangle_budget": "15000-35000",
+    "budget_passed": true
+  },
+  "runtime_validation": {
+    "workflow_run": 35275629712,
+    "renderer": "software WebGL2 via ANGLE/SwiftShader",
+    "structures_observed": 2,
+    "storehouse_diagnostic": "procedural-project-owned",
+    "storehouse_triangles_observed": 15550,
+    "phase1_draw_calls_observed": 144,
+    "lifecycle_remount_cycles": "3/3 passed",
+    "phase0_webgpu_regression": "passed",
+    "screenshot_artifact_id": 10520776615,
+    "screenshot_review": "visible and readable as the smaller second settlement structure; WIP candidate only"
+  },
+  "admission": {
+    "admitted_models_storehouse": null,
+    "candidate_integrated": true,
+    "art_gate_passed": false,
+    "visual_acceptance": "pending",
+    "historical_acceptance": "pending",
+    "actual_hardware_performance": "pending",
+    "production_asset_status": "candidate_not_final"
+  }
+}
