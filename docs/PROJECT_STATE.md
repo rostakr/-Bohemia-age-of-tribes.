@@ -9,27 +9,33 @@
   "phase_0_import_sha": "5decba22ee42f55de3430cb367663a776fb6f37d",
   "integration_pr": 1,
   "browser_smoke_pr": 2,
-  "browser_smoke_source_sha": "38f9ada32c5a3388a01a8a682e8b401481e1fc77",
+  "interaction_qa_pr": 3,
   "active_milestone": "PHASE_0_FOUNDATION",
-  "status": "phase_0_integrated_ci_webgl2_passed_awaiting_hardware_gpu_qa",
+  "status": "phase_0_ci_browser_qa_extended_awaiting_hardware_gpu_qa",
   "engine": "playcanvas@2.22.1",
   "next_phase_authorized": false,
   "deployment": null,
   "latest_qa": {
-    "github_actions": "passed: Phase 0 integration and browser-smoke PR runs",
+    "github_actions": "passed: run 35201007076 full validation + browser + interaction smoke",
     "npm_ci": "passed on Node 24.20.0",
     "typescript": "passed",
-    "focused_node_tests": "5/5 passed locally and in CI",
-    "production_build": "passed in CI",
-    "static_root_path": "passed: HTTP 200, relative assets present",
-    "static_nested_path": "passed: /bohemia/ HTTP 200, relative assets present",
-    "license_notice": "passed: served at root and nested path",
-    "webgl2_ci_software": "passed: GitHub Actions run 35197836188, Chrome 152.0.7977.82, ANGLE SwiftShader",
-    "webgl2_ci_evidence": "passed: visible floor and marker, renderer webgl2, tick advanced, failed=false, deviceLost=false, 1920x1080 screenshot artifact",
+    "focused_node_tests": "5/5 passed",
+    "production_build": "passed",
+    "static_root_path": "passed",
+    "static_nested_path": "passed: /bohemia/",
+    "license_notice": "passed",
+    "forced_webgl2_ci_software": "passed",
+    "automatic_fallback_ci_software": "passed with WebGPU disabled; renderer reported webgl2",
+    "pause_resume_ci": "passed; tick remained stable while paused and resumed afterward",
+    "visibility_handler_ci": "passed synthetically for >10 seconds with no catch-up burst",
+    "resize_ci": "passed; drawing buffer changed with live viewport size",
+    "device_loss_restore_ci_software": "passed via WEBGL_lose_context",
+    "repeated_reload_ci": "passed: 3 production reloads, one healthy canvas/runtime each",
+    "failure_ui_ci": "passed with WebGL disabled; visible actionable renderer error UI",
     "webgpu_hardware": "unverified",
     "webgl2_hardware": "unverified",
-    "automatic_fallback": "unverified",
-    "device_loss_recovery": "unverified",
+    "native_hidden_tab_hardware": "unverified",
+    "hmr_resource_inspection": "unverified",
     "gpu_performance": "not_measured"
   }
 }
@@ -48,27 +54,30 @@
 - Static 20 m calibration floor and 1.8 m marker; no production art.
 - GitHub Actions validation and manual-only Pages deployment workflows integrated.
 - Asset categories and provenance/rights gate; project/art/architecture documents integrated.
-- Repeatable Phase 0 WebGL2 browser smoke added in PR #2 using runner Chrome + ANGLE SwiftShader; no gameplay or Phase 1 systems are introduced.
+- Repeatable software-WebGL2 startup/render smoke, screenshot capture, fallback simulation, failure-UI validation and CDP interaction regression checks are covered in CI.
 
 ## QA evidence
 
-- GitHub Actions Phase 0 integration validation passed on Ubuntu 24.04 with Node 24.20.0 and npm 11.19.0.
+- GitHub Actions run `35201007076` passed the complete Phase 0 validation sequence on Ubuntu 24.04 with Node 24.20.0 and Chrome 152.0.7977.82.
 - `npm ci` installs the pinned dependency set and reports 0 vulnerabilities.
 - `npm run validate` passes strict TypeScript, all 5 focused Node tests, and the Vite production build.
 - Build output remains approximately 2.03 MB minified / 520.79 kB gzip plus source map; the known Vite chunk-size advisory remains.
 - PlayCanvas optional worker paths continue to emit the documented `node:worker_threads` browser-externalization warnings; Phase 0 does not invoke those optional paths.
 - Static HTTP checks passed at `/` and `/bohemia/`; generated HTML uses relative JS/CSS paths and the PlayCanvas MIT notice is served.
-- Local browser automation remains blocked by environment policy on localhost; this is not treated as a runtime failure.
-- GitHub Actions run `35197836188` executed the production build in Google Chrome `152.0.7977.82` with ANGLE SwiftShader and forced WebGL2. The smoke reported tick `4`, `failed: false`, `deviceLost: false`, valid drawing-buffer dimensions at both tested viewports, and captured a 1920×1080 technical screenshot.
-- The captured screenshot was inspected: the calibration floor and 1.8 m marker are visible, the UI reports `WEBGL2 · Foundation running`, and the debug panel reports `renderer: webgl2`, `tick: 4`, `failed: false`, and `deviceLost: false`.
-- This is software-rendered CI evidence, not a real-GPU performance result and not a WebGPU pass.
+- Forced software WebGL2 startup/render-loop smoke passes and captures a 1920×1080 technical screenshot.
+- With WebGPU disabled in CI, the default renderer path reaches healthy WebGL2, demonstrating the fallback code path in the software environment.
+- With WebGL disabled, the app shows the renderer failure status and actionable recovery UI instead of a silent blank screen.
+- Interaction smoke passed: Pause froze tick, Resume restarted it, the visibility-change handler stayed hidden for more than 10 seconds without catch-up, live resize changed drawing-buffer dimensions, `WEBGL_lose_context` reached device loss/restoration successfully, and three production reloads returned to one healthy canvas/runtime.
+- These SwiftShader/headless results are functional evidence only; they do not count as real WebGPU, real-GPU performance, native background-tab, or hardware device-loss acceptance.
 
 ## Known broken or unverified systems
 
-- No observed Phase 0 failures in dependency installation, typecheck, focused Node tests, production build, static-path serving, or software WebGL2 browser startup/render-loop smoke.
+- No observed Phase 0 failures in dependency installation, typecheck, focused Node tests, production build, static-path serving, software WebGL2 startup/rendering, pause/resume handling, synthetic visibility handling, resize, software context loss/restoration, repeated production reload, fallback simulation, or renderer failure UI.
 - Actual WebGPU rendering remains unverified on a real desktop GPU/browser.
-- Hardware WebGL2 and automatic WebGPU-to-WebGL2 fallback remain unverified.
-- Pause/resume UI interaction, 10-second hidden-tab return, repeated reload/HMR resource behavior, graphics-device loss/restoration, and total renderer failure UI still require browser/hardware validation.
+- Hardware WebGL2 and fallback on a browser/device where WebGPU is genuinely unavailable remain unverified.
+- Native background-tab behavior remains unverified; CI exercises the same application visibility handler synthetically.
+- Repeated development HMR resource behavior remains unverified; CI covers full production reloads.
+- Hardware graphics-device loss/restoration remains unverified.
 - No production deployment has been performed.
 - Terrain, RTS camera, navigation, selection, command execution, economy, construction, production, combat, AI, fog, trade and victory conditions are future milestones, not broken Phase 0 features.
 
@@ -82,8 +91,8 @@
 
 ## Phase gate
 
-**Phase 0 is integrated and code/CI/software-WebGL2 QA passes, but the phase gate remains OPEN until real desktop browser/GPU QA is completed. Phase 1 is not authorized.**
+**Phase 0 code/CI/software-browser QA now passes a substantially broader automated gate, but the phase remains OPEN until real desktop browser/GPU acceptance is completed. Phase 1 is not authorized.**
 
 ## Next work
 
-Complete the remaining hardware-dependent checks from `docs/HANDOFF_PHASE_0.md`: real WebGPU with renderer explicitly reporting `webgpu`, hardware WebGL2/automatic fallback, pause/resume, 10-second hidden-tab recovery, repeated reload/HMR inspection, graphics-device loss/restoration, failure UI and an idle 1080p hardware baseline with browser/OS/GPU recorded. Do not begin Phase 1 until this evidence is accepted.
+Complete the remaining hardware-dependent checks from `docs/HANDOFF_PHASE_0.md`: real WebGPU with diagnostics explicitly reporting `webgpu`, real hardware WebGL2/fallback, native 10-second background-tab return, repeated development HMR resource inspection, hardware graphics-device loss/restoration, and an idle 1080p hardware baseline with browser/OS/GPU recorded. Do not begin Phase 1 until this evidence is accepted.
