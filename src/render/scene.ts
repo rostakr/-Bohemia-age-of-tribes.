@@ -6,4 +6,5 @@ export interface RuntimeScene {
   fixedUpdate(dtSeconds: number, tick: number): void;
   update(dtSeconds: number, interpolationAlpha: number): void;
   destroy(): void;
+  diagnostics?(): Record<string, string | number | boolean>;
 }

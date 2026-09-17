@@ -7,7 +7,7 @@ import { join, resolve } from 'node:path';
 const host = '127.0.0.1';
 const previewPort = 4177;
 const debugPort = 9227;
-const baseUrl = `http://${host}:${previewPort}/?renderer=webgl2&debug=1`;
+const baseUrl = `http://${host}:${previewPort}/?scene=calibration&renderer=webgl2&debug=1`;
 const debugBase = `http://${host}:${debugPort}`;
 const sleep = ms => new Promise(resolvePromise => setTimeout(resolvePromise, ms));
 

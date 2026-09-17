@@ -26,14 +26,14 @@ jobs:
             local suffix="$1"
             local output="$2"
             local status
-            status="$(curl -L -sS -H 'Cache-Control: no-cache' -o "$output" -w '%{http_code}' "${SITE_URL}?qa=${GITHUB_SHA}-${suffix}")"
+            status="$(curl -L -sS -H 'Cache-Control: no-cache' -o "$output" -w '%{http_code}' "${SITE_URL}?scene=calibration&qa=${GITHUB_SHA}-${suffix}")"
             test "$status" = "200"
           }
 
           fetch_index first "$tmp/index-first.html"
           fetch_index hard-refresh "$tmp/index-refresh.html"
           cmp "$tmp/index-first.html" "$tmp/index-refresh.html"
-          grep -Fq '<title>BOHEMIA: AGE OF TRIBES — Foundation</title>' "$tmp/index-refresh.html"
+          grep -Fq '<title>BOHEMIA: AGE OF TRIBES' "$tmp/index-refresh.html"
 
           INDEX_FILE="$tmp/index-refresh.html" python3 - <<'PY' > "$tmp/assets.txt"
           from html.parser import HTMLParser
@@ -85,7 +85,7 @@ jobs:
           test -n "$chrome"
           tmp="$(mktemp -d)"
           trap 'rm -rf "$tmp"' EXIT
-          url="${SITE_URL}?renderer=webgl2&debug=1&qa=${GITHUB_SHA}"
+          url="${SITE_URL}?scene=calibration&renderer=webgl2&debug=1&qa=${GITHUB_SHA}"
 
           "$chrome" \
             --headless=new \
@@ -106,4 +106,4 @@ jobs:
             exit 1
           fi
 
-          echo 'Published WebGL2 runtime reached Foundation running state.'
+          echo 'Published WebGL2 calibration runtime reached Foundation running state.'

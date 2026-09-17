@@ -1,6 +1,8 @@
 import './style.css';
 import { CONFIG } from './config';
 import { CalibrationScene } from './render/calibration-scene';
+import { BenchmarkScene } from './render/benchmark-scene';
+import type { ViewName } from './render/inspection-camera';
 import { createGameRuntime, type GameRuntime, type RuntimeSnapshot } from './render/runtime';
 
 interface DebugRuntimeBridge {
@@ -32,6 +34,7 @@ const retryButton = requiredElement<HTMLButtonElement>('#retry');
 const compatibilityButton = requiredElement<HTMLButtonElement>('#compatibility');
 const parameters = new URLSearchParams(window.location.search);
 const debug = parameters.get('debug') === '1';
+const calibration = parameters.get('scene') === 'calibration';
 const forceWebGL2 = parameters.get('renderer') === 'webgl2';
 
 let runtime: GameRuntime | undefined;
@@ -43,7 +46,7 @@ function showError(error: unknown): void {
   console.error('[BOHEMIA foundation]', error);
   status.textContent = 'Renderer unavailable';
   errorPanel.hidden = false;
-  errorText.textContent = 'The 3D scene could not continue. Reload, or try the WebGL2 compatibility mode.';
+  errorText.textContent = 'The 3D scene could not continue. Check the connection, reload, or try WebGL2. Details are available in the developer console.';
   pauseButton.disabled = true;
 }
 
@@ -55,19 +58,19 @@ function syncVisibility(): void {
   runtime?.setVisibility(document.hidden);
 }
 
-function updateDiagnostics(created: GameRuntime): void {
+function updateDiagnostics(created: GameRuntime, runningLabel: string): void {
   if (runtime !== created) return;
   const sample = created.snapshot();
   status.textContent = sample.failed
     ? 'Runtime stopped'
     : sample.deviceLost
       ? 'Graphics device lost — waiting for recovery'
-      : `${sample.renderer.toUpperCase()} · ${sample.paused ? 'Simulation paused' : 'Foundation running'}`;
+      : `${sample.renderer.toUpperCase()} · ${sample.paused ? 'Simulation paused' : runningLabel}`;
   if (debug) diagnostics.textContent = JSON.stringify(sample, null, 2);
 }
 
 function resetHostUi(): void {
-  status.textContent = 'Starting the renderer…';
+  status.textContent = calibration ? 'Starting the renderer…' : 'Preparing the landscape…';
   pauseButton.disabled = true;
   pauseButton.textContent = 'Pause simulation';
   pauseButton.setAttribute('aria-pressed', 'false');
@@ -83,11 +86,13 @@ async function mount(): Promise<void> {
   resetHostUi();
   const events = new AbortController();
   hostEvents = events;
+  const scene = calibration ? new CalibrationScene() : new BenchmarkScene();
+  const runningLabel = calibration ? 'Foundation running' : 'Scene running';
 
   let created!: GameRuntime;
   created = createGameRuntime({
     canvas,
-    scene: new CalibrationScene(),
+    scene,
     renderer: forceWebGL2 ? 'webgl2' : 'auto',
     onFailure: error => {
       if (runtime === created) showError(error);
@@ -102,8 +107,19 @@ async function mount(): Promise<void> {
     else created.pause();
     pauseButton.textContent = paused ? 'Pause simulation' : 'Resume simulation';
     pauseButton.setAttribute('aria-pressed', String(!paused));
-    updateDiagnostics(created);
+    updateDiagnostics(created, runningLabel);
   }, { signal: events.signal });
+
+  for (const button of document.querySelectorAll<HTMLButtonElement>('[data-view]')) {
+    button.disabled = calibration;
+    button.addEventListener('click', () => {
+      if (runtime !== created || !(scene instanceof BenchmarkScene)) return;
+      scene.setView(button.dataset.view as ViewName);
+      for (const other of document.querySelectorAll('[data-view]')) {
+        other.setAttribute('aria-pressed', String(other === button));
+      }
+    }, { signal: events.signal });
+  }
 
   retryButton.addEventListener('click', () => location.reload(), { signal: events.signal });
   compatibilityButton.addEventListener('click', () => {
@@ -130,8 +146,8 @@ async function mount(): Promise<void> {
     created.setVisibility(document.hidden);
     created.start();
     pauseButton.disabled = false;
-    updateDiagnostics(created);
-    diagnosticsTimer = setInterval(() => updateDiagnostics(created), CONFIG.diagnosticsRefreshSeconds * 1000);
+    updateDiagnostics(created, runningLabel);
+    diagnosticsTimer = setInterval(() => updateDiagnostics(created, runningLabel), CONFIG.diagnosticsRefreshSeconds * 1000);
   } catch (error) {
     if (generation === mountGeneration && runtime === created) {
       events.abort();

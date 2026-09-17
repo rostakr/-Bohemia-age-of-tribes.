@@ -21,7 +21,7 @@ export interface GameRuntimeOptions {
 }
 
 export interface RuntimeSnapshot {
-  milestone: 'phase-0';
+  milestone: 'phase-0' | 'phase-1';
   renderer: string;
   tick: number;
   paused: boolean;
@@ -38,6 +38,7 @@ export interface RuntimeSnapshot {
   fps: number;
   simulationMs: number;
   droppedSeconds: number;
+  [key: string]: string | number | boolean;
 }
 
 export interface GameRuntime {
@@ -217,7 +218,7 @@ class PlayCanvasGameRuntime implements GameRuntime {
       this.lastWidth = device.width;
       this.lastHeight = device.height;
     }
-    return {
+    const snapshot: RuntimeSnapshot = {
       milestone: 'phase-0',
       renderer: this.lastRenderer,
       tick: this.clock.tick,
@@ -232,6 +233,9 @@ class PlayCanvasGameRuntime implements GameRuntime {
       height: this.lastHeight,
       ...this.telemetry.snapshot(),
     };
+    const sceneDiagnostics = this.scene?.diagnostics?.();
+    if (sceneDiagnostics) Object.assign(snapshot, sceneDiagnostics);
+    return snapshot;
   }
 
   destroy(): void {
