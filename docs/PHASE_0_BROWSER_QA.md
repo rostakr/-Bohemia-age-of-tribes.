@@ -22,15 +22,17 @@ This file documents the repeatable CI-only portion of the Phase 0 browser gate. 
 - `WEBGL_lose_context` propagates to `deviceLost: true`, restoration returns to `deviceLost: false`, and the runtime remains healthy;
 - three production reloads each return to exactly one live canvas/runtime with no failure/device-loss state.
 
-GitHub Actions run `35201007076` passed the full validation, browser smoke and interaction smoke sequence on Ubuntu 24.04 / Node 24.20.0 / Chrome 152.0.7977.82.
+`npm run smoke:webgpu` exercises the default PlayCanvas renderer-preference path under runner Chrome with Dawn/Vulkan SwiftShader candidates. The first one-shot `--dump-dom` probe proved that the software WebGPU path can initialize, but a later runner captured the page while it was still at `Starting the renderer…`; no application failure state was reported. The probe was therefore changed to Chrome DevTools Protocol polling so asynchronous WebGPU startup is observed directly rather than sampled once.
 
-The screenshot and SwiftShader results are technical evidence only. They are not commercial-art review and they are not hardware performance results.
+With the stabilized CDP probe, GitHub Actions run `35206528366` passed on Ubuntu 24.04 / Node 24.20.0 / Chrome 152.0.7977.82 using `vulkan-swiftshader`. The application reported `WEBGPU · Foundation running`, diagnostics reported `renderer: webgpu`, `failed: false`, and `deviceLost: false`, and the simulation advanced from `initialTick: 0` to `tick: 1` during the observation window.
+
+The screenshot and software-renderer results are technical evidence only. They are not commercial-art review and they are not hardware performance results.
 
 ## Still manual / hardware-dependent
 
 CI does **not** substitute for:
 
-- real hardware WebGPU confirmation with diagnostics explicitly reporting `webgpu`;
+- real hardware WebGPU confirmation with diagnostics explicitly reporting `webgpu` and normal advancing simulation;
 - real hardware WebGL2 confirmation and fallback on a browser/device where WebGPU is genuinely unavailable;
 - native tab hide/background/restore behavior on the target desktop browser (CI currently exercises the same application handler synthetically);
 - repeated development HMR resource inspection; CI covers full production reloads, not HMR replacement;
