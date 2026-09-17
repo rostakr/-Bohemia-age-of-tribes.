@@ -134,6 +134,8 @@ async function mount(): Promise<void> {
     diagnosticsTimer = setInterval(() => updateDiagnostics(created), CONFIG.diagnosticsRefreshSeconds * 1000);
   } catch (error) {
     if (generation === mountGeneration && runtime === created) {
+      events.abort();
+      if (hostEvents === events) hostEvents = undefined;
       runtime = undefined;
       showError(error);
     }
