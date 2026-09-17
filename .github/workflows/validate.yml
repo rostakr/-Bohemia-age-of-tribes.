@@ -9,7 +9,7 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,10 +22,12 @@ jobs:
         run: npm run smoke:webgl2
       - name: Phase 0 interaction smoke
         run: npm run smoke:interactions
-      - name: Phase 0 lifecycle remount smoke
+      - name: Lifecycle remount smoke
         run: npm run smoke:lifecycle
       - name: Phase 0 software WebGPU smoke
         run: npm run smoke:webgpu
+      - name: Phase 1 benchmark browser smoke
+        run: npm run smoke:phase1
       - uses: actions/upload-artifact@v4
         with:
           name: bohemia-static-build
@@ -36,6 +38,13 @@ jobs:
         if: always()
         with:
           name: phase0-webgl2-evidence
-          path: artifacts
+          path: artifacts/phase0-webgl2-1920x1080.png
+          if-no-files-found: warn
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase1-browser-evidence
+          path: artifacts/phase1/phase1-webgl2-1920x1080.png
           if-no-files-found: warn
           retention-days: 7
