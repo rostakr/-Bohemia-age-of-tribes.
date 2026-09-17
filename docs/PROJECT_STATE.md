@@ -5,19 +5,33 @@
   "schema_version": 1,
   "project": "BOHEMIA: AGE OF TRIBES",
   "updated": "2026-09-17",
-  "validated_phase_0_main_sha": "52e4f6a2edb53a5ed833f60a0276cf2e4e8880f8",
+  "validated_phase_0_main_sha": "dd2fa700c1d584b27a5403bf41bffebfb2b7885d",
+  "phase_0_runtime_sha": "52e4f6a2edb53a5ed833f60a0276cf2e4e8880f8",
   "phase_0_import_sha": "5decba22ee42f55de3430cb367663a776fb6f37d",
   "integration_pr": 1,
   "browser_smoke_pr": 2,
   "interaction_qa_pr": 3,
   "software_webgpu_pr": 4,
+  "hardware_acceptance_issue": 5,
+  "pages_bootstrap_pr": 6,
+  "pages_restore_pr": 7,
   "active_milestone": "PHASE_0_FOUNDATION",
-  "status": "phase_0_ci_webgl2_and_software_webgpu_passed_awaiting_hardware_gpu_qa",
+  "status": "phase_0_ci_passed_awaiting_hardware_gpu_qa_pages_not_enabled",
   "engine": "playcanvas@2.22.1",
   "next_phase_authorized": false,
-  "deployment": null,
+  "deployment": {
+    "provider": "github_pages",
+    "successful": false,
+    "workflow": "Publish reviewed foundation",
+    "attempt_run": 35214332852,
+    "build_sha": "38a087a723f6ac90eda897a6305e63c5ccbdfcee",
+    "artifact_id": 10494373413,
+    "build": "passed",
+    "deploy": "failed: GitHub Pages not enabled (actions/deploy-pages HTTP 404)",
+    "workflow_restored_manual_only": true
+  },
   "latest_qa": {
-    "github_actions": "passed on main: run 35206955508 at validated Phase 0 code SHA 52e4f6a2edb53a5ed833f60a0276cf2e4e8880f8",
+    "github_actions": "passed on main: run 35214609525 at SHA dd2fa700c1d584b27a5403bf41bffebfb2b7885d",
     "npm_ci": "passed on Node 24.20.0",
     "typescript": "passed",
     "focused_node_tests": "5/5 passed",
@@ -27,7 +41,7 @@
     "license_notice": "passed",
     "forced_webgl2_ci_software": "passed",
     "automatic_fallback_ci_software": "passed with WebGPU disabled; renderer reported webgl2",
-    "webgpu_ci_software": "passed repeatedly with CDP polling: PR runs 35206528366 and 35206771954 plus main run 35206955508; Chrome 152.0.7977.82, vulkan-swiftshader, renderer webgpu, failed=false, deviceLost=false, tick advanced 0->1",
+    "webgpu_ci_software": "passed repeatedly with CDP polling; Chrome 152.0.7977.82, vulkan-swiftshader, renderer webgpu, failed=false, deviceLost=false, tick advanced 0->1",
     "webgpu_ci_harness_note": "one-shot dump-dom probe was runner-timing-sensitive and was replaced by CDP state polling; no runtime failure was observed in the flaky sample",
     "pause_resume_ci": "passed; tick remained stable while paused and resumed afterward",
     "visibility_handler_ci": "passed synthetically for >10 seconds with no catch-up burst",
@@ -48,7 +62,7 @@
 
 - Correct repository resolved as `rostakr/-Bohemia-age-of-tribes.` and the Phase 0 package integrated through PR #1 without starting Phase 1.
 - Phase 0 integration was squash-merged to `main` at `fe7933aff631a1bb7d103268238a1d13e19bb598` after successful PR validation.
-- Phase 0 QA extensions through PRs #2-#4 were squash-merged without changing gameplay/production-art scope; the latest validated Phase 0 code SHA is `52e4f6a2edb53a5ed833f60a0276cf2e4e8880f8`.
+- Phase 0 QA extensions through PRs #2-#4 were squash-merged without changing gameplay/production-art scope; the Phase 0 runtime foundation is `52e4f6a2edb53a5ed833f60a0276cf2e4e8880f8`.
 - Strict TypeScript ES modules; pinned npm dependencies and lockfile; Vite relative-base static build.
 - PlayCanvas device bootstrap: WebGPU preference, WebGL2 fallback and forced compatibility URL.
 - Application/scene ownership, disposal on HMR/unload, viewport resize and capped pixel ratio.
@@ -60,11 +74,14 @@
 - Asset categories and provenance/rights gate; project/art/architecture documents integrated.
 - Repeatable software-WebGL2 startup/render smoke, screenshot capture, fallback simulation, failure-UI validation and CDP interaction regression checks are covered in CI.
 - Default PlayCanvas WebGPU preference path is exercised in CI through Chrome/Dawn `vulkan-swiftshader` using CDP polling; the software WebGPU simulation tick advances, but this is still not hardware acceptance.
+- A one-time Phase 0 Pages bootstrap was validated through PR #6 and reverted through PR #7 after the deployment API proved Pages is not enabled; the workflow is manual-only again and no runtime files changed.
 
 ## QA evidence
 
-- GitHub Actions main run `35206955508` passed the complete Phase 0 validation sequence at code SHA `52e4f6a2edb53a5ed833f60a0276cf2e4e8880f8`.
-- Stabilized software-WebGPU CDP coverage also passed independently in PR runs `35206528366` and `35206771954` before merge.
+- GitHub Actions main run `35214609525` passed the complete Phase 0 validation sequence at current validated main SHA `dd2fa700c1d584b27a5403bf41bffebfb2b7885d` after the Pages workflow was restored to manual-only.
+- Main run `35214332854` also passed the complete Phase 0 suite at the temporary deployment-bootstrap SHA `38a087a723f6ac90eda897a6305e63c5ccbdfcee`.
+- Pages workflow run `35214332852` successfully installed dependencies, ran `npm run validate`, and uploaded Pages artifact `10494373413`; only `actions/deploy-pages@v4` failed when GitHub returned HTTP 404 with `Ensure GitHub Pages has been enabled`.
+- Stabilized software-WebGPU CDP coverage passed repeatedly before and after merge.
 - `npm ci` installs the pinned dependency set and reports 0 vulnerabilities.
 - `npm run validate` passes strict TypeScript, all 5 focused Node tests, and the Vite production build.
 - Build output remains approximately 2.03 MB minified / 520.79 kB gzip plus source map; the known Vite chunk-size advisory remains.
@@ -80,13 +97,14 @@
 
 ## Known broken or unverified systems
 
-- No observed Phase 0 failures in dependency installation, typecheck, focused Node tests, production build, static-path serving, software WebGL2 startup/rendering, software WebGPU initialization/render/simulation path, pause/resume handling, synthetic visibility handling, resize, software context loss/restoration, repeated production reload, fallback simulation, or renderer failure UI.
+- No observed Phase 0 application failures in dependency installation, typecheck, focused Node tests, production build, static-path serving, software WebGL2 startup/rendering, software WebGPU initialization/render/simulation path, pause/resume handling, synthetic visibility handling, resize, software context loss/restoration, repeated production reload, fallback simulation, or renderer failure UI.
+- GitHub Pages is not enabled for this repository, so the reviewed Pages workflow cannot create a public deployment yet. This is a repository-setting blocker, not an observed application defect.
 - Real hardware WebGPU remains unverified on a desktop GPU/browser.
 - Hardware WebGL2 and fallback on a browser/device where WebGPU is genuinely unavailable remain unverified.
 - Native background-tab behavior remains unverified; CI exercises the same application visibility handler synthetically.
 - Repeated development HMR resource behavior remains unverified; CI covers full production reloads.
 - Hardware graphics-device loss/restoration remains unverified.
-- No production deployment has been performed.
+- No successful public deployment has been performed.
 - Terrain, RTS camera, navigation, selection, command execution, economy, construction, production, combat, AI, fog, trade and victory conditions are future milestones, not broken Phase 0 features.
 
 ## Concrete technical risks / performance state
@@ -103,4 +121,4 @@
 
 ## Next work
 
-Complete the remaining hardware-dependent checks from `docs/HANDOFF_PHASE_0.md`: real WebGPU with diagnostics explicitly reporting `webgpu` and normal advancing simulation, real hardware WebGL2/fallback, native 10-second background-tab return, repeated development HMR resource inspection, hardware graphics-device loss/restoration, and an idle 1080p hardware baseline with browser/OS/GPU recorded. Do not begin Phase 1 until this evidence is accepted.
+Enable GitHub Pages for the repository once, then run the existing manual `Publish reviewed foundation` workflow to obtain the HTTPS hardware-test target. Alternatively, the same hardware acceptance can be performed from `npm run preview` on localhost. Complete Issue #5: real WebGPU with diagnostics explicitly reporting `webgpu` and normal advancing simulation, real hardware WebGL2/fallback, native 10-second background-tab return, repeated development HMR resource inspection, hardware graphics-device loss/restoration, and an idle 1080p hardware baseline with browser/OS/GPU recorded. Do not begin Phase 1 until this evidence is accepted.
