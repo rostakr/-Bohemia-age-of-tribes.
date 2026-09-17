@@ -16,7 +16,7 @@
     "smoke:webgpu": "node scripts/browser-webgpu-smoke.mjs",
     "smoke:phase1": "node scripts/browser-phase1-smoke.mjs",
     "check:glb": "node scripts/check-glb.mjs",
-    "check:phase1-assets": "node scripts/check-phase1-assets.mjs",
+    "check:phase1-assets": "node --check scripts/check-glb.mjs && node --check scripts/check-phase1-assets.mjs && node scripts/check-phase1-assets.mjs",
     "validate": "npm run typecheck && npm test && npm run check:phase1-assets && npm run build"
   },
   "dependencies": { "playcanvas": "2.22.1" },
