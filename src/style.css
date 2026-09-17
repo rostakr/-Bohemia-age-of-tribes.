@@ -2,13 +2,13 @@
 * { box-sizing: border-box; }
 body { margin: 0; }
 #viewport { display: block; position: fixed; inset: 0; width: 100%; height: 100%; }
-.shell { position: relative; min-height: 100vh; padding: 36px; pointer-events: none; }
+.shell { position: relative; min-height: 100vh; padding: 32px; pointer-events: none; }
 header { max-width: 540px; text-shadow: 0 2px 8px #101819; }
 .eyebrow { color: #d2b77e; letter-spacing: .22em; font-size: 12px; font-weight: 650; }
 h1 { font-family: Georgia, serif; font-weight: 400; font-size: clamp(24px, 3vw, 44px); letter-spacing: .05em; margin: 8px 0; }
 h2 { font-family: Georgia, serif; font-weight: 400; margin: 8px 0 12px; }
 p { line-height: 1.6; }
-.panel { pointer-events: auto; max-width: 355px; margin-top: 38px; padding: 24px; background: #152022ed; border: 1px solid #52605a; }
+.panel { pointer-events: auto; max-width: 300px; margin-top: 36px; padding: 20px; background: #152022df; border: 1px solid #89917b66; }
 .muted, footer { color: #b0bab1; font-size: 12px; }
 #status { font-size: 13px; color: #d2b77e; }
 button { cursor: pointer; background: #263b37; color: #eee8d6; border: 1px solid #7f8e74; padding: 11px 16px; margin: 5px 4px 0 0; font: inherit; font-size: 13px; }
@@ -17,6 +17,13 @@ button:focus-visible { outline: 3px solid #e3c386; outline-offset: 4px; }
 button:disabled { opacity: .5; cursor: wait; }
 .error { border-color: #cb896a; }
 pre { position: absolute; right: 24px; top: 24px; padding: 16px; background: #10191de8; color: #c0d3bf; font-size: 12px; pointer-events: auto; }
-footer { margin-top: 32px; letter-spacing: .1em; }
+footer { position: fixed; left: 32px; right: 32px; bottom: 20px; text-align: center; letter-spacing: .1em; text-shadow: 0 1px 4px #000; }
+footer nav { pointer-events: auto; display: inline-flex; padding: 5px; border: 1px solid #89917b66; background: #152022df; }
+footer button { background: transparent; margin: 0; border: 0; padding: 13px 20px; }
+footer button[aria-pressed="true"] { background: #46533d; }
+footer button span { color: #d2b77e; margin-right: 10px; font-size: 10px; }
+footer p { font-size: 10px; color: #ecebdf; }
+.tagline { font-size: 13px; }
+#viewport:focus-visible { outline: 2px solid #d2b77e; outline-offset: -3px; }
 [hidden] { display: none !important; }
-@media (max-width: 700px) { .shell { padding: 20px; } pre { position: static; max-width: 355px; } }
+@media (max-width: 700px) { .shell { padding: 20px 20px 150px; } pre { position: static; max-width: 355px; } footer { left: 10px; right: 10px; } footer button { padding: 10px; } }
