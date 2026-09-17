@@ -1,0 +1,109 @@
+name: Verify published foundation
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/verify-pages.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SITE_URL: https://rostakr.github.io/-Bohemia-age-of-tribes./
+    steps:
+      - name: Verify production HTML and linked assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+
+          fetch_index() {
+            local suffix="$1"
+            local output="$2"
+            local status
+            status="$(curl -L -sS -H 'Cache-Control: no-cache' -o "$output" -w '%{http_code}' "${SITE_URL}?qa=${GITHUB_SHA}-${suffix}")"
+            test "$status" = "200"
+          }
+
+          fetch_index first "$tmp/index-first.html"
+          fetch_index hard-refresh "$tmp/index-refresh.html"
+          cmp "$tmp/index-first.html" "$tmp/index-refresh.html"
+          grep -Fq '<title>BOHEMIA: AGE OF TRIBES — Foundation</title>' "$tmp/index-refresh.html"
+
+          INDEX_FILE="$tmp/index-refresh.html" python3 - <<'PY' > "$tmp/assets.txt"
+          from html.parser import HTMLParser
+          from pathlib import Path
+          from urllib.parse import urljoin, urlparse
+          import os
+
+          site = os.environ['SITE_URL']
+          index_file = Path(os.environ['INDEX_FILE'])
+
+          class Parser(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.urls = []
+              def handle_starttag(self, tag, attrs):
+                  values = dict(attrs)
+                  if tag == 'script' and values.get('src'):
+                      self.urls.append(values['src'])
+                  if tag == 'link' and values.get('href') and values.get('rel') != 'icon':
+                      self.urls.append(values['href'])
+
+          parser = Parser()
+          parser.feed(index_file.read_text(encoding='utf-8'))
+          seen = set()
+          for value in parser.urls:
+              parsed = urlparse(value)
+              if parsed.scheme in ('data', 'http', 'https'):
+                  continue
+              resolved = urljoin(site, value)
+              if resolved not in seen:
+                  seen.add(resolved)
+                  print(resolved)
+          PY
+
+          test -s "$tmp/assets.txt"
+          while IFS= read -r asset; do
+            status="$(curl -L -sS -H 'Cache-Control: no-cache' -o /dev/null -w '%{http_code}' "$asset")"
+            test "$status" = "200"
+          done < "$tmp/assets.txt"
+
+          echo 'Production HTML and linked JS/CSS returned HTTP 200.'
+          cat "$tmp/assets.txt"
+
+      - name: Verify published WebGL2 runtime in Chrome
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome-stable || command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$chrome"
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          url="${SITE_URL}?renderer=webgl2&debug=1&qa=${GITHUB_SHA}"
+
+          "$chrome" \
+            --headless=new \
+            --no-sandbox \
+            --disable-dev-shm-usage \
+            --enable-unsafe-swiftshader \
+            --use-gl=angle \
+            --use-angle=swiftshader \
+            --virtual-time-budget=12000 \
+            --dump-dom \
+            "$url" > "$tmp/dom.html" 2> "$tmp/chrome.log"
+
+          grep -Fq 'WEBGL2 · Foundation running' "$tmp/dom.html"
+          grep -Eq '&quot;renderer&quot;:[[:space:]]*&quot;webgl2&quot;|"renderer":[[:space:]]*"webgl2"' "$tmp/dom.html"
+          if grep -Fq 'Unable to run the scene' "$tmp/dom.html" && ! grep -Fq 'hidden' "$tmp/dom.html"; then
+            echo 'Renderer error UI may be visible.' >&2
+            cat "$tmp/chrome.log" >&2
+            exit 1
+          fi
+
+          echo 'Published WebGL2 runtime reached Foundation running state.'
