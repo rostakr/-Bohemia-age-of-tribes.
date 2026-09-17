@@ -3,34 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#1e261d" />
-    <title>BOHEMIA: AGE OF TRIBES</title>
+    <meta name="theme-color" content="#141e20" />
+    <title>BOHEMIA: AGE OF TRIBES — Foundation</title>
+    <link rel="icon" href="data:," />
   </head>
   <body>
-    <div id="app-shell">
-      <canvas id="game-canvas" aria-label="BOHEMIA: AGE OF TRIBES game viewport"></canvas>
-      <header class="hud hud--top">
-        <div>
-          <div class="eyebrow">Vertical slice foundation</div>
-          <h1>BOHEMIA: AGE OF TRIBES</h1>
-          <p>Forge a tribe. Rule the land. Shape Bohemia.</p>
-        </div>
-        <div class="resource-strip" aria-label="Prototype resources">
-          <span>Food <strong>250</strong></span>
-          <span>Wood <strong>180</strong></span>
-          <span>Stone <strong>90</strong></span>
-          <span>Iron <strong>35</strong></span>
-          <span>Trade <strong>60</strong></span>
-        </div>
-      </header>
-      <aside class="hud hud--controls">
-        <strong>RTS camera</strong>
-        <span>WASD / arrows — pan</span>
-        <span>Mouse wheel — zoom</span>
-        <span>Q / E — rotate</span>
-      </aside>
-      <div id="status" class="hud hud--status">Initializing PlayCanvas…</div>
-    </div>
-    <script type="module" src="/src/main.js"></script>
+    <canvas id="viewport" aria-label="Phase zero calibration scene with a 20 metre floor and a 1.8 metre scale marker"></canvas>
+    <main class="shell">
+      <header><p class="eyebrow">BOHEMIA</p><h1>AGE OF TRIBES</h1><p>Forge a tribe. Rule the land. Shape Bohemia.</p></header>
+      <section class="panel" aria-labelledby="phase-title">
+        <p class="eyebrow">Production milestone 00</p>
+        <h2 id="phase-title">Foundation</h2>
+        <p>Technical calibration scene. The floor and scale marker are temporary engineering aids.</p>
+        <p class="muted">Production environment and RTS controls follow after foundation QA.</p>
+        <p id="status" role="status">Starting the renderer…</p>
+        <button id="pause" type="button" aria-pressed="false" disabled>Pause simulation</button>
+      </section>
+      <section id="error" class="panel error" role="alert" hidden>
+        <h2>Unable to run the scene</h2><p id="error-text"></p>
+        <button id="retry" type="button">Reload</button>
+        <button id="compatibility" type="button">Use WebGL2</button>
+      </section>
+      <pre id="diagnostics" aria-label="Runtime diagnostics" hidden></pre>
+      <footer>PHASE 0 · DESKTOP DEVELOPMENT BUILD</footer>
+    </main>
+    <noscript>JavaScript is required to run BOHEMIA: AGE OF TRIBES.</noscript>
+    <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
