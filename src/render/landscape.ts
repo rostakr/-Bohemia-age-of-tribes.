@@ -93,8 +93,8 @@ export function terrainMesh(segments = 180): MeshData {
       const x = -WORLD_HALF_SIZE + xi / segments * WORLD_HALF_SIZE * 2;
       positions.push(x, landscape.heightAt(x, z), z);
 
-      const u = x / 8.5 + 0.21 * Math.sin(z * 0.052) + 0.11 * Math.sin((x + z) * 0.021);
-      const v = z / 8.5 + 0.18 * Math.sin(x * 0.047 + 0.7) - 0.1 * Math.cos((x - z) * 0.019);
+      const u = x / 11.5 + 0.21 * Math.sin(z * 0.052) + 0.11 * Math.sin((x + z) * 0.021);
+      const v = z / 11.5 + 0.18 * Math.sin(x * 0.047 + 0.7) - 0.1 * Math.cos((x - z) * 0.019);
       uvs.push(u, v);
 
       const macro = 0.89
@@ -118,16 +118,27 @@ export function terrainMesh(segments = 180): MeshData {
 }
 
 export function riverMesh(): MeshData {
-  const positions: number[] = [], indices: number[] = [], uvs: number[] = [];
+  const positions: number[] = [], indices: number[] = [], uvs: number[] = [], colors: number[] = [];
+  const cross = [-1, -0.42, 0.42, 1];
+  const alphas = [0.48, 0.7, 0.7, 0.48];
   for (let i = 0; i <= 220; i++) {
     const z = i - WORLD_HALF_SIZE;
     const width = riverWidth(z) + 0.18;
     const center = riverCenter(z);
-    positions.push(center - width, WATER_HEIGHT, z, center + width, WATER_HEIGHT, z);
-    uvs.push(0, z / 7, 1, z / 7);
-    if (i < 220) indices.push(i * 2, i * 2 + 2, i * 2 + 1, i * 2 + 1, i * 2 + 2, i * 2 + 3);
+    for (let j = 0; j < cross.length; j++) {
+      const t = cross[j]!;
+      positions.push(center + width * t, WATER_HEIGHT, z);
+      uvs.push((t + 1) * 0.5, z / 7);
+      const edge = Math.abs(t);
+      const shade = 0.82 + edge * 0.13 + 0.035 * Math.sin(z * 0.071 + j);
+      colors.push(shade, Math.min(1, shade * 1.02), shade * 0.95, alphas[j]!);
+      if (i < 220 && j < cross.length - 1) {
+        const a = i * cross.length + j;
+        indices.push(a, a + cross.length, a + 1, a + 1, a + cross.length, a + cross.length + 1);
+      }
+    }
   }
-  return { positions, indices, uvs };
+  return { positions, indices, uvs, colors };
 }
 
 /** Thin, terrain-following sediment strips soften the water/grass boundary without another texture asset. */
@@ -146,9 +157,9 @@ export function riverMarginMesh(): MeshData {
       const x = xs[j]!;
       positions.push(x, landscape.heightAt(x, z) + 0.018, z);
       uvs.push(z / 6.5, j === 0 || j === 3 ? 0 : 1);
-      const alpha = j === 0 || j === 3 ? 0 : 0.58;
-      const damp = 0.84 + 0.05 * Math.sin(z * 0.071 + j * 0.9);
-      colors.push(damp * 0.88, damp * 0.9, damp * 0.8, alpha);
+      const alpha = j === 0 || j === 3 ? 0 : 0.43;
+      const damp = 0.87 + 0.045 * Math.sin(z * 0.071 + j * 0.9);
+      colors.push(damp * 0.9, damp * 0.91, damp * 0.83, alpha);
     }
     if (i < rows) {
       const base = i * columns;
@@ -163,7 +174,7 @@ export function riverMarginMesh(): MeshData {
 export function pathMesh(): MeshData {
   const positions: number[] = [], indices: number[] = [], uvs: number[] = [], colors: number[] = [];
   const cross = [-1, -0.58, 0, 0.58, 1];
-  const alpha = [0, 0.48, 0.78, 0.48, 0];
+  const alpha = [0, 0.31, 0.58, 0.31, 0];
   const rows = 170;
   for (let i = 0; i <= rows; i++) {
     const x = i - 85;
@@ -179,10 +190,10 @@ export function pathMesh(): MeshData {
       const px = x + nx * offset;
       const pz = center + nz * offset;
       positions.push(px, landscape.heightAt(px, pz) + 0.035, pz);
-      uvs.push(x / 6.5 + 0.06 * Math.sin(x * 0.11), j / (cross.length - 1));
+      uvs.push(x / 7.2 + 0.06 * Math.sin(x * 0.11), j / (cross.length - 1));
       const edge = Math.abs(cross[j]!);
-      const tone = 0.98 - 0.05 * edge + 0.025 * Math.sin(x * 0.09 + j);
-      colors.push(tone, tone * 0.965, tone * 0.9, alpha[j]!);
+      const tone = 1.0 - 0.035 * edge + 0.02 * Math.sin(x * 0.09 + j);
+      colors.push(tone, tone * 0.98, tone * 0.93, alpha[j]!);
       if (i < rows && j < cross.length - 1) {
         const a = i * cross.length + j;
         indices.push(a, a + 1, a + cross.length, a + 1, a + cross.length + 1, a + cross.length);
