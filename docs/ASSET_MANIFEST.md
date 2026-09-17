@@ -17,7 +17,7 @@ No professional or commercial art asset is included in Phase 0.
 
 ## Phase 1 provider review
 
-One Phase 1 dwelling model is now imported for evaluation; the other four model slots remain empty. On 2026-09-17,
+One Phase 1 dwelling model is imported for evaluation. The GLB/model slots for storehouse, workshop, inhabitant and tree remain empty; a project-owned procedural storehouse candidate is integrated separately and is not represented as an admitted production model. On 2026-09-17,
 the live fal.ai catalog was reviewed for an image-to-3D route. `meshy/v7/image-to-3d`
 advertised textured PBR GLB output, controllable topology, and a price of USD 0.80 per
 generation. Five conversions would cost USD 4.00 before concept-image generation.
@@ -94,4 +94,10 @@ For every future art row, record exact triangle counts per LOD, texture dimensio
 | Boii dwelling concept | Original generated concept, not third-party art | PNG, assets/source/phase1/boii-dwelling-concept.png | 1536 × 1024 | 2D only; no model/LOD | Boii, conversion input | Created and converted through authorized free official Hugging Face route; not historical validation |
 | Rectangular Boii dwelling | Original concept converted with Microsoft TRELLIS.2 official Hugging Face Space; MIT model/code reference | GLB; embedded 2048 × 2048 WebP base-color and metallic-roughness maps; `EXT_texture_webp` | 5,621,848 bytes; scaled bounds 8.002 × 4.5 × 5.443 m | 105,019 vertices; 99,298 triangles; no LOD | Boii dwelling candidate; noncommercial current project use | Integrated; GLB structure, finite attributes, index bounds and texture decoding passed; visual, historical and performance QA pending |
 
-Exact terrain paths, dimensions, published MD5 and SHA256 are recorded in assets/source/phase1/terrain-receipt.json. Exact dwelling generation settings, hashes, geometry and validation are recorded in assets/source/phase1/dwelling-receipt.json. All images are retained at acquired resolution. The concept is a 2D design, not a rendered game screenshot. Its preview does not prove final mesh quality.
+## Phase 1 internal content candidates
+
+| Candidate | Source/license | Runtime form | Dimensions | Geometry/LOD | Materials | Culture/use | State |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Small Boii storehouse | Original project code `src/render/storehouse.ts`; internal project work, no third-party art | Deterministic procedural PlayCanvas mesh; no external textures | Overall bounds 3.856 × 3.376 × 3.795 m including roof overhang; raised structural platform ~3.15 × 3.15 m | 15,910 vertices; 15,550 triangles; no LOD | Five solid non-metallic groups: weathered oak, hazel wattle, pale clay daub, straw thatch, packed earth | Boii / Late La Tène small raised storage candidate | Integrated as explicit `procedural-project-owned` WIP candidate; geometry tests, 3/3 lifecycle remount and software-WebGL2 screenshot passed. `ADMITTED_MODELS.storehouse` remains null; visual, historical and actual-hardware performance acceptance pending; `artGatePassed=false`. |
+
+Exact terrain paths, dimensions, published MD5 and SHA256 are recorded in `assets/source/phase1/terrain-receipt.json`. Exact dwelling generation settings, hashes, geometry and validation are recorded in `assets/source/phase1/dwelling-receipt.json`. Exact procedural storehouse source, deterministic seed, geometry statistics and CI evidence are recorded in `assets/source/phase1/storehouse-receipt.json`. All images are retained at acquired resolution. The dwelling concept is a 2D design, not a rendered game screenshot. Its preview does not prove final mesh quality.

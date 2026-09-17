@@ -141,7 +141,9 @@ try {
       diagnostics.deviceLost === false &&
       Number(diagnostics.tick) >= 1 &&
       Number(diagnostics.drawCalls) >= 1 &&
-      Number(diagnostics.structures) >= 1 &&
+      Number(diagnostics.structures) >= 2 &&
+      diagnostics.storehouseCandidate === 'procedural-project-owned' &&
+      Number(diagnostics.storehouseTriangles) >= 15_000 &&
       Number(diagnostics.grassClumps) >= 1
     ) {
       healthyState = state;
@@ -158,7 +160,10 @@ try {
     finalState?.status !== 'WEBGL2 · Scene running' ||
     finalState.canvasCount !== 1 ||
     diagnostics?.failed !== false || diagnostics?.deviceLost !== false ||
-    Number(diagnostics?.tick) < 1 || Number(diagnostics?.drawCalls) < 1
+    Number(diagnostics?.tick) < 1 || Number(diagnostics?.drawCalls) < 1 ||
+    Number(diagnostics?.structures) < 2 ||
+    diagnostics?.storehouseCandidate !== 'procedural-project-owned' ||
+    Number(diagnostics?.storehouseTriangles) < 15_000
   ) {
     throw new Error(`Phase 1 scene became unhealthy before evidence capture: ${JSON.stringify(finalState)}`);
   }
@@ -174,6 +179,8 @@ try {
     inhabitants: diagnostics.inhabitants,
     trees: diagnostics.trees,
     grassClumps: diagnostics.grassClumps,
+    storehouseCandidate: diagnostics.storehouseCandidate,
+    storehouseTriangles: diagnostics.storehouseTriangles,
     drawCalls: diagnostics.drawCalls,
     fps: diagnostics.fps,
     frameMs: diagnostics.frameMs,
