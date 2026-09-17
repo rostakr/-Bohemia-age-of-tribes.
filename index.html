@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1e261d" />
+    <title>BOHEMIA: AGE OF TRIBES</title>
+  </head>
+  <body>
+    <div id="app-shell">
+      <canvas id="game-canvas" aria-label="BOHEMIA: AGE OF TRIBES game viewport"></canvas>
+      <header class="hud hud--top">
+        <div>
+          <div class="eyebrow">Vertical slice foundation</div>
+          <h1>BOHEMIA: AGE OF TRIBES</h1>
+          <p>Forge a tribe. Rule the land. Shape Bohemia.</p>
+        </div>
+        <div class="resource-strip" aria-label="Prototype resources">
+          <span>Food <strong>250</strong></span>
+          <span>Wood <strong>180</strong></span>
+          <span>Stone <strong>90</strong></span>
+          <span>Iron <strong>35</strong></span>
+          <span>Trade <strong>60</strong></span>
+        </div>
+      </header>
+      <aside class="hud hud--controls">
+        <strong>RTS camera</strong>
+        <span>WASD / arrows — pan</span>
+        <span>Mouse wheel — zoom</span>
+        <span>Q / E — rotate</span>
+      </aside>
+      <div id="status" class="hud hud--status">Initializing PlayCanvas…</div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
