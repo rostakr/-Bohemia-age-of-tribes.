@@ -10,50 +10,61 @@
   "phase_0_reference_sha": "17d0e23c6b70fd8cb3a00ebaad79d717e8bea455",
   "phase_0_runtime_sha": "52e4f6a2edb53a5ed833f60a0276cf2e4e8880f8",
   "phase_0_acceptance": "owner-confirmed on 2026-09-17",
-  "active_milestone": "PHASE_1_INTEGRATION_RECONCILIATION",
   "phase_0_5_status": "COMPLETE_VERIFIED",
   "phase_0_5_pr": 9,
-  "phase_0_5_implementation_sha": "5893eef9fdffc38b8d94b373f830b69b8d8300c7",
   "phase_0_5_merge_sha": "1b1b28bbfea91689d22455b117d12f412f5a24c2",
+  "phase_0_5_final_state_sha": "1a080e9bced13c13dbf73e47e45279569ac54a5f",
+  "active_milestone": "PHASE_1_QA_CHECKPOINT",
   "phase_1_authorized": true,
-  "phase_1_pr": 8,
-  "phase_1_status": "CHECKPOINT_REQUIRES_RECONCILIATION_WITH_PHASE_0_5",
+  "phase_1_source_pr": 8,
+  "phase_1_reconciliation_pr": 14,
+  "phase_1_reconciliation_branch": "integrate/phase1-on-phase0_5",
+  "phase_1_validated_runtime_sha": "6ad76483cde4e2cf5c18e41c930af8cd347573f1",
+  "phase_1_status": "RECONCILED_CI_PASS_VISUAL_HISTORICAL_REAL_GPU_QA_PENDING",
   "hosting_strategy": "Vite/GitHub Pages reference build; no Floot migration performed",
   "deployment": {
     "provider": "github_pages",
     "url": "https://rostakr.github.io/-Bohemia-age-of-tribes./",
+    "published_milestone": "phase_0_5",
     "status": "passed",
     "deployed_build_sha": "aacc1317504d09832eb6a9eeeab16234e89de7ef",
     "deployment_workflow_run": 35250435890,
-    "publishing_mode": "manual_only_after_verified_one_time_publish",
-    "manual_mode_restore_sha": "850149f1c857f7374cae263a9951b531712baf6b"
-  },
-  "phase_0_5_validation": {
-    "final_pr_workflow_run": 35239053512,
-    "post_merge_main_workflow_run": 35249907956,
-    "result": "passed",
-    "node": "24.20.0",
-    "npm_ci": "passed; 0 vulnerabilities",
-    "typescript": "passed",
-    "node_tests": "9/9 passed",
-    "production_build": "passed",
-    "webgl2_software_smoke": "passed",
-    "automatic_webgpu_to_webgl2_fallback": "passed",
-    "failure_ui": "passed",
-    "interaction_smoke": "passed",
-    "lifecycle_remount_smoke": "3/3 cycles passed",
-    "webgpu_software_smoke": "passed"
+    "publishing_mode": "manual_only",
+    "phase_1_reconciliation_deployed": false
   },
   "production_deployment_validation": {
     "workflow": "Verify published foundation",
     "workflow_run": 35250992614,
-    "workflow_merge_sha": "3abb138e98d8134ecf3691a67a14f57c0074077d",
     "result": "passed",
     "cache_busted_hard_refresh": "passed",
     "published_html": "HTTP 200",
     "published_javascript": "HTTP 200",
     "published_css": "HTTP 200",
     "published_webgl2_runtime": "Foundation running"
+  },
+  "phase_1_reconciliation_validation": {
+    "workflow_run": 35262530231,
+    "result": "passed",
+    "node": "24.20.0",
+    "npm_ci": "passed; 0 vulnerabilities",
+    "typescript": "passed",
+    "node_tests": "11/11 passed",
+    "production_build": "passed",
+    "phase_0_webgl2": "passed",
+    "phase_0_interactions": "passed",
+    "phase_0_lifecycle_remount": "3/3 cycles passed",
+    "phase_0_webgpu": "passed",
+    "phase_1_webgl2_benchmark": "passed",
+    "phase_1_structures": 1,
+    "phase_1_inhabitants": 0,
+    "phase_1_trees": 0,
+    "phase_1_grass_clumps": 4678,
+    "phase_1_draw_calls": 124,
+    "phase_1_ci_fps_swiftshader": 15.003750937734413,
+    "phase_1_ci_frame_ms_swiftshader": 66.65000000000009,
+    "static_build_artifact_id": 10515331207,
+    "phase_0_evidence_artifact_id": 10515136710,
+    "phase_1_evidence_artifact_id": 10515106681
   }
 }
 ```
@@ -61,54 +72,61 @@
 ## COMPLETED
 
 - Phase 0 remains complete and accepted as the historical foundation baseline.
-- Phase 0.5 integration repair is complete and objectively verified. PR #9 was merged without force-pushing `main`.
-- PlayCanvas remains the primary 3D/gameplay engine and owns the engine/render loop; no React/Floot rewrite or duplicate loop was introduced.
-- The runtime exposes explicit initialize/start/pause/resume/resize/visibility/destroy lifecycle operations and can be remounted repeatedly without a page reload.
-- Browser/DOM lifecycle ownership remains in `src/main.ts`; the PlayCanvas runtime is no longer coupled to a specific HTML layout.
-- Failed initialization cleans up the failed mount's host listeners before the runtime reference is released.
-- Logical runtime assets are resolved centrally beneath `public/assets` with relative/subpath/injected-host base support.
-- Final repair CI passed static validation, 9/9 Node tests, production build, WebGL2/fallback/failure UI, interactions, 3/3 remount cycles and software WebGPU.
-- The repaired foundation was published through the reviewed GitHub Pages workflow. GitHub reported deployment success for build `aacc1317504d09832eb6a9eeeab16234e89de7ef` at `https://rostakr.github.io/-Bohemia-age-of-tribes./`.
-- A separate production smoke then fetched the public page twice with cache busting/no-cache, verified the published JS/CSS resources with HTTP 200, and launched headless Chrome against the public URL until the PlayCanvas diagnostics reached `WEBGL2 · Foundation running`.
-- The temporary deployment bootstrap trigger was removed after the successful publish; Pages publishing is manual-only again.
+- Phase 0.5 is complete, verified, deployed and documented. PlayCanvas remains the sole game/render engine; the host-neutral lifecycle, central asset resolver, fixed-step simulation and WebGPU/WebGL2 paths are preserved.
+- The old Phase 1 checkpoint from PR #8 has been reconstructed on a fresh branch from verified Phase 0.5 rather than merged over it.
+- The exact checkpoint binary assets were reused by Git blob SHA, including the 5.6 MB dwelling GLB and nine terrain texture maps.
+- The Phase 1 benchmark is now integrated with the Phase 0.5 lifecycle. The default route renders the benchmark; `?scene=calibration` preserves the Phase 0 reference scene.
+- Phase 1 scene assets load through the central `resolveAsset()` pipeline rather than bypassing it with scattered base-URL concatenation.
+- Scene diagnostics are exposed through the existing `GameRuntime.snapshot()` without transferring browser event or game-loop ownership into scene code.
+- CI run `35262530231` passed strict TypeScript, 11/11 Node tests, production build, all Phase 0 browser regressions, software WebGPU and the Phase 1 benchmark WebGL2 smoke.
+- The Phase 1 smoke successfully rendered one dwelling and the terrain/meadow scene and produced a screenshot evidence artifact.
 
 ## CURRENT REPOSITORY STATE
 
-- `main` now contains the verified Phase 0.5 integration foundation plus its repeatable public deployment smoke workflow.
-- PR #9 (Phase 0.5 repair), PR #10 (one-time Pages bootstrap), PR #11 (restore manual-only publishing) and PR #12 (production Pages smoke) have served their integration/QA purpose.
-- PR #8 remains a draft Phase 1 environment checkpoint created from the pre-Phase-0.5 baseline. It is not ready to merge directly because its base predates the lifecycle/asset-resolution repair and GitHub currently reports it non-mergeable.
-- Phase 1 may now resume, but only by reconciling its checkpoint onto the verified Phase 0.5 baseline without discarding either set of work.
-- Floot/React remains unnecessary for the current deployment. If introduced later, it must be a thin host around the existing PlayCanvas runtime and must not own the game loop.
+- `main` remains the verified Phase 0.5 reference and public deployment source.
+- Draft PR #14 is the authoritative Phase 1 reconciliation candidate. Its first validated runtime head is `6ad76483cde4e2cf5c18e41c930af8cd347573f1`.
+- Draft PR #8 is stale relative to Phase 0.5 and must not be merged directly. It remains useful only as the source/audit history for the checkpoint until PR #14 is accepted or superseded.
+- The public GitHub Pages URL still serves the verified Phase 0.5 release. Phase 1 has not been promoted to the public reference deployment.
+- Pages publishing remains manual-only.
+- No React/Floot migration has been performed or demonstrated as necessary.
 
-## PHASE 0.5 VALIDATION EVIDENCE
+## PHASE 1 CHECKPOINT CONTENT
 
-- `npm ci`: PASS; dependency audit reported 0 vulnerabilities in the verified repair runs.
-- `npm run typecheck`: PASS under strict TypeScript.
-- `npm test`: PASS, 9/9 tests — five fixed-step/telemetry tests plus four asset resolver tests.
+- 220 m rolling landscape study with stream, earth path, textured terrain and procedural meadow.
+- Terrain-aware inspection camera with orbit/pan/zoom and preset views.
+- Three Poly Haven CC0 terrain material sets (9 textures total).
+- One generated rectangular Boii dwelling candidate.
+- Missing production model slots: storehouse, workshop, inhabitant and tree.
+- No navigation, economy, combat, AI or production gameplay systems are accepted by this checkpoint.
+
+## PHASE 1 VALIDATION EVIDENCE
+
+- `npm ci`: PASS; 0 vulnerabilities reported.
+- `npm run typecheck`: PASS.
+- `npm test`: **11/11 PASS**, combining fixed-step/telemetry, asset resolver and landscape geometry tests.
 - `npm run build`: PASS with Vite 8.3.0.
-- `npm run smoke:webgl2`: PASS, including resize, automatic fallback and explicit total-renderer-failure UI.
-- `npm run smoke:interactions`: PASS for pause/resume, hidden-tab behavior, resize, WebGL context loss/restoration and reload regression.
-- `npm run smoke:lifecycle`: PASS for three full unmount/mount cycles on the same canvas.
-- `npm run smoke:webgpu`: PASS under software Vulkan/SwiftShader.
-- Post-merge validation on `main`: PASS in workflow run `35249907956`.
-- GitHub Pages deployment: PASS in workflow run `35250435890`.
-- Public production smoke: PASS in workflow run `35250992614`.
-- Published JS observed by production smoke: `assets/index-CZ4eO7z7.js` — HTTP 200.
-- Published CSS observed by production smoke: `assets/index-BjnsYadS.css` — HTTP 200.
-- Public WebGL2 browser state: `WEBGL2 · Foundation running`.
-
-These graphics checks establish runtime, fallback, lifecycle and deployment correctness in software-backed CI. They are not an actual-hardware GPU performance certification and do not establish a 60 FPS Phase 1 performance target.
+- Phase 0 WebGL2/fallback/failure UI: PASS.
+- Phase 0 interactions: PASS.
+- Phase 0 lifecycle remount: PASS, 3/3 cycles.
+- Phase 0 software WebGPU: PASS.
+- Phase 1 WebGL2 benchmark browser smoke: PASS.
+- Phase 1 evidence capture reported 1 structure, 0 inhabitants, 0 trees, 4,678 grass clumps and 124 draw calls.
+- Software SwiftShader capture reported ~15.0 FPS / ~66.65 ms frame time. This is CI instrumentation only and is not an actual-hardware performance result.
+- Phase 1 screenshot evidence: artifact `10515106681` from workflow run `35262530231`.
 
 ## CURRENT LIMITS / RISKS
 
-- Actual-hardware GPU performance and Phase 1 visual/historical acceptance remain separate QA tasks.
-- Known non-blocking build advisories remain: the Vite large-chunk advisory and optional PlayCanvas `node:worker_threads` browser-externalization warnings.
-- Phase 0.5 intentionally does not implement terrain, navigation, economy, combat, AI or production game content.
-- Phase 1 PR #8 contains useful checkpoint work but must be reconciled with the newer runtime/lifecycle/asset resolver before acceptance.
+- Phase 1 has not passed historical or visual acceptance.
+- Actual-hardware GPU performance is unmeasured; no 60 FPS claim is supported.
+- The current dwelling candidate has 99,298 triangles and no LOD, exceeding its 25k–60k asset-brief target. Optimization or replacement is required before production acceptance.
+- Storehouse, workshop, inhabitants and trees are still absent.
+- Vegetation batching/instancing/LOD cannot be finalized before actual tree assets exist.
+- Known non-blocking build advisories remain: Vite large-chunk warning and optional PlayCanvas `node:worker_threads` browser-externalization warnings.
+- PR #14 is not deployed; the live Pages verification continues to cover the Phase 0.5 calibration release.
 
 ## NEXT TASK
 
-Reconcile Phase 1 PR #8 onto the verified Phase 0.5 baseline. Preserve the Phase 0.5 runtime contract and central asset resolver, port the Phase 1-specific environment/assets/smoke coverage, resolve overlapping bootstrap/runtime/workflow changes explicitly, then run the complete Phase 0 regression suite plus the Phase 1 benchmark smoke before any Phase 1 merge decision.
+Review the Phase 1 screenshot evidence and perform targeted visual QA. Then validate the checkpoint on an actual GPU, perform historical review of the dwelling, decide whether to optimize or replace it, and acquire/integrate the missing Phase 1 model slots through approved free/noncommercial routes. Keep the full Phase 0 regression suite green after every change. Do not merge old PR #8 directly.
 
 ## PHASE GATE
 
@@ -116,4 +134,6 @@ Reconcile Phase 1 PR #8 onto the verified Phase 0.5 baseline. Preserve the Phase
 
 **PHASE 0.5: PASS / COMPLETE_VERIFIED / DEPLOYED.**
 
-**PHASE 1: AUTHORIZED / CHECKPOINT PRESENT / RECONCILIATION REQUIRED BEFORE QA ACCEPTANCE.**
+**PHASE 1: RECONCILED / CI PASS / VISUAL + HISTORICAL + ACTUAL-GPU QA PENDING.**
+
+**PHASE 2: NOT YET RELEASED BY PHASE 1 ACCEPTANCE.**
