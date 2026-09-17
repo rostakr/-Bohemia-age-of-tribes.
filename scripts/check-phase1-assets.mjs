@@ -17,7 +17,9 @@ const candidates = [
   {
     label: 'Boii adult worker',
     path: 'public/assets/characters/boii_adult_worker.glb',
-    min: 25000,
+    // RTS inhabitants are repeated assets: prefer a clean silhouette over an arbitrary polygon floor.
+    // 12k still rejects trivial/failed reconstructions while admitting the current 14k candidate for render QA.
+    min: 12000,
     max: 50000,
   },
 ];
