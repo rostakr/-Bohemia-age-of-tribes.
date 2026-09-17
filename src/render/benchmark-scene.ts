@@ -1,10 +1,11 @@
 import { BLEND_NORMAL, CameraFrame, Color, Entity, FOG_LINEAR, PIXELFORMAT_RGBA8, SSAOTYPE_LIGHTING,
-  StandardMaterial, Texture, TONEMAP_ACES, Vec2, type Application, type Mesh, type ContainerResource } from 'playcanvas';
+  StandardMaterial, Texture, TONEMAP_ACES, Vec2, type Application, type Mesh } from 'playcanvas';
 import type { RuntimeScene } from './scene';
 import { SceneAssets, instantiateAtHeight } from './scene-assets';
-import { createSurface, landscape, pathMesh, riverMarginMesh, riverMesh, terrainMesh, SETTLEMENT, randomGenerator, riverCenter, smoothstep } from './landscape';
+import { createSurface, landscape, pathMesh, riverMarginMesh, riverMesh, terrainMesh, SETTLEMENT, smoothstep } from './landscape';
 import { InspectionCamera, type ViewName } from './inspection-camera';
 import { createMeadow } from './meadow';
+import { createCentralEuropeanTreeStudy } from './trees';
 
 export interface BenchmarkModels {
   dwelling: string | null;
@@ -33,9 +34,11 @@ export class BenchmarkScene implements RuntimeScene {
   private buildings = 0;
   private inhabitants = 0;
   private trees = 0;
+  private oakTrees = 0;
+  private birchTrees = 0;
+  private treeTriangles = 0;
   private grassClumps = 0;
   private drawCalls = 0;
-  private readonly foliage: Entity[] = [];
   private app: Application | undefined;
 
   constructor(private readonly models: BenchmarkModels = ADMITTED_MODELS) {}
@@ -102,6 +105,14 @@ export class BenchmarkScene implements RuntimeScene {
     this.materials.push(meadow.material);
     this.grassClumps = meadow.clumps;
     for (const surface of meadow.surfaces) { this.root.addChild(surface.entity); this.meshes.push(surface.mesh); }
+
+    const treeStudy = createCentralEuropeanTreeStudy(app);
+    this.materials.push(...treeStudy.materials);
+    this.trees = treeStudy.trees;
+    this.oakTrees = treeStudy.oaks;
+    this.birchTrees = treeStudy.birches;
+    this.treeTriangles = treeStudy.triangles;
+    for (const surface of treeStudy.surfaces) { this.root.addChild(surface.entity); this.meshes.push(surface.mesh); }
 
     await this.populate();
     this.frame = new CameraFrame(app, cameraEntity.camera!);
@@ -207,20 +218,8 @@ export class BenchmarkScene implements RuntimeScene {
         this.root!.addChild(entity); this.inhabitants++;
       }
     }
-    if (this.models.tree) this.plantTrees(await this.assets!.model(this.models.tree));
   }
 
-  private plantTrees(resource: ContainerResource): void {
-    const random = randomGenerator(31415);
-    for (let i = 0; i < 45; i++) {
-      const x = -65 + random() * 110, z = -60 + random() * 80;
-      if (Math.hypot(x, z) < 28 || Math.abs(x - riverCenter(z)) < 8) continue;
-      const tree = instantiateAtHeight(resource, `Deciduous tree ${i}`, 10 + random() * 6);
-      tree.setPosition(x, landscape.heightAt(x,z), z);
-      tree.setEulerAngles(0, random() * 360, 0);
-      this.root!.addChild(tree); this.foliage.push(tree); this.trees++;
-    }
-  }
 
   setView(view: ViewName): void { this.camera?.setView(view); }
   fixedUpdate(_dt: number, _tick: number): void { }
@@ -234,7 +233,8 @@ export class BenchmarkScene implements RuntimeScene {
 
   diagnostics(): Record<string, string | number | boolean> {
     return { milestone: 'phase-1', artGatePassed: false, terrainMetres: 220, structures: this.buildings,
-      inhabitants: this.inhabitants, trees: this.trees, grassClumps: this.grassClumps, drawCalls: this.drawCalls };
+      inhabitants: this.inhabitants, trees: this.trees, oakTrees: this.oakTrees, birchTrees: this.birchTrees,
+      treeTriangles: this.treeTriangles, grassClumps: this.grassClumps, drawCalls: this.drawCalls };
   }
 
   destroy(): void {
@@ -245,7 +245,6 @@ export class BenchmarkScene implements RuntimeScene {
     for (const material of this.materials) material.destroy(); this.materials.length = 0;
     for (const texture of this.textures) texture.destroy(); this.textures.length = 0;
     this.assets?.destroy(); this.assets = undefined;
-    this.foliage.length = 0;
     this.water = undefined; this.app = undefined;
   }
 }
