@@ -5,7 +5,7 @@
   "schema_version": 1,
   "project": "BOHEMIA: AGE OF TRIBES",
   "updated": "2026-09-17",
-  "validated_phase_0_main_sha": "fe7933aff631a1bb7d103268238a1d13e19bb598",
+  "validated_phase_0_main_sha": "52e4f6a2edb53a5ed833f60a0276cf2e4e8880f8",
   "phase_0_import_sha": "5decba22ee42f55de3430cb367663a776fb6f37d",
   "integration_pr": 1,
   "browser_smoke_pr": 2,
@@ -17,7 +17,7 @@
   "next_phase_authorized": false,
   "deployment": null,
   "latest_qa": {
-    "github_actions": "passed: run 35206528366 full validation + WebGL2 + interaction + stabilized software WebGPU smoke",
+    "github_actions": "passed on main: run 35206955508 at validated Phase 0 code SHA 52e4f6a2edb53a5ed833f60a0276cf2e4e8880f8",
     "npm_ci": "passed on Node 24.20.0",
     "typescript": "passed",
     "focused_node_tests": "5/5 passed",
@@ -27,7 +27,7 @@
     "license_notice": "passed",
     "forced_webgl2_ci_software": "passed",
     "automatic_fallback_ci_software": "passed with WebGPU disabled; renderer reported webgl2",
-    "webgpu_ci_software": "passed with CDP polling: Chrome 152.0.7977.82, vulkan-swiftshader, renderer webgpu, failed=false, deviceLost=false, tick advanced 0->1",
+    "webgpu_ci_software": "passed repeatedly with CDP polling: PR runs 35206528366 and 35206771954 plus main run 35206955508; Chrome 152.0.7977.82, vulkan-swiftshader, renderer webgpu, failed=false, deviceLost=false, tick advanced 0->1",
     "webgpu_ci_harness_note": "one-shot dump-dom probe was runner-timing-sensitive and was replaced by CDP state polling; no runtime failure was observed in the flaky sample",
     "pause_resume_ci": "passed; tick remained stable while paused and resumed afterward",
     "visibility_handler_ci": "passed synthetically for >10 seconds with no catch-up burst",
@@ -48,6 +48,7 @@
 
 - Correct repository resolved as `rostakr/-Bohemia-age-of-tribes.` and the Phase 0 package integrated through PR #1 without starting Phase 1.
 - Phase 0 integration was squash-merged to `main` at `fe7933aff631a1bb7d103268238a1d13e19bb598` after successful PR validation.
+- Phase 0 QA extensions through PRs #2-#4 were squash-merged without changing gameplay/production-art scope; the latest validated Phase 0 code SHA is `52e4f6a2edb53a5ed833f60a0276cf2e4e8880f8`.
 - Strict TypeScript ES modules; pinned npm dependencies and lockfile; Vite relative-base static build.
 - PlayCanvas device bootstrap: WebGPU preference, WebGL2 fallback and forced compatibility URL.
 - Application/scene ownership, disposal on HMR/unload, viewport resize and capped pixel ratio.
@@ -62,7 +63,8 @@
 
 ## QA evidence
 
-- GitHub Actions run `35206528366` passed the complete Phase 0 validation sequence on Ubuntu 24.04 with Node 24.20.0 and Chrome 152.0.7977.82.
+- GitHub Actions main run `35206955508` passed the complete Phase 0 validation sequence at code SHA `52e4f6a2edb53a5ed833f60a0276cf2e4e8880f8`.
+- Stabilized software-WebGPU CDP coverage also passed independently in PR runs `35206528366` and `35206771954` before merge.
 - `npm ci` installs the pinned dependency set and reports 0 vulnerabilities.
 - `npm run validate` passes strict TypeScript, all 5 focused Node tests, and the Vite production build.
 - Build output remains approximately 2.03 MB minified / 520.79 kB gzip plus source map; the known Vite chunk-size advisory remains.
@@ -73,7 +75,7 @@
 - With WebGL disabled, the app shows the renderer failure status and actionable recovery UI instead of a silent blank screen.
 - Interaction smoke passed: Pause froze tick, Resume restarted it, the visibility-change handler stayed hidden for more than 10 seconds without catch-up, live resize changed drawing-buffer dimensions, `WEBGL_lose_context` reached device loss/restoration successfully, and three production reloads returned to one healthy canvas/runtime.
 - The initial software-WebGPU `--dump-dom` harness produced one successful run and one runner-timing-sensitive sample that remained at `Starting the renderer…` without a runtime error. It was replaced with CDP polling rather than changing application code.
-- Stabilized software WebGPU smoke passed with the `vulkan-swiftshader` probe: the production page reported `WEBGPU · Foundation running`, `renderer: webgpu`, `failed: false`, `deviceLost: false`, and tick advanced from `0` to `1` during observation.
+- Stabilized software WebGPU smoke repeatedly passed with the `vulkan-swiftshader` probe: the production page reported `WEBGPU · Foundation running`, `renderer: webgpu`, `failed: false`, `deviceLost: false`, and tick advanced from `0` to `1` during observation.
 - These software/headless results are functional evidence only; they do not count as real-GPU performance, native background-tab, hardware device-loss or hardware WebGPU acceptance.
 
 ## Known broken or unverified systems
@@ -97,7 +99,7 @@
 
 ## Phase gate
 
-**Phase 0 code/CI/software-WebGL2/software-WebGPU QA now passes a broader automated gate, but the phase remains OPEN until real desktop browser/GPU acceptance is completed. Phase 1 is not authorized.**
+**Phase 0 code/CI/software-WebGL2/software-WebGPU QA passes, but the phase remains OPEN until real desktop browser/GPU acceptance is completed. Phase 1 is not authorized.**
 
 ## Next work
 
