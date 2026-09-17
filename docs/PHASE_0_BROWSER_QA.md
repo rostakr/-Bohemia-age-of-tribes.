@@ -22,15 +22,17 @@ This file documents the repeatable CI-only portion of the Phase 0 browser gate. 
 - `WEBGL_lose_context` propagates to `deviceLost: true`, restoration returns to `deviceLost: false`, and the runtime remains healthy;
 - three production reloads each return to exactly one live canvas/runtime with no failure/device-loss state.
 
-GitHub Actions run `35201007076` passed the full validation, browser smoke and interaction smoke sequence on Ubuntu 24.04 / Node 24.20.0 / Chrome 152.0.7977.82.
+`npm run smoke:webgpu` exercises the default PlayCanvas renderer-preference path under runner Chrome with Dawn/Vulkan SwiftShader candidates. GitHub Actions run `35206022276` succeeded with Chrome `152.0.7977.82` using the `vulkan-swiftshader` probe. The page reported `WEBGPU · Foundation running`, diagnostics reported `renderer: webgpu`, `failed: false` and `deviceLost: false`. The captured diagnostic snapshot occurred at tick `0`, so this check is intentionally classified as WebGPU initialization/render-path evidence rather than simulation-timing or performance evidence.
 
-The screenshot and SwiftShader results are technical evidence only. They are not commercial-art review and they are not hardware performance results.
+GitHub Actions run `35206022276` passed the full validation, WebGL2 browser smoke, interaction smoke and software-WebGPU smoke sequence on Ubuntu 24.04 / Node 24.20.0 / Chrome 152.0.7977.82.
+
+The screenshot and software-renderer results are technical evidence only. They are not commercial-art review and they are not hardware performance results.
 
 ## Still manual / hardware-dependent
 
 CI does **not** substitute for:
 
-- real hardware WebGPU confirmation with diagnostics explicitly reporting `webgpu`;
+- real hardware WebGPU confirmation with diagnostics explicitly reporting `webgpu` and normal advancing simulation;
 - real hardware WebGL2 confirmation and fallback on a browser/device where WebGPU is genuinely unavailable;
 - native tab hide/background/restore behavior on the target desktop browser (CI currently exercises the same application handler synthetically);
 - repeated development HMR resource inspection; CI covers full production reloads, not HMR replacement;
