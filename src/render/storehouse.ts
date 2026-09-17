@@ -212,7 +212,7 @@ export function createStorehouseGeometry(): StorehouseGeometry {
       1.775,
       xAxis,
       yAxis,
-      [0, 0, 1],
+      [0, 0, side],
     );
   }
 
