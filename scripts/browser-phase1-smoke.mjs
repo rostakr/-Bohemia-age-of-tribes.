@@ -146,6 +146,9 @@ try {
       Number(diagnostics.storehouseTriangles) >= 15_000 &&
       diagnostics.workshopCandidate === 'procedural-project-owned' &&
       Number(diagnostics.workshopTriangles) >= 20_000 &&
+      Number(diagnostics.trees) >= 28 &&
+      diagnostics.treeCandidate === 'procedural-project-owned-birch' &&
+      Number(diagnostics.treeTriangles) >= 15_000 &&
       Number(diagnostics.grassClumps) >= 1
     ) {
       healthyState = state;
@@ -167,7 +170,10 @@ try {
     diagnostics?.storehouseCandidate !== 'procedural-project-owned' ||
     Number(diagnostics?.storehouseTriangles) < 15_000 ||
     diagnostics?.workshopCandidate !== 'procedural-project-owned' ||
-    Number(diagnostics?.workshopTriangles) < 20_000
+    Number(diagnostics?.workshopTriangles) < 20_000 ||
+    Number(diagnostics?.trees) < 28 ||
+    diagnostics?.treeCandidate !== 'procedural-project-owned-birch' ||
+    Number(diagnostics?.treeTriangles) < 15_000
   ) {
     throw new Error(`Phase 1 scene became unhealthy before evidence capture: ${JSON.stringify(finalState)}`);
   }
@@ -187,6 +193,8 @@ try {
     storehouseTriangles: diagnostics.storehouseTriangles,
     workshopCandidate: diagnostics.workshopCandidate,
     workshopTriangles: diagnostics.workshopTriangles,
+    treeCandidate: diagnostics.treeCandidate,
+    treeTriangles: diagnostics.treeTriangles,
     drawCalls: diagnostics.drawCalls,
     fps: diagnostics.fps,
     frameMs: diagnostics.frameMs,
