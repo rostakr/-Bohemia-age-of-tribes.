@@ -1,71 +1,179 @@
 import './style.css';
 import { CONFIG } from './config';
 import { CalibrationScene } from './render/calibration-scene';
-import { createRuntime, type Runtime } from './render/runtime';
+import { createGameRuntime, type GameRuntime, type RuntimeSnapshot } from './render/runtime';
 
-const canvas = document.querySelector<HTMLCanvasElement>('#viewport')!;
-const status = document.querySelector<HTMLElement>('#status')!;
-const pause = document.querySelector<HTMLButtonElement>('#pause')!;
-const diagnostics = document.querySelector<HTMLElement>('#diagnostics')!;
-const errorPanel = document.querySelector<HTMLElement>('#error')!;
-const errorText = document.querySelector<HTMLElement>('#error-text')!;
+interface DebugRuntimeBridge {
+  mount(): Promise<void>;
+  unmount(): void;
+  remount(): Promise<void>;
+  snapshot(): RuntimeSnapshot | null;
+}
+
+declare global {
+  interface Window {
+    __BOHEMIA_DEBUG__?: DebugRuntimeBridge;
+  }
+}
+
+function requiredElement<T extends Element>(selector: string): T {
+  const element = document.querySelector<T>(selector);
+  if (!element) throw new Error(`Missing required host element: ${selector}`);
+  return element;
+}
+
+const canvas = requiredElement<HTMLCanvasElement>('#viewport');
+const status = requiredElement<HTMLElement>('#status');
+const pauseButton = requiredElement<HTMLButtonElement>('#pause');
+const diagnostics = requiredElement<HTMLElement>('#diagnostics');
+const errorPanel = requiredElement<HTMLElement>('#error');
+const errorText = requiredElement<HTMLElement>('#error-text');
+const retryButton = requiredElement<HTMLButtonElement>('#retry');
+const compatibilityButton = requiredElement<HTMLButtonElement>('#compatibility');
 const parameters = new URLSearchParams(window.location.search);
 const debug = parameters.get('debug') === '1';
-let runtime: Runtime | undefined;
-let disposed = false;
-let timer: ReturnType<typeof setInterval> | undefined;
-const events = new AbortController();
+const forceWebGL2 = parameters.get('renderer') === 'webgl2';
+
+let runtime: GameRuntime | undefined;
+let hostEvents: AbortController | undefined;
+let diagnosticsTimer: ReturnType<typeof setInterval> | undefined;
+let mountGeneration = 0;
 
 function showError(error: unknown): void {
   console.error('[BOHEMIA foundation]', error);
   status.textContent = 'Renderer unavailable';
   errorPanel.hidden = false;
   errorText.textContent = 'The 3D scene could not continue. Reload, or try the WebGL2 compatibility mode.';
-  pause.disabled = true;
+  pauseButton.disabled = true;
 }
 
-document.querySelector<HTMLButtonElement>('#retry')!.addEventListener('click', () => location.reload(), { signal: events.signal });
-document.querySelector<HTMLButtonElement>('#compatibility')!.addEventListener('click', () => {
-  const url = new URL(location.href);
-  url.searchParams.set('renderer', 'webgl2');
-  location.assign(url);
-}, { signal: events.signal });
-pause.addEventListener('click', () => {
-  if (!runtime) return;
-  const paused = !runtime.snapshot().paused;
-  runtime.setPaused(paused);
-  pause.textContent = paused ? 'Resume simulation' : 'Pause simulation';
-  pause.setAttribute('aria-pressed', String(paused));
-}, { signal: events.signal });
-
-function dispose(): void {
-  disposed = true;
-  events.abort();
-  if (timer !== undefined) clearInterval(timer);
-  runtime?.destroy();
+function resizeRuntime(): void {
+  runtime?.resize(window.innerWidth, window.innerHeight, window.devicePixelRatio || 1);
 }
 
-async function boot(): Promise<void> {
+function syncVisibility(): void {
+  runtime?.setVisibility(document.hidden);
+}
+
+function updateDiagnostics(created: GameRuntime): void {
+  if (runtime !== created) return;
+  const sample = created.snapshot();
+  status.textContent = sample.failed
+    ? 'Runtime stopped'
+    : sample.deviceLost
+      ? 'Graphics device lost — waiting for recovery'
+      : `${sample.renderer.toUpperCase()} · ${sample.paused ? 'Simulation paused' : 'Foundation running'}`;
+  if (debug) diagnostics.textContent = JSON.stringify(sample, null, 2);
+}
+
+function resetHostUi(): void {
+  status.textContent = 'Starting the renderer…';
+  pauseButton.disabled = true;
+  pauseButton.textContent = 'Pause simulation';
+  pauseButton.setAttribute('aria-pressed', 'false');
+  diagnostics.hidden = !debug;
+  diagnostics.textContent = '';
+  errorPanel.hidden = true;
+  errorText.textContent = '';
+}
+
+async function mount(): Promise<void> {
+  if (runtime) return;
+  const generation = ++mountGeneration;
+  resetHostUi();
+  const events = new AbortController();
+  hostEvents = events;
+
+  let created!: GameRuntime;
+  created = createGameRuntime({
+    canvas,
+    scene: new CalibrationScene(),
+    renderer: forceWebGL2 ? 'webgl2' : 'auto',
+    onFailure: error => {
+      if (runtime === created) showError(error);
+    },
+  });
+  runtime = created;
+
+  pauseButton.addEventListener('click', () => {
+    if (runtime !== created) return;
+    const paused = created.snapshot().paused;
+    if (paused) created.resume();
+    else created.pause();
+    pauseButton.textContent = paused ? 'Pause simulation' : 'Resume simulation';
+    pauseButton.setAttribute('aria-pressed', String(!paused));
+    updateDiagnostics(created);
+  }, { signal: events.signal });
+
+  retryButton.addEventListener('click', () => location.reload(), { signal: events.signal });
+  compatibilityButton.addEventListener('click', () => {
+    const url = new URL(location.href);
+    url.searchParams.set('renderer', 'webgl2');
+    location.assign(url);
+  }, { signal: events.signal });
+  window.addEventListener('resize', resizeRuntime, { signal: events.signal });
+  document.addEventListener('visibilitychange', syncVisibility, { signal: events.signal });
+  window.addEventListener('pagehide', event => {
+    if (!event.persisted) unmount();
+  }, { signal: events.signal });
+
+  created.resize(window.innerWidth, window.innerHeight, window.devicePixelRatio || 1);
+  created.setVisibility(document.hidden);
+
   try {
-    const created = await createRuntime(canvas, new CalibrationScene(), parameters.get('renderer') === 'webgl2', showError);
-    if (disposed) { created.destroy(); return; }
-    runtime = created;
-    pause.disabled = false;
-    diagnostics.hidden = !debug;
-    const updateDiagnostics = () => {
-      const sample = created.snapshot();
-      status.textContent = sample.failed ? 'Runtime stopped' : sample.deviceLost ? 'Graphics device lost — waiting for recovery' :
-        `${sample.renderer.toUpperCase()} · ${sample.paused ? 'Simulation paused' : 'Foundation running'}`;
-      if (debug) diagnostics.textContent = JSON.stringify(sample, null, 2);
-    };
-    updateDiagnostics();
-    timer = setInterval(updateDiagnostics, CONFIG.diagnosticsRefreshSeconds * 1000);
-  } catch (error) { if (!disposed) showError(error); }
+    await created.initialize();
+    if (generation !== mountGeneration || runtime !== created) {
+      created.destroy();
+      return;
+    }
+    created.resize(window.innerWidth, window.innerHeight, window.devicePixelRatio || 1);
+    created.setVisibility(document.hidden);
+    created.start();
+    pauseButton.disabled = false;
+    updateDiagnostics(created);
+    diagnosticsTimer = setInterval(() => updateDiagnostics(created), CONFIG.diagnosticsRefreshSeconds * 1000);
+  } catch (error) {
+    if (generation === mountGeneration && runtime === created) {
+      events.abort();
+      if (hostEvents === events) hostEvents = undefined;
+      runtime = undefined;
+      showError(error);
+    }
+  }
 }
 
-window.addEventListener('pagehide', event => {
-  // Preserve a live runtime in the browser's back/forward cache.
-  if (!event.persisted) dispose();
-}, { signal: events.signal });
-if (import.meta.hot) import.meta.hot.dispose(dispose);
-void boot();
+function unmount(): void {
+  ++mountGeneration;
+  hostEvents?.abort();
+  hostEvents = undefined;
+  if (diagnosticsTimer !== undefined) clearInterval(diagnosticsTimer);
+  diagnosticsTimer = undefined;
+  const current = runtime;
+  runtime = undefined;
+  current?.destroy();
+  pauseButton.disabled = true;
+  pauseButton.textContent = 'Pause simulation';
+  pauseButton.setAttribute('aria-pressed', 'false');
+  diagnostics.textContent = '';
+}
+
+if (debug) {
+  window.__BOHEMIA_DEBUG__ = {
+    mount,
+    unmount,
+    async remount(): Promise<void> {
+      unmount();
+      await mount();
+    },
+    snapshot: () => runtime?.snapshot() ?? null,
+  };
+}
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    unmount();
+    delete window.__BOHEMIA_DEBUG__;
+  });
+}
+
+void mount();
