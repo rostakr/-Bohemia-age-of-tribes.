@@ -6,7 +6,7 @@ import { join, resolve } from 'node:path';
 
 const host = '127.0.0.1';
 const previewPort = 4175;
-const baseUrl = `http://${host}:${previewPort}/?debug=1`;
+const baseUrl = `http://${host}:${previewPort}/?scene=calibration&debug=1`;
 const sleep = ms => new Promise(resolvePromise => setTimeout(resolvePromise, ms));
 
 function findChrome() {
