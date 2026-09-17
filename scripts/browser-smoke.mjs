@@ -1,5 +1,6 @@
 import { mkdirSync, readFileSync } from 'node:fs';
 import { spawn, spawnSync } from 'node:child_process';
+import { once } from 'node:events';
 import { resolve } from 'node:path';
 
 const host = '127.0.0.1';
@@ -7,6 +8,10 @@ const port = 4173;
 const baseUrl = `http://${host}:${port}/`;
 const artifactsDir = resolve('artifacts');
 mkdirSync(artifactsDir, { recursive: true });
+
+function sleep(ms) {
+  return new Promise(resolvePromise => setTimeout(resolvePromise, ms));
+}
 
 function findChrome() {
   const candidates = [
@@ -35,7 +40,7 @@ async function waitForServer(url, timeoutMs = 20_000) {
     } catch (error) {
       lastError = error;
     }
-    await new Promise(resolvePromise => setTimeout(resolvePromise, 250));
+    await sleep(250);
   }
   throw new Error(`Preview server did not become ready: ${String(lastError)}`);
 }
@@ -50,13 +55,13 @@ function runChrome(chrome, width, height, extraArgs = []) {
     '--use-gl=angle',
     '--use-angle=swiftshader',
     `--window-size=${width},${height}`,
-    '--virtual-time-budget=3000',
+    '--virtual-time-budget=2500',
     ...extraArgs,
     url,
   ];
   return spawnSync(chrome, args, {
     encoding: 'utf8',
-    timeout: 30_000,
+    timeout: 25_000,
     maxBuffer: 16 * 1024 * 1024,
   });
 }
@@ -93,13 +98,24 @@ function assertDom(result, label) {
   };
 }
 
-const preview = spawn('npm', ['run', 'preview', '--', '--port', String(port), '--strictPort'], {
+const viteBin = resolve('node_modules/vite/bin/vite.js');
+const preview = spawn(process.execPath, [viteBin, 'preview', '--host', host, '--port', String(port), '--strictPort'], {
   stdio: ['ignore', 'pipe', 'pipe'],
   env: { ...process.env, CI: '1' },
 });
 let previewOutput = '';
 preview.stdout.on('data', chunk => { previewOutput += chunk.toString(); });
 preview.stderr.on('data', chunk => { previewOutput += chunk.toString(); });
+
+async function stopPreview() {
+  if (preview.exitCode !== null) return;
+  preview.kill('SIGTERM');
+  await Promise.race([once(preview, 'exit'), sleep(1500)]);
+  if (preview.exitCode === null) {
+    preview.kill('SIGKILL');
+    await Promise.race([once(preview, 'exit'), sleep(1500)]);
+  }
+}
 
 try {
   await waitForServer(baseUrl);
@@ -128,8 +144,6 @@ try {
   console.log('Phase 0 WebGL2 browser smoke passed.');
   console.log(JSON.stringify({ small, large, screenshot: screenshotPath }, null, 2));
 } finally {
-  preview.kill('SIGTERM');
-  await new Promise(resolvePromise => setTimeout(resolvePromise, 250));
-  if (!preview.killed) preview.kill('SIGKILL');
-  if (preview.exitCode && preview.exitCode !== 0) console.error(previewOutput);
+  await stopPreview();
+  if (preview.exitCode && preview.exitCode !== 0 && previewOutput) console.error(previewOutput);
 }
