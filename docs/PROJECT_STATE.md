@@ -14,13 +14,14 @@
   "phase_0_5_pr": 9,
   "phase_0_5_merge_sha": "1b1b28bbfea91689d22455b117d12f412f5a24c2",
   "phase_0_5_final_state_sha": "1a080e9bced13c13dbf73e47e45279569ac54a5f",
-  "active_milestone": "PHASE_1_QA_CHECKPOINT",
+  "active_milestone": "PHASE_1_VISUAL_BENCHMARK_ITERATION",
   "phase_1_authorized": true,
   "phase_1_source_pr": 8,
   "phase_1_reconciliation_pr": 14,
   "phase_1_reconciliation_branch": "integrate/phase1-on-phase0_5",
   "phase_1_validated_runtime_sha": "6ad76483cde4e2cf5c18e41c930af8cd347573f1",
-  "phase_1_status": "RECONCILED_CI_PASS_VISUAL_HISTORICAL_REAL_GPU_QA_PENDING",
+  "phase_1_status": "RECONCILED_CI_PASS_VISUAL_GATE_BLOCKED_HISTORICAL_REAL_GPU_QA_PENDING",
+  "phase_1_visual_blocker_issue": 16,
   "hosting_strategy": "Vite/GitHub Pages reference build; no Floot migration performed",
   "deployment": {
     "provider": "github_pages",
@@ -65,6 +66,16 @@
     "static_build_artifact_id": 10515331207,
     "phase_0_evidence_artifact_id": 10515136710,
     "phase_1_evidence_artifact_id": 10515106681
+  },
+  "phase_1_visual_evidence_review": {
+    "source_artifact_id": 10515106681,
+    "resolution": "1920x1080",
+    "technical_runtime": "passed",
+    "professional_visual_gate": "not_accepted",
+    "blocking_document": "docs/PHASE_1_VISUAL_QA.md",
+    "implementation_issue": 16,
+    "actual_gpu_review": "pending",
+    "historical_review": "pending"
   }
 }
 ```
@@ -75,19 +86,20 @@
 - Phase 0.5 is complete, verified, deployed and documented. PlayCanvas remains the sole game/render engine; the host-neutral lifecycle, central asset resolver, fixed-step simulation and WebGPU/WebGL2 paths are preserved.
 - The old Phase 1 checkpoint from PR #8 has been reconstructed on a fresh branch from verified Phase 0.5 rather than merged over it.
 - The exact checkpoint binary assets were reused by Git blob SHA, including the 5.6 MB dwelling GLB and nine terrain texture maps.
-- The Phase 1 benchmark is now integrated with the Phase 0.5 lifecycle. The default route renders the benchmark; `?scene=calibration` preserves the Phase 0 reference scene.
+- The Phase 1 benchmark is integrated with the Phase 0.5 lifecycle. The default route renders the benchmark; `?scene=calibration` preserves the Phase 0 reference scene.
 - Phase 1 scene assets load through the central `resolveAsset()` pipeline rather than bypassing it with scattered base-URL concatenation.
 - Scene diagnostics are exposed through the existing `GameRuntime.snapshot()` without transferring browser event or game-loop ownership into scene code.
 - CI run `35262530231` passed strict TypeScript, 11/11 Node tests, production build, all Phase 0 browser regressions, software WebGPU and the Phase 1 benchmark WebGL2 smoke.
-- The Phase 1 smoke successfully rendered one dwelling and the terrain/meadow scene and produced a screenshot evidence artifact.
+- The Phase 1 evidence screenshot was reviewed. Technical rendering succeeded, but the professional visual gate was not accepted; detailed blockers are recorded in `docs/PHASE_1_VISUAL_QA.md` and GitHub Issue #16.
 
 ## CURRENT REPOSITORY STATE
 
 - `main` remains the verified Phase 0.5 reference and public deployment source.
 - Draft PR #14 is the authoritative Phase 1 reconciliation candidate. Its first validated runtime head is `6ad76483cde4e2cf5c18e41c930af8cd347573f1`.
-- Draft PR #8 is stale relative to Phase 0.5 and must not be merged directly. It remains useful only as the source/audit history for the checkpoint until PR #14 is accepted or superseded.
+- Draft PR #8 is stale relative to Phase 0.5 and must not be merged directly. It remains useful only as source/audit history until PR #14 is accepted or superseded.
 - The public GitHub Pages URL still serves the verified Phase 0.5 release. Phase 1 has not been promoted to the public reference deployment.
 - Pages publishing remains manual-only.
+- GitHub Issue #16 is the isolated implementation task for the next Phase 1 visual iteration.
 - No React/Floot migration has been performed or demonstrated as necessary.
 
 ## PHASE 1 CHECKPOINT CONTENT
@@ -114,9 +126,24 @@
 - Software SwiftShader capture reported ~15.0 FPS / ~66.65 ms frame time. This is CI instrumentation only and is not an actual-hardware performance result.
 - Phase 1 screenshot evidence: artifact `10515106681` from workflow run `35262530231`.
 
+## VISUAL QA RESULT
+
+The 1920×1080 CI evidence is technically healthy but still reads as an environment study rather than a professional historical RTS benchmark. Blocking findings:
+
+- immediately visible terrain texture repetition / insufficient macro breakup;
+- stream reads as a hard cut trench with overly uniform teal water;
+- procedural grass reads as high-frequency needle noise;
+- path is too dark, straight and constant-width;
+- palette/lighting is overly yellow-green and lacks local landscape variation;
+- settlement composition remains sparse because required production assets are not yet present;
+- dwelling remains an evaluation candidate and requires close/historical/optimization review.
+
+Full evidence review: `docs/PHASE_1_VISUAL_QA.md`. Implementation task: GitHub Issue #16.
+
 ## CURRENT LIMITS / RISKS
 
-- Phase 1 has not passed historical or visual acceptance.
+- Professional Phase 1 visual acceptance is currently blocked by the issues above.
+- Historical acceptance remains pending.
 - Actual-hardware GPU performance is unmeasured; no 60 FPS claim is supported.
 - The current dwelling candidate has 99,298 triangles and no LOD, exceeding its 25k–60k asset-brief target. Optimization or replacement is required before production acceptance.
 - Storehouse, workshop, inhabitants and trees are still absent.
@@ -126,7 +153,7 @@
 
 ## NEXT TASK
 
-Review the Phase 1 screenshot evidence and perform targeted visual QA. Then validate the checkpoint on an actual GPU, perform historical review of the dwelling, decide whether to optimize or replace it, and acquire/integrate the missing Phase 1 model slots through approved free/noncommercial routes. Keep the full Phase 0 regression suite green after every change. Do not merge old PR #8 directly.
+Implement GitHub Issue #16 on the reconciled Phase 1 branch or a child branch: improve terrain macro variation, stream/banks, meadow presentation, path and lighting/composition while preserving every Phase 0.5 architecture and QA invariant. Then rerun the combined CI suite, capture updated Phase 1 evidence, compare it against the current baseline, and only after that proceed to actual-GPU and historical acceptance. Do not merge old PR #8 directly.
 
 ## PHASE GATE
 
@@ -134,6 +161,6 @@ Review the Phase 1 screenshot evidence and perform targeted visual QA. Then vali
 
 **PHASE 0.5: PASS / COMPLETE_VERIFIED / DEPLOYED.**
 
-**PHASE 1: RECONCILED / CI PASS / VISUAL + HISTORICAL + ACTUAL-GPU QA PENDING.**
+**PHASE 1: RECONCILED / CI PASS / PROFESSIONAL VISUAL GATE BLOCKED / HISTORICAL + ACTUAL-GPU QA PENDING.**
 
 **PHASE 2: NOT YET RELEASED BY PHASE 1 ACCEPTANCE.**

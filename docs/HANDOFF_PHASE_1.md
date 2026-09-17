@@ -1,4 +1,4 @@
-# Phase 1 checkpoint — RECONCILED / NOT ACCEPTED
+# Phase 1 checkpoint — RECONCILED / VISUAL GATE BLOCKED / NOT ACCEPTED
 
 ## STATUS
 
@@ -8,7 +8,9 @@ Source checkpoint PR: `#8` (`a144a6f3e4d0c395086c2d296a0af661109fd14f`)
 Reconciliation PR: `#14`  
 Validated reconciliation runtime SHA: `6ad76483cde4e2cf5c18e41c930af8cd347573f1`  
 Validation workflow run: `35262530231`  
-Result: **CI PASS; visual/historical/actual-hardware GPU acceptance pending**.
+Technical result: **CI PASS**.  
+Professional visual result: **NOT ACCEPTED — implementation blocker Issue #16**.  
+Historical and actual-hardware GPU acceptance: **pending**.
 
 Phase 0.5 remains authoritative for runtime lifecycle, host ownership, fixed-step timing, WebGPU/WebGL2 fallback and asset addressing.
 
@@ -52,7 +54,7 @@ The original checkpoint's binary asset blobs were reused directly in Git rather 
 - embedded textures: two 2048×2048 WebP maps
 - LOD: none
 
-The dwelling was generated through the free official Microsoft TRELLIS.2 Hugging Face Space for the user's authorized noncommercial project use. Structural/container/texture checks passed, but this does **not** establish historical, visual or final production acceptance. Its 99,298 triangles are also above the 25k–60k target in the asset brief, so optimization/LOD review is required before treating it as a production-ready RTS asset.
+The dwelling was generated through the free official Microsoft TRELLIS.2 Hugging Face Space for the user's authorized noncommercial project use. Structural/container/texture checks passed, but this does **not** establish historical, visual or final production acceptance. Its 99,298 triangles are above the 25k–60k target in the asset brief, so optimization/LOD review is required before treating it as a production-ready RTS asset.
 
 Terrain provenance, licenses and hashes remain recorded in `assets/source/phase1/terrain-receipt.json`, `public/ASSET_CREDITS.txt` and `docs/ASSET_MANIFEST.md`.
 
@@ -91,6 +93,23 @@ Evidence artifacts from run `35262530231`:
 - Phase 0 screenshot: artifact `10515136710`
 - Phase 1 screenshot: artifact `10515106681`, ZIP SHA-256 `8aa9b8dfbb2421c6510b415f6a36c5fe762c83e8cf947686c20d49d80b769809`
 
+## VISUAL EVIDENCE REVIEW
+
+The Phase 1 screenshot artifact was opened and reviewed at 1920×1080. Runtime state is healthy, but the frame does not yet satisfy the professional visual benchmark gate.
+
+Blocking observations:
+
+- obvious repeated terrain texture patterning at RTS scale;
+- stream reads as a hard cut trench with uniform saturated teal water;
+- 4,678 grass clumps read as widespread thin needle-noise rather than coherent meadow clusters;
+- path is too dark, straight and constant-width;
+- palette/lighting is strongly yellow-green and lacks convincing local material variation;
+- settlement is necessarily sparse because storehouse/workshop/inhabitants/trees are still absent;
+- the dwelling is readable but remains evaluation-only and needs closer visual/historical/optimization review.
+
+Detailed QA: `docs/PHASE_1_VISUAL_QA.md`.  
+Isolated implementation task: GitHub Issue `#16`.
+
 ## DEPLOYMENT
 
 The public GitHub Pages URL remains the verified Phase 0.5 release:
@@ -103,14 +122,15 @@ PR #14 has **not** been promoted to the reference public deployment. Pages publi
 
 Before Phase 1 acceptance:
 
-1. Inspect the Phase 1 evidence screenshot and then the scene on an actual GPU at the intended desktop resolution.
-2. Check terrain/path/water joins, normal orientation, TAA ghosting, fog/readability, dwelling grounding and generated backside quality.
-3. Perform historical review of the dwelling against Late La Tène Boii construction evidence.
-4. Measure actual-hardware GPU performance; the software SwiftShader FPS number is not suitable for acceptance.
-5. Optimize or replace the 99,298-triangle dwelling and define LOD policy if it is retained.
-6. Acquire/integrate historically plausible storehouse, workshop, inhabitants and Central-European trees through approved free/noncommercial routes; record provenance before admission.
-7. Add batching/instancing/LOD strategy once actual vegetation assets exist.
-8. Keep Phase 0 calibration regressions passing throughout.
+1. Implement Issue #16: terrain macro breakup, softer/more natural stream banks/water, clustered meadow presentation, less graphic path and more natural Central-European lighting/palette.
+2. Re-run the complete combined CI suite and capture updated settlement/workshop-site/stream evidence.
+3. Compare the new evidence against `docs/PHASE_1_VISUAL_QA.md`; do not promote the milestone while the listed visual blockers remain obvious.
+4. Inspect the updated scene on an actual GPU at the intended desktop resolution.
+5. Perform historical review of the dwelling against Late La Tène Boii construction evidence.
+6. Optimize or replace the 99,298-triangle dwelling and define LOD policy if it is retained.
+7. Acquire/integrate historically plausible storehouse, workshop, inhabitants and Central-European trees through approved free/noncommercial routes; record provenance before admission.
+8. Add batching/instancing/LOD strategy once actual vegetation assets exist.
+9. Keep Phase 0 calibration regressions passing throughout.
 
 No Phase 2 acceptance should be inferred from this checkpoint.
 
