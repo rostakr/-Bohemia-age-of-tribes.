@@ -5,16 +5,16 @@
   "schema_version": 1,
   "project": "BOHEMIA: AGE OF TRIBES",
   "updated": "2026-09-17",
-  "current_main_sha": "8ebbf84572197c7fb94b34fb20803581113a5af4",
+  "validated_phase_0_main_sha": "fe7933aff631a1bb7d103268238a1d13e19bb598",
   "phase_0_import_sha": "5decba22ee42f55de3430cb367663a776fb6f37d",
   "integration_pr": 1,
   "active_milestone": "PHASE_0_FOUNDATION",
-  "status": "integrated_on_pr_ci_passed_awaiting_desktop_gpu_qa",
+  "status": "phase_0_integrated_awaiting_desktop_gpu_qa",
   "engine": "playcanvas@2.22.1",
   "next_phase_authorized": false,
   "deployment": null,
   "latest_qa": {
-    "github_actions": "passed: run 35194406557",
+    "github_actions": "passed: PR runs 35194406557 and 35194619681",
     "npm_ci": "passed on Node 24.20.0",
     "typescript": "passed",
     "focused_node_tests": "5/5 passed locally and in CI",
@@ -33,7 +33,8 @@
 
 ## Completed systems
 
-- Correct repository resolved as `rostakr/-Bohemia-age-of-tribes.` and the Phase 0 package integrated on PR #1 without starting Phase 1.
+- Correct repository resolved as `rostakr/-Bohemia-age-of-tribes.` and the Phase 0 package integrated through PR #1 without starting Phase 1.
+- Phase 0 integration was squash-merged to `main` at `fe7933aff631a1bb7d103268238a1d13e19bb598` after two successful PR validation runs.
 - Strict TypeScript ES modules; pinned npm dependencies and lockfile; Vite relative-base static build.
 - PlayCanvas device bootstrap: WebGPU preference, WebGL2 fallback and forced compatibility URL.
 - Application/scene ownership, disposal on HMR/unload, viewport resize and capped pixel ratio.
@@ -46,7 +47,8 @@
 
 ## QA evidence
 
-- GitHub Actions validation run `35194406557` completed successfully on Ubuntu 24.04 with Node 24.20.0 and npm 11.19.0.
+- GitHub Actions PR validation runs `35194406557` and `35194619681` completed successfully.
+- The first recorded run used Ubuntu 24.04 with Node 24.20.0 and npm 11.19.0.
 - `npm ci` installed 21 packages and reported 0 vulnerabilities.
 - `npm run validate` passed strict TypeScript, all 5 focused Node tests, and Vite production build.
 - Build output: JS approximately 2.03 MB minified / 520.79 kB gzip plus source map; the known Vite chunk-size advisory remains.
