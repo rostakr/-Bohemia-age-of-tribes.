@@ -52,10 +52,24 @@ test('worn path has restrained but meaningful width variation', () => {
   assert.ok(max - min > 0.25, `path width variation too small: ${max - min}`);
 });
 
-test('sediment margins stay outside the rendered water strip and remain terrain-following', () => {
+test('sediment margins overlap the water edge and extend outward on both banks', () => {
   const margin = riverMarginMesh();
   const water = riverMesh();
-  assert.ok(margin.positions.length > water.positions.length, 'margin should contain inner and outer bank vertices');
+  const rowVertices = 4;
+  const rows = 221;
+  for (let row = 0; row < rows; row += 22) {
+    const offset = row * rowVertices * 3;
+    const marginLeftOuter = margin.positions[offset]!;
+    const marginLeftInner = margin.positions[offset + 3]!;
+    const marginRightInner = margin.positions[offset + 6]!;
+    const marginRightOuter = margin.positions[offset + 9]!;
+    const waterLeft = water.positions[offset]!;
+    const waterRight = water.positions[offset + 9]!;
+    assert.ok(marginLeftOuter < waterLeft, `row ${row}: left sediment does not extend beyond water`);
+    assert.ok(marginLeftInner > waterLeft, `row ${row}: left sediment should overlap water edge slightly`);
+    assert.ok(marginRightInner < waterRight, `row ${row}: right sediment should overlap water edge slightly`);
+    assert.ok(marginRightOuter > waterRight, `row ${row}: right sediment does not extend beyond water`);
+  }
   const alphas = margin.colors?.filter((_value, index) => index % 4 === 3) ?? [];
   assert.ok(alphas.some(value => value === 0), 'margin needs transparent outer shoulders');
   assert.ok(alphas.some(value => value > 0.4), 'margin needs visible inner sediment');
