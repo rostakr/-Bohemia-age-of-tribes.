@@ -5,29 +5,40 @@
   "schema_version": 1,
   "project": "BOHEMIA: AGE OF TRIBES",
   "updated": "2026-09-17",
+  "engine": "playcanvas@2.22.1",
   "phase_0_status": "COMPLETE_ACCEPTED",
+  "phase_0_reference_main_sha": "17d0e23c6b70fd8cb3a00ebaad79d717e8bea455",
   "phase_0_runtime_sha": "52e4f6a2edb53a5ed833f60a0276cf2e4e8880f8",
   "phase_0_acceptance": "owner-confirmed on 2026-09-17",
-  "active_milestone": "PHASE_1_IN_PROGRESS",
+  "active_milestone": "PHASE_0_5_INTEGRATION_REPAIR",
+  "phase_0_5_status": "CI_PASS_EXTERNAL_QA_PENDING",
+  "phase_0_5_branch": "repair/integration-phase-0",
+  "phase_0_5_pr": 9,
+  "phase_0_5_validated_source_sha": "888b4e7d24ce9d4afded5c1b901d2d0f05a58f4f",
   "phase_1_authorized": true,
-  "phase_1_implementation_channel": "Build Bohemia RTS",
-  "phase_1_repo_sync_status": "no Phase 1 branch, PR, or commit observed in GitHub yet",
-  "qa_integration_channel_role": "repository inspection, CI, regression QA, integration, documentation, simple fixes, and Astra escalation preparation only",
-  "engine": "playcanvas@2.22.1",
+  "phase_1_pr": 8,
+  "phase_1_status": "CHECKPOINT_HELD_PENDING_PHASE_0_5_GATE",
+  "hosting_strategy": "Vite/GitHub Pages reference build; no Floot migration performed",
   "deployment": {
     "provider": "github_pages",
     "url": "https://rostakr.github.io/-Bohemia-age-of-tribes./",
-    "status": "passed"
+    "reference_branch": "main",
+    "reference_status": "passed",
+    "repair_branch_deployed": false
   },
-  "latest_phase_0_validation": {
-    "run": 35224990899,
+  "latest_phase_0_5_validation": {
+    "workflow_run": 35238118041,
     "result": "passed",
-    "npm_ci": "passed",
+    "node": "24.20.0",
+    "npm_ci": "passed; 0 vulnerabilities",
     "typescript": "passed",
-    "focused_node_tests": "5/5 passed",
+    "node_tests": "9/9 passed",
     "production_build": "passed",
     "webgl2_software_smoke": "passed",
+    "automatic_webgpu_to_webgl2_fallback": "passed",
+    "failure_ui": "passed",
     "interaction_smoke": "passed",
+    "lifecycle_remount_smoke": "3/3 cycles passed",
     "webgpu_software_smoke": "passed"
   }
 }
@@ -35,44 +46,48 @@
 
 ## COMPLETED
 
-- Phase 0 is complete and accepted.
-- Phase 0 CI, browser/software renderer QA and HTTPS deployment passed.
-- Phase 1 has been explicitly authorized by the project owner and is being implemented in the separate chat `Build Bohemia RTS`.
+- Phase 0 remains complete and accepted on the untouched `main` reference.
+- Phase 0.5 repair has separated the PlayCanvas runtime from the standalone DOM host without changing engine ownership or the fixed-step simulation model.
+- The runtime now exposes explicit initialize/start/pause/resume/resize/visibility/destroy lifecycle operations suitable for the current Vite host and a future thin host integration.
+- Browser lifecycle ownership (DOM controls, window resize, document visibility and page lifecycle) is contained in `src/main.ts`; PlayCanvas continues to own rendering and the engine update loop.
+- A central asset resolver now maps logical asset paths beneath `public/assets` while respecting relative, subpath and injected-host deployment bases.
+- CI run `35238118041` passed static validation, existing browser regressions, a new three-cycle unmount/remount test and software WebGPU validation on validated implementation SHA `888b4e7d24ce9d4afded5c1b901d2d0f05a58f4f`.
 
 ## CURRENT REPOSITORY STATE
 
-- `main` still contains the accepted Phase 0 foundation only.
-- No Phase 1 branch, pull request or Phase 1 commit is currently visible in GitHub.
-- This QA/integration chat must not duplicate Phase 1 implementation while the implementation chat is working.
+- `main` remains the accepted Phase 0 reference at `17d0e23c6b70fd8cb3a00ebaad79d717e8bea455`; the repair has not overwritten it.
+- Draft PR #9 contains the Phase 0.5 integration repair and remains pending external QA/merge review.
+- PR #8 contains the separate Phase 1 environment checkpoint. It must not bypass the Phase 0.5 infrastructure gate; after Phase 0.5 acceptance it should be rebased or otherwise integrated against the accepted repair baseline before Phase 1 acceptance work resumes.
+- Floot/React was not introduced because the current Vite/GitHub Pages route is already functional. If Floot is later required, it should be a thin host that supplies the canvas and calls the host-neutral PlayCanvas lifecycle API; it must not own the game loop.
 
-## QA / INTEGRATION RESPONSIBILITY
+## PHASE 0.5 VALIDATION EVIDENCE
 
-When the Phase 1 implementation chat pushes a branch, PR, commit or handoff package, this channel should:
+- `npm ci`: passed, 21 packages installed, 0 vulnerabilities.
+- `npm run typecheck`: passed under strict TypeScript.
+- `npm test`: 9/9 passed, consisting of the five existing fixed-step/telemetry tests and four asset-resolver tests.
+- `npm run build`: passed with Vite 8.3.0.
+- `npm run smoke:webgl2`: passed in Chrome 152 software rendering, including automatic WebGPU-to-WebGL2 fallback and explicit renderer-failure UI.
+- `npm run smoke:interactions`: passed pause/resume, 10+ second hidden-tab behavior, resize, WebGL context loss/restoration and repeated reload checks.
+- `npm run smoke:lifecycle`: passed three full unmount/mount cycles on the same host canvas with no failed/device-lost/destroyed final state.
+- `npm run smoke:webgpu`: passed using Vulkan SwiftShader and reported renderer `webgpu`.
 
-1. inspect the exact diff against the accepted Phase 0 baseline;
-2. run/verify CI, production build and regression coverage;
-3. perform visual/runtime QA and inspect screenshots/logs where available;
-4. fix only simple, localized defects that do not conflict with active implementation work;
-5. update project state and handoff documentation;
-6. prepare an Astra task only for a demonstrated difficult architecture/rendering/navigation/simulation/AI/engine/performance problem.
+These CI renderer results demonstrate browser/runtime correctness in software-backed CI. They are not an actual-hardware GPU performance certification and must not be interpreted as a 60 FPS claim.
 
-## EXPECTED PHASE 1 SCOPE
+## CURRENT LIMITS / RISKS
 
-The implementation channel is targeting the first professional visual benchmark / vertical-slice foundation: South Bohemian terrain, believable Central-European vegetation and atmosphere, stream/path composition, Boii structures/inhabitants, RTS camera/readability, and the rendering/performance foundation needed for later RTS systems.
+- Actual-hardware GPU performance and visual acceptance remain outside this Phase 0.5 CI evidence.
+- Known non-blocking build advisories remain: the Vite large-chunk advisory and optional PlayCanvas `node:worker_threads` browser-externalization warnings.
+- The repair branch is not separately deployed. The existing GitHub Pages deployment from accepted `main` remains the reference public deployment until the repair is accepted and merged.
+- Phase 1 art, terrain, units and RTS systems are not part of this repair gate.
 
-This section is descriptive coordination context, not evidence that those systems have already been committed.
+## NEXT TASK
 
-## CURRENT BUGS
-
-- No known P0/P1 defect in the accepted Phase 0 foundation.
-- Known non-blocking build advisories remain: Vite large-chunk advisory and optional PlayCanvas worker externalization warnings.
-
-## NEXT TASK FOR THIS CHANNEL
-
-Wait for the first Phase 1 repository handoff from `Build Bohemia RTS`. As soon as Phase 1 code appears in GitHub, inspect it before merge and produce the QA/integration result. Do not independently implement the same Phase 1 work in parallel.
+External QA should inspect PR #9 and its final CI result. If accepted, merge the Phase 0.5 repair without force-pushing `main`. Then rebase/port the Phase 1 checkpoint onto the accepted Phase 0.5 baseline and resume Phase 1 implementation/QA from that foundation.
 
 ## PHASE GATE
 
 **PHASE 0: PASS / ACCEPTED.**
 
-**PHASE 1: AUTHORIZED / IN PROGRESS IN `Build Bohemia RTS`.**
+**PHASE 0.5: IMPLEMENTED / CI PASS / EXTERNAL QA PENDING.**
+
+**PHASE 1: AUTHORIZED / CHECKPOINT PRESENT / HELD BEHIND PHASE 0.5 GATE.**
