@@ -52,7 +52,6 @@ export async function createRuntime(
     app.setCanvasResolution(RESOLUTION_AUTO);
     const resize = () => {
       device.maxPixelRatio = Math.min(window.devicePixelRatio || 1, CONFIG.maxPixelRatio);
-      // resizeCanvas writes inline pixel sizes; use viewport, not stale clientWidth.
       app!.resizeCanvas(Math.max(1, window.innerWidth), Math.max(1, window.innerHeight));
     };
     resize();
@@ -64,7 +63,7 @@ export async function createRuntime(
     }, { signal: events.signal });
     device.on('devicelost', onDeviceLost);
     device.on('devicerestored', onDeviceRestored);
-    scene.enter(app);
+    await scene.enter(app);
     app.autoRender = !document.hidden;
     app.on('update', (deltaSeconds: number) => {
       if (destroyed || failed || document.hidden || deviceLost) return;
@@ -91,10 +90,11 @@ export async function createRuntime(
         skipNextDelta = true;
       },
       snapshot: () => ({
-        milestone: 'phase-0', renderer: device.deviceType, tick: clock.tick,
+        renderer: device.deviceType, tick: clock.tick,
         paused, hidden: document.hidden, deviceLost, failed,
         width: device.width, height: device.height,
         ...telemetry.snapshot(),
+        ...scene.diagnostics?.(),
       }),
     };
   } catch (error) {
