@@ -25,7 +25,7 @@ function showError(error: unknown): void {
   console.error('[BOHEMIA foundation]', error);
   status.textContent = 'Renderer unavailable';
   errorPanel.hidden = false;
-  errorText.textContent = 'The scene could not load or continue. Check the connection, reload, or try WebGL2. Details are available in the developer console.';
+  errorText.textContent = 'The 3D scene could not continue. Check the connection, reload, or try WebGL2. Details are available in the developer console.';
   pause.disabled = true;
 }
 
