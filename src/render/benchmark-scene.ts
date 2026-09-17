@@ -148,8 +148,8 @@ export class BenchmarkScene implements RuntimeScene {
     const pixels = texture.lock() as Uint8Array;
     for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
       const u = x / size * Math.PI * 2, v = y / size * Math.PI * 2;
-      const nx = Math.cos(u * 3 + v * 2) * 0.1 + Math.cos(u * 7 - v * 3) * 0.055;
-      const ny = Math.cos(u * 2 + v * 5) * 0.115;
+      const nx = Math.cos(u * 3 + v * 2) * 0.085 + Math.cos(u * 7 - v * 3) * 0.045;
+      const ny = Math.cos(u * 2 + v * 5) * 0.1;
       const length = Math.hypot(nx, ny, 1), index = (y * size + x) * 4;
       pixels[index] = (nx / length * 0.5 + 0.5) * 255;
       pixels[index + 1] = (ny / length * 0.5 + 0.5) * 255;
@@ -161,13 +161,16 @@ export class BenchmarkScene implements RuntimeScene {
 
     const material = new StandardMaterial();
     material.name = 'Shallow rippled stream';
-    material.diffuse = new Color(0.105, 0.19, 0.17);
-    material.specular = new Color(0.3, 0.34, 0.33);
-    material.gloss = 0.82;
+    material.diffuse = new Color(0.22, 0.29, 0.25);
+    material.diffuseVertexColor = true;
+    material.specular = new Color(0.42, 0.46, 0.44);
+    material.gloss = 0.78;
     material.normalMap = texture;
-    material.normalMapTiling = new Vec2(2.35, 1.65);
-    material.bumpiness = 0.36;
-    material.opacity = 0.76;
+    material.normalMapTiling = new Vec2(2.1, 1.55);
+    material.bumpiness = 0.28;
+    material.opacity = 1;
+    material.opacityVertexColor = true;
+    material.opacityVertexColorChannel = 'a';
     material.blendType = BLEND_NORMAL;
     material.depthWrite = false;
     material.update();
@@ -224,7 +227,7 @@ export class BenchmarkScene implements RuntimeScene {
   update(dt: number, _alpha: number): void {
     this.camera?.update(dt);
     this.elapsed += dt;
-    if (this.water) this.water.normalMapOffset.set(this.elapsed * 0.006, this.elapsed * 0.01);
+    if (this.water) this.water.normalMapOffset.set(this.elapsed * 0.005, this.elapsed * 0.008);
     this.frame?.update();
     this.drawCalls = this.app?.stats.drawCalls.total ?? 0;
   }
