@@ -17,6 +17,22 @@
 | Assets | Gate commercial assets through provenance, licensing, historical, visual, and technical review | No professional asset is imported or mass-produced in Phase 0 |
 | Deployment | Build a relative-base Vite `dist` for static HTTPS hosting; keep Pages deployment manual-only | CI may verify builds, but no remote or deployment is created or claimed by this milestone |
 
+## Phase 0.5 integration repair decisions
+
+| Area | Decision | Consequence |
+| --- | --- | --- |
+| Engine boundary | Keep PlayCanvas 2.22.1 as the sole game/render engine | No React rewrite, DOM renderer substitution or duplicate game loop is introduced |
+| Runtime API | Expose explicit `initialize`, `start`, `pause`, `resume`, `resize`, `setVisibility`, `snapshot` and `destroy` operations | A host can mount and unmount the engine cleanly without a full page reload |
+| Host ownership | Keep browser/DOM event wiring in the standalone Vite bootstrap rather than in the PlayCanvas runtime | Runtime code is reusable by another shell without depending on a specific HTML layout |
+| Scene initialization | Allow `RuntimeScene.enter()` to be synchronous or asynchronous | Future asset-heavy scenes can finish controlled loading before the runtime starts without changing engine ownership |
+| Remount safety | Make teardown idempotent and add a three-cycle browser mount/unmount regression test | Future host integration must prove it does not duplicate canvas/runtime side effects |
+| Asset addressing | Resolve logical asset paths centrally beneath `public/assets` and respect the configured deployment base | Gameplay/render code does not scatter hardcoded production URLs and remains compatible with root, subpath or injected host bases |
+| Hosting | Retain Vite/GitHub Pages as the reference build; do not migrate to Floot without a demonstrated requirement | The accepted working deployment is preserved and migration risk is avoided |
+| Future Floot/React boundary | If later required, React/Floot may own only the shell/canvas/UI lifecycle and call the PlayCanvas runtime API | PlayCanvas still owns rendering, fixed-step integration and the game loop |
+| Graphics fallback | Preserve PlayCanvas WebGPU preference with WebGL2 compatibility fallback and explicit WebGL2 QA override | Phase 0 renderer behavior remains regression-tested rather than replaced |
+| Simulation | Preserve the existing engine-independent `FixedStepClock` unchanged | Later movement, combat, AI and economy work retains the deterministic timing foundation |
+| Gate order | Hold Phase 1 behind acceptance of the Phase 0.5 infrastructure repair | Production content does not become coupled to an unstable integration boundary |
+
 ## Product constraints carried forward
 
 - The chronological campaign distinguishes Boii (Late La Tène), Marcomanni (early Roman Imperial), and Slavs (6th–7th centuries).
@@ -27,4 +43,4 @@
 
 ## Validation and handoff
 
-The intended clean setup is `npm ci`, followed by `npm run validate` for type checking, focused Node tests, and a production build. Use `npm run dev` for development and `npm run preview` to inspect the built output. Record actual validation results in `docs/PROJECT_STATE.md`; this document does not claim results or a commit SHA.
+The intended clean setup is `npm ci`, followed by `npm run validate` for type checking, focused Node tests, and a production build. Browser regression coverage additionally runs WebGL2 startup/fallback, interactions, lifecycle remount and software WebGPU smoke tests in CI. Actual results and validated commit references belong in `docs/PROJECT_STATE.md` and the milestone handoff document rather than being inferred from this decisions log.
