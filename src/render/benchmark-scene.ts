@@ -32,6 +32,7 @@ import { InspectionCamera, type ViewName } from './inspection-camera';
 import { createMeadow } from './meadow';
 import { createBoiiStorehouse } from './storehouse';
 import { createBoiiWorkshop } from './workshop.ts';
+import { createYoungBirchPrototype } from './birch.ts';
 
 export interface BenchmarkModels {
   dwelling: string | null;
@@ -54,6 +55,7 @@ export const ADMITTED_MODELS: BenchmarkModels = {
 // admitted production GLB and not a generic primitive fallback.
 export const USE_PROCEDURAL_STOREHOUSE_CANDIDATE = true;
 export const USE_PROCEDURAL_WORKSHOP_CANDIDATE = true;
+export const USE_PROCEDURAL_BIRCH_CANDIDATE = true;
 
 export class BenchmarkScene implements RuntimeScene {
   private root: Entity | undefined;
@@ -72,6 +74,7 @@ export class BenchmarkScene implements RuntimeScene {
   private drawCalls = 0;
   private storehouseTriangles = 0;
   private workshopTriangles = 0;
+  private treeTriangles = 0;
   private readonly foliage: Entity[] = [];
   private app: Application | undefined;
   private destroyed = false;
@@ -315,6 +318,32 @@ export class BenchmarkScene implements RuntimeScene {
       }
     }
 
+    if (USE_PROCEDURAL_BIRCH_CANDIDATE && !this.models.tree && this.active && this.app && this.root) {
+      const candidate = createYoungBirchPrototype(this.app);
+      this.meshes.push(...candidate.meshes);
+      this.materials.push(...candidate.materials);
+      this.treeTriangles = candidate.stats.triangles;
+      const random = randomGenerator(271828);
+      let placed = 0;
+      let attempts = 0;
+      while (placed < 28 && attempts < 160) {
+        attempts++;
+        const x = -78 + random() * 143;
+        const z = -72 + random() * 134;
+        if (Math.hypot(x, z) < 30 || Math.abs(x - riverCenter(z)) < 9) continue;
+        const tree = candidate.entity.clone();
+        const scale = 0.78 + random() * 0.38;
+        tree.setLocalScale(scale, scale, scale);
+        tree.setPosition(x, landscape.heightAt(x, z), z);
+        tree.setEulerAngles(0, random() * 360, 0);
+        this.root.addChild(tree);
+        this.foliage.push(tree);
+        this.trees++;
+        placed++;
+      }
+      candidate.entity.destroy();
+    }
+
     if (this.models.tree && this.assets) {
       const resource = await this.assets.model(this.models.tree);
       if (!this.active) return;
@@ -364,6 +393,8 @@ export class BenchmarkScene implements RuntimeScene {
       storehouseTriangles: this.storehouseTriangles,
       workshopCandidate: this.workshopTriangles > 0 ? 'procedural-project-owned' : 'absent',
       workshopTriangles: this.workshopTriangles,
+      treeCandidate: this.treeTriangles > 0 ? 'procedural-project-owned-birch' : 'absent',
+      treeTriangles: this.treeTriangles,
       drawCalls: this.drawCalls,
     };
   }
@@ -389,6 +420,7 @@ export class BenchmarkScene implements RuntimeScene {
     this.water = undefined;
     this.storehouseTriangles = 0;
     this.workshopTriangles = 0;
+    this.treeTriangles = 0;
     this.app = undefined;
   }
 }
