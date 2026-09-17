@@ -36,7 +36,7 @@ async function waitForServer(url, timeoutMs = 20_000) {
   throw new Error(`Preview server did not become ready: ${String(lastError)}`);
 }
 
-function runChrome(chrome, width, height, extraArgs = [], query = '?renderer=webgl2&debug=1', softwareGraphics = true) {
+function runChrome(chrome, width, height, extraArgs = [], query = '?scene=calibration&renderer=webgl2&debug=1', softwareGraphics = true) {
   const args = ['--headless=new', '--no-sandbox', '--disable-dev-shm-usage'];
   if (softwareGraphics) args.push('--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader');
   args.push(`--window-size=${width},${height}`, '--virtual-time-budget=2500', ...extraArgs, `${baseUrl}${query}`);
@@ -96,11 +96,11 @@ try {
   if (large.width < small.width || large.height < small.height) throw new Error(`Canvas did not grow with viewport: ${JSON.stringify({ small, large })}`);
 
   const fallback = assertDom(
-    runChrome(chrome, 1280, 720, ['--disable-features=WebGPU', '--dump-dom'], '?debug=1'),
+    runChrome(chrome, 1280, 720, ['--disable-features=WebGPU', '--dump-dom'], '?scene=calibration&debug=1'),
     'automatic WebGPU-to-WebGL2 fallback',
     { requireTick: false },
   );
-  assertFailureUi(runChrome(chrome, 1280, 720, ['--disable-gpu', '--disable-webgl', '--dump-dom'], '?renderer=webgl2&debug=1', false));
+  assertFailureUi(runChrome(chrome, 1280, 720, ['--disable-gpu', '--disable-webgl', '--dump-dom'], '?scene=calibration&renderer=webgl2&debug=1', false));
 
   const screenshotPath = resolve(artifactsDir, 'phase0-webgl2-1920x1080.png');
   const screenshot = runChrome(chrome, 1920, 1080, [`--screenshot=${screenshotPath}`]);
