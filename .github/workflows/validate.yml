@@ -18,9 +18,18 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run validate
+      - name: Phase 0 WebGL2 browser smoke
+        run: npm run smoke:webgl2
       - uses: actions/upload-artifact@v4
         with:
           name: bohemia-static-build
           path: dist
           if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase0-webgl2-evidence
+          path: artifacts
+          if-no-files-found: warn
           retention-days: 7
