@@ -5,22 +5,22 @@
   "schema_version": 1,
   "project": "BOHEMIA: AGE OF TRIBES",
   "updated": "2026-09-17",
-  "main_sha_before_this_state_update": "1d2257fb6b377f1f8a48c2bbf3c7e36b974ba604",
-  "phase_0_runtime_sha": "52e4f6a2edb53a5ed833f60a0276cf2e4e8880f8",
   "phase_0_status": "COMPLETE_ACCEPTED",
+  "phase_0_runtime_sha": "52e4f6a2edb53a5ed833f60a0276cf2e4e8880f8",
   "phase_0_acceptance": "owner-confirmed on 2026-09-17",
-  "active_milestone": "PHASE_0_COMPLETE_AWAITING_PHASE_1_AUTHORIZATION",
-  "next_phase_authorized": false,
+  "active_milestone": "PHASE_1_IN_PROGRESS",
+  "phase_1_authorized": true,
+  "phase_1_implementation_channel": "Build Bohemia RTS",
+  "phase_1_repo_sync_status": "no Phase 1 branch, PR, or commit observed in GitHub yet",
+  "qa_integration_channel_role": "repository inspection, CI, regression QA, integration, documentation, simple fixes, and Astra escalation preparation only",
   "engine": "playcanvas@2.22.1",
   "deployment": {
     "provider": "github_pages",
     "url": "https://rostakr.github.io/-Bohemia-age-of-tribes./",
-    "workflow_run": 35214332852,
-    "artifact_id": 10494373413,
     "status": "passed"
   },
-  "latest_validation": {
-    "run": 35224575573,
+  "latest_phase_0_validation": {
+    "run": 35224990899,
     "result": "passed",
     "npm_ci": "passed",
     "typescript": "passed",
@@ -29,53 +29,50 @@
     "webgl2_software_smoke": "passed",
     "interaction_smoke": "passed",
     "webgpu_software_smoke": "passed"
-  },
-  "hardware_acceptance_note": "Accepted by project owner. Detailed browser/OS/GPU/FPS measurements were not supplied in chat and are not fabricated here."
+  }
 }
 ```
 
 ## COMPLETED
 
-- Phase 0 package integrated into the correct repository without starting Phase 1.
-- Strict TypeScript/Vite/PlayCanvas foundation, fixed-step timing, telemetry, renderer bootstrap, calibration scene and lifecycle handling integrated.
-- CI covers typecheck, 5 focused tests, production build, forced software WebGL2, fallback/failure UI, pause/resume, visibility path, resize, context loss/restore, repeated reload and software WebGPU.
-- Reviewed Phase 0 artifact is deployed over HTTPS at `https://rostakr.github.io/-Bohemia-age-of-tribes./`.
-- Project owner explicitly accepted the remaining Phase 0 hardware gate on 2026-09-17.
+- Phase 0 is complete and accepted.
+- Phase 0 CI, browser/software renderer QA and HTTPS deployment passed.
+- Phase 1 has been explicitly authorized by the project owner and is being implemented in the separate chat `Build Bohemia RTS`.
+
+## CURRENT REPOSITORY STATE
+
+- `main` still contains the accepted Phase 0 foundation only.
+- No Phase 1 branch, pull request or Phase 1 commit is currently visible in GitHub.
+- This QA/integration chat must not duplicate Phase 1 implementation while the implementation chat is working.
+
+## QA / INTEGRATION RESPONSIBILITY
+
+When the Phase 1 implementation chat pushes a branch, PR, commit or handoff package, this channel should:
+
+1. inspect the exact diff against the accepted Phase 0 baseline;
+2. run/verify CI, production build and regression coverage;
+3. perform visual/runtime QA and inspect screenshots/logs where available;
+4. fix only simple, localized defects that do not conflict with active implementation work;
+5. update project state and handoff documentation;
+6. prepare an Astra task only for a demonstrated difficult architecture/rendering/navigation/simulation/AI/engine/performance problem.
+
+## EXPECTED PHASE 1 SCOPE
+
+The implementation channel is targeting the first professional visual benchmark / vertical-slice foundation: South Bohemian terrain, believable Central-European vegetation and atmosphere, stream/path composition, Boii structures/inhabitants, RTS camera/readability, and the rendering/performance foundation needed for later RTS systems.
+
+This section is descriptive coordination context, not evidence that those systems have already been committed.
 
 ## CURRENT BUGS
 
-- No known P0/P1 Phase 0 defect.
+- No known P0/P1 defect in the accepted Phase 0 foundation.
 - Known non-blocking build advisories remain: Vite large-chunk advisory and optional PlayCanvas worker externalization warnings.
 
-## CURRENT PERFORMANCE
+## NEXT TASK FOR THIS CHANNEL
 
-- Software CI proves functional renderer paths only; it is not a hardware performance benchmark.
-- No hardware FPS/frame-time figures are recorded in this document because none were supplied explicitly.
-
-## CURRENT VISUAL QA
-
-- Calibration scene and renderer diagnostics passed automated smoke coverage.
-- Phase 0 visual/hardware acceptance is owner-confirmed.
-
-## NEXT TASK
-
-- Phase 1 is intentionally NOT authorized yet.
-- Do not implement terrain, RTS camera, navigation, selection, economy, combat, AI, fog, trade, production art or other Phase 1 systems until explicitly authorized.
-- No Astra task is currently justified; use Astra only if the next authorized milestone contains a genuinely difficult senior implementation problem.
-
-## RELEVANT FILES
-
-- `docs/HANDOFF_PHASE_0.md`
-- `docs/PHASE_0_BROWSER_QA.md`
-- `docs/ARCHITECTURE.md`
-- `docs/ART_BIBLE.md`
-- `docs/ASSET_MANIFEST.md`
-- `.github/workflows/validate.yml`
-- `.github/workflows/deploy-pages.yml`
-- `src/`
+Wait for the first Phase 1 repository handoff from `Build Bohemia RTS`. As soon as Phase 1 code appears in GitHub, inspect it before merge and produce the QA/integration result. Do not independently implement the same Phase 1 work in parallel.
 
 ## PHASE GATE
 
 **PHASE 0: PASS / ACCEPTED.**
 
-**PHASE 1: NOT AUTHORIZED.**
+**PHASE 1: AUTHORIZED / IN PROGRESS IN `Build Bohemia RTS`.**
