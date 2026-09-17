@@ -18,9 +18,22 @@ export function normalizeAssetPath(assetPath: string): string {
   return normalized;
 }
 
+function normalizeBaseUrl(baseUrl: string): string {
+  const trimmed = baseUrl.trim() || './';
+  return trimmed.endsWith('/') ? trimmed : `${trimmed}/`;
+}
+
+/**
+ * Resolve a logical asset such as `environment/tree_oak.glb` beneath public/assets.
+ * The deployment base may be relative (`./`), a repository subpath, or an injected host URL.
+ */
 export function createAssetResolver(baseUrl = viteBaseUrl()): AssetResolver {
-  const base = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
-  return assetPath => `${base}${normalizeAssetPath(assetPath)}`;
+  const base = normalizeBaseUrl(baseUrl);
+  return assetPath => {
+    const relativeAsset = `assets/${normalizeAssetPath(assetPath)}`;
+    if (/^[a-z][a-z0-9+.-]*:/i.test(base)) return new URL(relativeAsset, base).toString();
+    return `${base}${relativeAsset}`;
+  };
 }
 
 /** Default Vite/static-host resolver. A Floot/React shell may inject another resolver later. */
