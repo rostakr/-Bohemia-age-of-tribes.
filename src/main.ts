@@ -1,7 +1,10 @@
 import './style.css';
 import { CONFIG } from './config';
 import { CalibrationScene } from './render/calibration-scene';
+import { BenchmarkScene } from './render/benchmark-scene';
+import type { ViewName } from './render/inspection-camera';
 import { createGameRuntime, type GameRuntime, type RuntimeSnapshot } from './render/runtime';
+import type { RuntimeScene } from './render/scene';
 
 interface DebugRuntimeBridge {
   mount(): Promise<void>;
@@ -30,17 +33,28 @@ const errorPanel = requiredElement<HTMLElement>('#error');
 const errorText = requiredElement<HTMLElement>('#error-text');
 const retryButton = requiredElement<HTMLButtonElement>('#retry');
 const compatibilityButton = requiredElement<HTMLButtonElement>('#compatibility');
+const viewButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-view]')];
 const parameters = new URLSearchParams(window.location.search);
 const debug = parameters.get('debug') === '1';
 const forceWebGL2 = parameters.get('renderer') === 'webgl2';
+const calibration = parameters.get('scene') === 'calibration';
+const runningLabel = calibration ? 'Foundation running' : 'Scene running';
 
 let runtime: GameRuntime | undefined;
+let activeBenchmarkScene: BenchmarkScene | undefined;
 let hostEvents: AbortController | undefined;
 let diagnosticsTimer: ReturnType<typeof setInterval> | undefined;
 let mountGeneration = 0;
 
+function createScene(): RuntimeScene {
+  if (calibration) return new CalibrationScene();
+  const benchmark = new BenchmarkScene();
+  activeBenchmarkScene = benchmark;
+  return benchmark;
+}
+
 function showError(error: unknown): void {
-  console.error('[BOHEMIA foundation]', error);
+  console.error('[BOHEMIA runtime]', error);
   status.textContent = 'Renderer unavailable';
   errorPanel.hidden = false;
   errorText.textContent = 'The 3D scene could not continue. Reload, or try the WebGL2 compatibility mode.';
@@ -62,12 +76,16 @@ function updateDiagnostics(created: GameRuntime): void {
     ? 'Runtime stopped'
     : sample.deviceLost
       ? 'Graphics device lost — waiting for recovery'
-      : `${sample.renderer.toUpperCase()} · ${sample.paused ? 'Simulation paused' : 'Foundation running'}`;
+      : `${sample.renderer.toUpperCase()} · ${sample.paused ? 'Simulation paused' : runningLabel}`;
   if (debug) diagnostics.textContent = JSON.stringify(sample, null, 2);
 }
 
+function setSelectedView(selected: HTMLButtonElement): void {
+  for (const button of viewButtons) button.setAttribute('aria-pressed', String(button === selected));
+}
+
 function resetHostUi(): void {
-  status.textContent = 'Starting the renderer…';
+  status.textContent = calibration ? 'Starting the renderer…' : 'Preparing the landscape…';
   pauseButton.disabled = true;
   pauseButton.textContent = 'Pause simulation';
   pauseButton.setAttribute('aria-pressed', 'false');
@@ -75,6 +93,7 @@ function resetHostUi(): void {
   diagnostics.textContent = '';
   errorPanel.hidden = true;
   errorText.textContent = '';
+  for (const button of viewButtons) button.disabled = calibration;
 }
 
 async function mount(): Promise<void> {
@@ -83,11 +102,12 @@ async function mount(): Promise<void> {
   resetHostUi();
   const events = new AbortController();
   hostEvents = events;
+  const scene = createScene();
 
   let created!: GameRuntime;
   created = createGameRuntime({
     canvas,
-    scene: new CalibrationScene(),
+    scene,
     renderer: forceWebGL2 ? 'webgl2' : 'auto',
     onFailure: error => {
       if (runtime === created) showError(error);
@@ -111,6 +131,16 @@ async function mount(): Promise<void> {
     url.searchParams.set('renderer', 'webgl2');
     location.assign(url);
   }, { signal: events.signal });
+
+  for (const button of viewButtons) {
+    button.addEventListener('click', () => {
+      if (!activeBenchmarkScene || runtime !== created) return;
+      activeBenchmarkScene.setView(button.dataset.view as ViewName);
+      setSelectedView(button);
+      canvas.focus({ preventScroll: true });
+    }, { signal: events.signal });
+  }
+
   window.addEventListener('resize', resizeRuntime, { signal: events.signal });
   document.addEventListener('visibilitychange', syncVisibility, { signal: events.signal });
   window.addEventListener('pagehide', event => {
@@ -137,6 +167,7 @@ async function mount(): Promise<void> {
       events.abort();
       if (hostEvents === events) hostEvents = undefined;
       runtime = undefined;
+      activeBenchmarkScene = undefined;
       showError(error);
     }
   }
@@ -150,6 +181,7 @@ function unmount(): void {
   diagnosticsTimer = undefined;
   const current = runtime;
   runtime = undefined;
+  activeBenchmarkScene = undefined;
   current?.destroy();
   pauseButton.disabled = true;
   pauseButton.textContent = 'Pause simulation';
