@@ -1,6 +1,8 @@
 import './style.css';
 import { CONFIG } from './config';
 import { CalibrationScene } from './render/calibration-scene';
+import { BenchmarkScene } from './render/benchmark-scene';
+import type { ViewName } from './render/inspection-camera';
 import { createRuntime, type Runtime } from './render/runtime';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#viewport')!;
@@ -11,6 +13,9 @@ const errorPanel = document.querySelector<HTMLElement>('#error')!;
 const errorText = document.querySelector<HTMLElement>('#error-text')!;
 const parameters = new URLSearchParams(window.location.search);
 const debug = parameters.get('debug') === '1';
+const calibration = parameters.get('scene') === 'calibration';
+const scene = calibration ? new CalibrationScene() : new BenchmarkScene();
+const runningLabel = calibration ? 'Foundation running' : 'Scene running';
 let runtime: Runtime | undefined;
 let disposed = false;
 let timer: ReturnType<typeof setInterval> | undefined;
@@ -20,7 +25,7 @@ function showError(error: unknown): void {
   console.error('[BOHEMIA foundation]', error);
   status.textContent = 'Renderer unavailable';
   errorPanel.hidden = false;
-  errorText.textContent = 'The 3D scene could not continue. Reload, or try the WebGL2 compatibility mode.';
+  errorText.textContent = 'The scene could not load or continue. Check the connection, reload, or try WebGL2. Details are available in the developer console.';
   pause.disabled = true;
 }
 
@@ -37,6 +42,13 @@ pause.addEventListener('click', () => {
   pause.textContent = paused ? 'Resume simulation' : 'Pause simulation';
   pause.setAttribute('aria-pressed', String(paused));
 }, { signal: events.signal });
+for (const button of document.querySelectorAll<HTMLButtonElement>('[data-view]')) {
+  button.addEventListener('click', () => {
+    if (scene instanceof BenchmarkScene) scene.setView(button.dataset.view as ViewName);
+    for (const other of document.querySelectorAll('[data-view]')) other.setAttribute('aria-pressed', String(other === button));
+  }, { signal: events.signal });
+  if (calibration) button.disabled = true;
+}
 
 function dispose(): void {
   disposed = true;
@@ -47,7 +59,7 @@ function dispose(): void {
 
 async function boot(): Promise<void> {
   try {
-    const created = await createRuntime(canvas, new CalibrationScene(), parameters.get('renderer') === 'webgl2', showError);
+    const created = await createRuntime(canvas, scene, parameters.get('renderer') === 'webgl2', showError);
     if (disposed) { created.destroy(); return; }
     runtime = created;
     pause.disabled = false;
@@ -55,7 +67,7 @@ async function boot(): Promise<void> {
     const updateDiagnostics = () => {
       const sample = created.snapshot();
       status.textContent = sample.failed ? 'Runtime stopped' : sample.deviceLost ? 'Graphics device lost — waiting for recovery' :
-        `${sample.renderer.toUpperCase()} · ${sample.paused ? 'Simulation paused' : 'Foundation running'}`;
+        `${sample.renderer.toUpperCase()} · ${sample.paused ? 'Simulation paused' : runningLabel}`;
       if (debug) diagnostics.textContent = JSON.stringify(sample, null, 2);
     };
     updateDiagnostics();
