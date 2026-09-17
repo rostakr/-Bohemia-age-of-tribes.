@@ -12,6 +12,7 @@
     "preview": "vite preview --host 127.0.0.1",
     "smoke:webgl2": "node scripts/browser-smoke.mjs",
     "smoke:interactions": "node scripts/browser-interactions.mjs",
+    "smoke:lifecycle": "node scripts/browser-lifecycle.mjs",
     "smoke:webgpu": "node scripts/browser-webgpu-smoke.mjs",
     "validate": "npm run typecheck && npm test && npm run build"
   },
