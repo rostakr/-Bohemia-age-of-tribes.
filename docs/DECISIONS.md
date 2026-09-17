@@ -27,11 +27,14 @@
 | Scene initialization | Allow `RuntimeScene.enter()` to be synchronous or asynchronous | Future asset-heavy scenes can finish controlled loading before the runtime starts without changing engine ownership |
 | Remount safety | Make teardown idempotent and add a three-cycle browser mount/unmount regression test | Future host integration must prove it does not duplicate canvas/runtime side effects |
 | Asset addressing | Resolve logical asset paths centrally beneath `public/assets` and respect the configured deployment base | Gameplay/render code does not scatter hardcoded production URLs and remains compatible with root, subpath or injected host bases |
-| Hosting | Retain Vite/GitHub Pages as the reference build; do not migrate to Floot without a demonstrated requirement | The accepted working deployment is preserved and migration risk is avoided |
+| Hosting | Retain Vite/GitHub Pages as the reference build; do not migrate to Floot without a demonstrated requirement | The working deployment is preserved and migration risk is avoided |
 | Future Floot/React boundary | If later required, React/Floot may own only the shell/canvas/UI lifecycle and call the PlayCanvas runtime API | PlayCanvas still owns rendering, fixed-step integration and the game loop |
 | Graphics fallback | Preserve PlayCanvas WebGPU preference with WebGL2 compatibility fallback and explicit WebGL2 QA override | Phase 0 renderer behavior remains regression-tested rather than replaced |
 | Simulation | Preserve the existing engine-independent `FixedStepClock` unchanged | Later movement, combat, AI and economy work retains the deterministic timing foundation |
-| Gate order | Hold Phase 1 behind acceptance of the Phase 0.5 infrastructure repair | Production content does not become coupled to an unstable integration boundary |
+| Deployment publishing | Keep GitHub Pages publishing manual-only after reviewed releases | Normal repository pushes do not silently publish a game build |
+| One-time deployment bootstrap | Reuse the established temporary trigger scoped only to changes of `deploy-pages.yml`, then restore manual-only mode after a successful publish | A reviewed build can be published with available tooling without permanently changing deployment policy |
+| Production verification | Maintain a separate `Verify published foundation` workflow that tests the public Pages URL, linked JS/CSS and initialized WebGL2 runtime | Deployment correctness is independently reproducible rather than inferred from a successful upload/deploy action |
+| Gate order | Phase 1 may proceed only after Phase 0.5 static, runtime, fallback, lifecycle and public deployment checks pass | Phase 1 content is integrated onto a verified infrastructure baseline rather than masking integration defects |
 
 ## Product constraints carried forward
 
@@ -43,4 +46,4 @@
 
 ## Validation and handoff
 
-The intended clean setup is `npm ci`, followed by `npm run validate` for type checking, focused Node tests, and a production build. Browser regression coverage additionally runs WebGL2 startup/fallback, interactions, lifecycle remount and software WebGPU smoke tests in CI. Actual results and validated commit references belong in `docs/PROJECT_STATE.md` and the milestone handoff document rather than being inferred from this decisions log.
+The clean setup remains `npm ci`, followed by `npm run validate` for type checking, focused Node tests, and a production build. Browser regression coverage additionally runs WebGL2 startup/fallback, interactions, lifecycle remount and software WebGPU smoke tests in CI. Reviewed releases are deployed through the manual-only Pages workflow and can be checked independently with `Verify published foundation` against the public URL. Actual results, workflow IDs and commit references belong in `docs/PROJECT_STATE.md` and the milestone handoff document rather than being inferred from this decisions log.
