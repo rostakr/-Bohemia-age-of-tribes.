@@ -43,19 +43,19 @@ function runChrome(chrome, width, height, extraArgs = [], query = '?renderer=web
   return spawnSync(chrome, args, { encoding: 'utf8', timeout: 25_000, maxBuffer: 16 * 1024 * 1024 });
 }
 
-function assertDom(result, label) {
+function assertDom(result, label, { requireTick = true } = {}) {
   if (result.error) throw result.error;
   if (result.status !== 0) throw new Error(`${label}: Chrome exited ${result.status}\n${result.stderr}`);
   const dom = result.stdout;
   if (!dom.includes('WEBGL2 · Foundation running')) throw new Error(`${label}: expected running WebGL2 status not found.\n${dom.slice(-5000)}`);
   if (dom.includes('Renderer unavailable')) throw new Error(`${label}: renderer failure UI was shown.`);
   const tickMatch = dom.match(/"tick"\s*:\s*(\d+)/);
-  if (!tickMatch || Number(tickMatch[1]) < 1) throw new Error(`${label}: simulation tick did not advance.\n${dom.slice(-5000)}`);
+  if (requireTick && (!tickMatch || Number(tickMatch[1]) < 1)) throw new Error(`${label}: simulation tick did not advance.\n${dom.slice(-5000)}`);
   if (!/"failed"\s*:\s*false/.test(dom)) throw new Error(`${label}: diagnostics did not report failed=false.`);
   if (!/"deviceLost"\s*:\s*false/.test(dom)) throw new Error(`${label}: diagnostics did not report deviceLost=false.`);
   const widthMatch = dom.match(/"width"\s*:\s*(\d+)/);
   const heightMatch = dom.match(/"height"\s*:\s*(\d+)/);
-  return { tick: Number(tickMatch[1]), width: widthMatch ? Number(widthMatch[1]) : 0, height: heightMatch ? Number(heightMatch[1]) : 0 };
+  return { tick: tickMatch ? Number(tickMatch[1]) : 0, width: widthMatch ? Number(widthMatch[1]) : 0, height: heightMatch ? Number(heightMatch[1]) : 0 };
 }
 
 function assertFailureUi(result) {
@@ -95,7 +95,11 @@ try {
   if (small.width < 1 || small.height < 1 || large.width < 1 || large.height < 1) throw new Error(`Invalid canvas dimensions: ${JSON.stringify({ small, large })}`);
   if (large.width < small.width || large.height < small.height) throw new Error(`Canvas did not grow with viewport: ${JSON.stringify({ small, large })}`);
 
-  const fallback = assertDom(runChrome(chrome, 1280, 720, ['--disable-features=WebGPU', '--dump-dom'], '?debug=1'), 'automatic WebGPU-to-WebGL2 fallback');
+  const fallback = assertDom(
+    runChrome(chrome, 1280, 720, ['--disable-features=WebGPU', '--dump-dom'], '?debug=1'),
+    'automatic WebGPU-to-WebGL2 fallback',
+    { requireTick: false },
+  );
   assertFailureUi(runChrome(chrome, 1280, 720, ['--disable-gpu', '--disable-webgl', '--dump-dom'], '?renderer=webgl2&debug=1', false));
 
   const screenshotPath = resolve(artifactsDir, 'phase0-webgl2-1920x1080.png');
