@@ -17,7 +17,7 @@
   "next_phase_authorized": false,
   "deployment": null,
   "latest_qa": {
-    "github_actions": "passed: run 35206022276 full validation + WebGL2 + interaction + software WebGPU smoke",
+    "github_actions": "passed: run 35206528366 full validation + WebGL2 + interaction + stabilized software WebGPU smoke",
     "npm_ci": "passed on Node 24.20.0",
     "typescript": "passed",
     "focused_node_tests": "5/5 passed",
@@ -27,7 +27,8 @@
     "license_notice": "passed",
     "forced_webgl2_ci_software": "passed",
     "automatic_fallback_ci_software": "passed with WebGPU disabled; renderer reported webgl2",
-    "webgpu_ci_software": "passed: Chrome 152.0.7977.82, vulkan-swiftshader, renderer webgpu, failed=false, deviceLost=false; diagnostic snapshot tick=0",
+    "webgpu_ci_software": "passed with CDP polling: Chrome 152.0.7977.82, vulkan-swiftshader, renderer webgpu, failed=false, deviceLost=false, tick advanced 0->1",
+    "webgpu_ci_harness_note": "one-shot dump-dom probe was runner-timing-sensitive and was replaced by CDP state polling; no runtime failure was observed in the flaky sample",
     "pause_resume_ci": "passed; tick remained stable while paused and resumed afterward",
     "visibility_handler_ci": "passed synthetically for >10 seconds with no catch-up burst",
     "resize_ci": "passed; drawing buffer changed with live viewport size",
@@ -57,11 +58,11 @@
 - GitHub Actions validation and manual-only Pages deployment workflows integrated.
 - Asset categories and provenance/rights gate; project/art/architecture documents integrated.
 - Repeatable software-WebGL2 startup/render smoke, screenshot capture, fallback simulation, failure-UI validation and CDP interaction regression checks are covered in CI.
-- Default PlayCanvas WebGPU preference path is also exercised in CI through Chrome/Dawn `vulkan-swiftshader`; this is software backend coverage, not hardware acceptance.
+- Default PlayCanvas WebGPU preference path is exercised in CI through Chrome/Dawn `vulkan-swiftshader` using CDP polling; the software WebGPU simulation tick advances, but this is still not hardware acceptance.
 
 ## QA evidence
 
-- GitHub Actions run `35206022276` passed the complete Phase 0 validation sequence on Ubuntu 24.04 with Node 24.20.0 and Chrome 152.0.7977.82.
+- GitHub Actions run `35206528366` passed the complete Phase 0 validation sequence on Ubuntu 24.04 with Node 24.20.0 and Chrome 152.0.7977.82.
 - `npm ci` installs the pinned dependency set and reports 0 vulnerabilities.
 - `npm run validate` passes strict TypeScript, all 5 focused Node tests, and the Vite production build.
 - Build output remains approximately 2.03 MB minified / 520.79 kB gzip plus source map; the known Vite chunk-size advisory remains.
@@ -71,13 +72,14 @@
 - With WebGPU disabled in CI, the default renderer path reaches healthy WebGL2, demonstrating the fallback code path in the software environment.
 - With WebGL disabled, the app shows the renderer failure status and actionable recovery UI instead of a silent blank screen.
 - Interaction smoke passed: Pause froze tick, Resume restarted it, the visibility-change handler stayed hidden for more than 10 seconds without catch-up, live resize changed drawing-buffer dimensions, `WEBGL_lose_context` reached device loss/restoration successfully, and three production reloads returned to one healthy canvas/runtime.
-- Software WebGPU smoke passed with the `vulkan-swiftshader` probe: the production page reported `WEBGPU · Foundation running`, `renderer: webgpu`, `failed: false`, and `deviceLost: false`. Its diagnostic snapshot was captured at tick `0`, so it is not used as timing/performance evidence.
+- The initial software-WebGPU `--dump-dom` harness produced one successful run and one runner-timing-sensitive sample that remained at `Starting the renderer…` without a runtime error. It was replaced with CDP polling rather than changing application code.
+- Stabilized software WebGPU smoke passed with the `vulkan-swiftshader` probe: the production page reported `WEBGPU · Foundation running`, `renderer: webgpu`, `failed: false`, `deviceLost: false`, and tick advanced from `0` to `1` during observation.
 - These software/headless results are functional evidence only; they do not count as real-GPU performance, native background-tab, hardware device-loss or hardware WebGPU acceptance.
 
 ## Known broken or unverified systems
 
-- No observed Phase 0 failures in dependency installation, typecheck, focused Node tests, production build, static-path serving, software WebGL2 startup/rendering, software WebGPU initialization/render path, pause/resume handling, synthetic visibility handling, resize, software context loss/restoration, repeated production reload, fallback simulation, or renderer failure UI.
-- Real hardware WebGPU remains unverified on a desktop GPU/browser with normal advancing simulation.
+- No observed Phase 0 failures in dependency installation, typecheck, focused Node tests, production build, static-path serving, software WebGL2 startup/rendering, software WebGPU initialization/render/simulation path, pause/resume handling, synthetic visibility handling, resize, software context loss/restoration, repeated production reload, fallback simulation, or renderer failure UI.
+- Real hardware WebGPU remains unverified on a desktop GPU/browser.
 - Hardware WebGL2 and fallback on a browser/device where WebGPU is genuinely unavailable remain unverified.
 - Native background-tab behavior remains unverified; CI exercises the same application visibility handler synthetically.
 - Repeated development HMR resource behavior remains unverified; CI covers full production reloads.
