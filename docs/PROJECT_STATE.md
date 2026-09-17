@@ -5,7 +5,7 @@
   "schema_version": 1,
   "project": "BOHEMIA: AGE OF TRIBES",
   "updated": "2026-09-17",
-  "validated_phase_0_main_sha": "dd2fa700c1d584b27a5403bf41bffebfb2b7885d",
+  "validated_phase_0_main_sha": "14c748e172be278649167075ae4f85eef9ffde6f",
   "phase_0_runtime_sha": "52e4f6a2edb53a5ed833f60a0276cf2e4e8880f8",
   "phase_0_import_sha": "5decba22ee42f55de3430cb367663a776fb6f37d",
   "integration_pr": 1,
@@ -16,22 +16,23 @@
   "pages_bootstrap_pr": 6,
   "pages_restore_pr": 7,
   "active_milestone": "PHASE_0_FOUNDATION",
-  "status": "phase_0_ci_passed_awaiting_hardware_gpu_qa_pages_not_enabled",
+  "status": "phase_0_ci_and_https_deployment_passed_awaiting_real_hardware_gpu_qa",
   "engine": "playcanvas@2.22.1",
   "next_phase_authorized": false,
   "deployment": {
     "provider": "github_pages",
-    "successful": false,
+    "successful": true,
     "workflow": "Publish reviewed foundation",
-    "attempt_run": 35214332852,
+    "run": 35214332852,
     "build_sha": "38a087a723f6ac90eda897a6305e63c5ccbdfcee",
     "artifact_id": 10494373413,
     "build": "passed",
-    "deploy": "failed: GitHub Pages not enabled (actions/deploy-pages HTTP 404)",
-    "workflow_restored_manual_only": true
+    "deploy": "passed",
+    "url": "https://rostakr.github.io/-Bohemia-age-of-tribes./",
+    "workflow_manual_only": true
   },
   "latest_qa": {
-    "github_actions": "passed on main: run 35214609525 at SHA dd2fa700c1d584b27a5403bf41bffebfb2b7885d",
+    "github_actions": "passed on main: run 35214792658 at SHA 14c748e172be278649167075ae4f85eef9ffde6f",
     "npm_ci": "passed on Node 24.20.0",
     "typescript": "passed",
     "focused_node_tests": "5/5 passed",
@@ -49,6 +50,7 @@
     "device_loss_restore_ci_software": "passed via WEBGL_lose_context",
     "repeated_reload_ci": "passed: 3 production reloads, one healthy canvas/runtime each",
     "failure_ui_ci": "passed with WebGL disabled; visible actionable renderer error UI",
+    "https_pages_deployment": "passed; GitHub Pages URL published successfully",
     "webgpu_hardware": "unverified",
     "webgl2_hardware": "unverified",
     "native_hidden_tab_hardware": "unverified",
@@ -74,13 +76,14 @@
 - Asset categories and provenance/rights gate; project/art/architecture documents integrated.
 - Repeatable software-WebGL2 startup/render smoke, screenshot capture, fallback simulation, failure-UI validation and CDP interaction regression checks are covered in CI.
 - Default PlayCanvas WebGPU preference path is exercised in CI through Chrome/Dawn `vulkan-swiftshader` using CDP polling; the software WebGPU simulation tick advances, but this is still not hardware acceptance.
-- A one-time Phase 0 Pages bootstrap was validated through PR #6 and reverted through PR #7 after the deployment API proved Pages is not enabled; the workflow is manual-only again and no runtime files changed.
+- GitHub Pages is enabled and the reviewed Phase 0 artifact is publicly deployed at `https://rostakr.github.io/-Bohemia-age-of-tribes./`.
 
 ## QA evidence
 
-- GitHub Actions main run `35214609525` passed the complete Phase 0 validation sequence at current validated main SHA `dd2fa700c1d584b27a5403bf41bffebfb2b7885d` after the Pages workflow was restored to manual-only.
-- Main run `35214332854` also passed the complete Phase 0 suite at the temporary deployment-bootstrap SHA `38a087a723f6ac90eda897a6305e63c5ccbdfcee`.
-- Pages workflow run `35214332852` successfully installed dependencies, ran `npm run validate`, and uploaded Pages artifact `10494373413`; only `actions/deploy-pages@v4` failed when GitHub returned HTTP 404 with `Ensure GitHub Pages has been enabled`.
+- GitHub Actions main run `35214792658` passed the complete Phase 0 validation sequence at validated main SHA `14c748e172be278649167075ae4f85eef9ffde6f`.
+- Main run `35214332854` also passed the complete Phase 0 suite at deployment-bootstrap SHA `38a087a723f6ac90eda897a6305e63c5ccbdfcee`.
+- Pages workflow run `35214332852` successfully installed dependencies, ran `npm run validate`, uploaded Pages artifact `10494373413`, and later deployed that artifact successfully after Pages was enabled.
+- The successful Pages deployment reported environment URL `https://rostakr.github.io/-Bohemia-age-of-tribes./`.
 - Stabilized software-WebGPU CDP coverage passed repeatedly before and after merge.
 - `npm ci` installs the pinned dependency set and reports 0 vulnerabilities.
 - `npm run validate` passes strict TypeScript, all 5 focused Node tests, and the Vite production build.
@@ -91,20 +94,18 @@
 - With WebGPU disabled in CI, the default renderer path reaches healthy WebGL2, demonstrating the fallback code path in the software environment.
 - With WebGL disabled, the app shows the renderer failure status and actionable recovery UI instead of a silent blank screen.
 - Interaction smoke passed: Pause froze tick, Resume restarted it, the visibility-change handler stayed hidden for more than 10 seconds without catch-up, live resize changed drawing-buffer dimensions, `WEBGL_lose_context` reached device loss/restoration successfully, and three production reloads returned to one healthy canvas/runtime.
-- The initial software-WebGPU `--dump-dom` harness produced one successful run and one runner-timing-sensitive sample that remained at `Starting the renderer…` without a runtime error. It was replaced with CDP polling rather than changing application code.
 - Stabilized software WebGPU smoke repeatedly passed with the `vulkan-swiftshader` probe: the production page reported `WEBGPU · Foundation running`, `renderer: webgpu`, `failed: false`, `deviceLost: false`, and tick advanced from `0` to `1` during observation.
-- These software/headless results are functional evidence only; they do not count as real-GPU performance, native background-tab, hardware device-loss or hardware WebGPU acceptance.
+- These software/headless results and successful HTTPS publication are functional evidence only; they do not count as real-GPU performance, native background-tab, hardware device-loss or hardware WebGPU acceptance.
 
 ## Known broken or unverified systems
 
-- No observed Phase 0 application failures in dependency installation, typecheck, focused Node tests, production build, static-path serving, software WebGL2 startup/rendering, software WebGPU initialization/render/simulation path, pause/resume handling, synthetic visibility handling, resize, software context loss/restoration, repeated production reload, fallback simulation, or renderer failure UI.
-- GitHub Pages is not enabled for this repository, so the reviewed Pages workflow cannot create a public deployment yet. This is a repository-setting blocker, not an observed application defect.
+- No observed Phase 0 application failures in dependency installation, typecheck, focused Node tests, production build, static-path serving, software WebGL2 startup/rendering, software WebGPU initialization/render/simulation path, pause/resume handling, synthetic visibility handling, resize, software context loss/restoration, repeated production reload, fallback simulation, renderer failure UI, or Pages publication.
 - Real hardware WebGPU remains unverified on a desktop GPU/browser.
 - Hardware WebGL2 and fallback on a browser/device where WebGPU is genuinely unavailable remain unverified.
 - Native background-tab behavior remains unverified; CI exercises the same application visibility handler synthetically.
 - Repeated development HMR resource behavior remains unverified; CI covers full production reloads.
 - Hardware graphics-device loss/restoration remains unverified.
-- No successful public deployment has been performed.
+- Idle 1920×1080 real-hardware FPS/frame-time baseline remains unmeasured.
 - Terrain, RTS camera, navigation, selection, command execution, economy, construction, production, combat, AI, fog, trade and victory conditions are future milestones, not broken Phase 0 features.
 
 ## Concrete technical risks / performance state
@@ -117,8 +118,8 @@
 
 ## Phase gate
 
-**Phase 0 code/CI/software-WebGL2/software-WebGPU QA passes, but the phase remains OPEN until real desktop browser/GPU acceptance is completed. Phase 1 is not authorized.**
+**Phase 0 code/CI/software-WebGL2/software-WebGPU/HTTPS-deployment QA passes, but the phase remains OPEN until real desktop browser/GPU acceptance is completed. Phase 1 is not authorized.**
 
 ## Next work
 
-Enable GitHub Pages for the repository once, then run the existing manual `Publish reviewed foundation` workflow to obtain the HTTPS hardware-test target. Alternatively, the same hardware acceptance can be performed from `npm run preview` on localhost. Complete Issue #5: real WebGPU with diagnostics explicitly reporting `webgpu` and normal advancing simulation, real hardware WebGL2/fallback, native 10-second background-tab return, repeated development HMR resource inspection, hardware graphics-device loss/restoration, and an idle 1080p hardware baseline with browser/OS/GPU recorded. Do not begin Phase 1 until this evidence is accepted.
+Use the deployed HTTPS target `https://rostakr.github.io/-Bohemia-age-of-tribes./` to complete Issue #5: real WebGPU with diagnostics explicitly reporting `webgpu` and normal advancing simulation, real hardware WebGL2/fallback, native 10-second background-tab return, repeated development HMR resource inspection, hardware graphics-device loss/restoration, and an idle 1080p hardware baseline with browser/OS/GPU recorded. Do not begin Phase 1 until this evidence is accepted.
