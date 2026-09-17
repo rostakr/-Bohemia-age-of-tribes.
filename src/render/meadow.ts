@@ -8,7 +8,7 @@ function meadowDensity(x: number, z: number): number {
     + 0.22 * Math.sin(x * 0.047 + z * 0.013)
     + 0.18 * Math.cos(z * 0.052 - x * 0.019);
   const pockets = 0.5 + 0.5 * Math.sin(x * 0.094 + Math.sin(z * 0.031) * 1.8);
-  return clamp01(0.2 + broad * 0.42 + pockets * 0.28);
+  return clamp01(0.18 + broad * 0.38 + pockets * 0.24);
 }
 
 function excluded(x: number, z: number): boolean {
@@ -26,15 +26,15 @@ function addRibbon(data: MeshData, x: number, y: number, z: number, angle: numbe
   data.positions.push(
     x - dx, y, z - dz,
     x + dx, y, z + dz,
-    x - dx * 0.42 + bx, y + height, z - dz * 0.42 + bz,
-    x + dx * 0.42 + bx, y + height, z + dz * 0.42 + bz,
+    x - dx * 0.46 + bx, y + height, z - dz * 0.46 + bz,
+    x + dx * 0.46 + bx, y + height, z + dz * 0.46 + bz,
   );
   data.indices.push(index, index + 2, index + 1, index + 1, index + 2, index + 3);
   data.uvs.push(0, 0, 1, 0, 0, 1, 1, 1);
   const [r, g, b] = color;
   data.colors!.push(
-    r * 0.72, g * 0.72, b * 0.68, 1,
-    r * 0.72, g * 0.72, b * 0.68, 1,
+    r * 0.9, g * 0.9, b * 0.88, 1,
+    r * 0.9, g * 0.9, b * 0.88, 1,
     r, g, b, 1,
     r, g, b, 1,
   );
@@ -44,42 +44,42 @@ function addRibbon(data: MeshData, x: number, y: number, z: number, angle: numbe
 export function createMeadow(app: Application) {
   const random = randomGenerator(9137);
   const material = new StandardMaterial();
-  material.diffuse = new Color(0.39, 0.46, 0.25);
+  material.diffuse = new Color(0.47, 0.5, 0.3);
   material.diffuseVertexColor = true;
   material.cull = CULLFACE_NONE;
   material.twoSidedLighting = true;
-  material.gloss = 0.035;
+  material.gloss = 0.025;
   material.update();
 
   const surfaces: ReturnType<typeof createSurface>[] = [];
   let clumps = 0;
   for (let cz = -2; cz <= 2; cz++) for (let cx = -2; cx <= 2; cx++) {
     const data: MeshData = { positions: [], indices: [], uvs: [], colors: [] };
-    for (let sample = 0; sample < 150; sample++) {
+    for (let sample = 0; sample < 135; sample++) {
       const anchorX = cx * 24 + (random() - 0.5) * 24;
       const anchorZ = cz * 24 + (random() - 0.5) * 24;
       const density = meadowDensity(anchorX, anchorZ);
-      if (random() > density * 0.78) continue;
+      if (random() > density * 0.72) continue;
 
-      const tuftCount = random() < density * 0.55 ? 2 : 1;
+      const tuftCount = random() < density * 0.4 ? 2 : 1;
       for (let tuft = 0; tuft < tuftCount; tuft++) {
-        const x = anchorX + (random() - 0.5) * 0.9;
-        const z = anchorZ + (random() - 0.5) * 0.9;
+        const x = anchorX + (random() - 0.5) * 0.95;
+        const z = anchorZ + (random() - 0.5) * 0.95;
         if (excluded(x, z)) continue;
-        const y = landscape.heightAt(x, z) + 0.012;
+        const y = landscape.heightAt(x, z) + 0.01;
         const baseAngle = random() * Math.PI;
-        const width = 0.085 + random() * 0.075;
-        const height = 0.23 + random() * 0.34;
-        const bend = (random() - 0.35) * 0.13;
+        const width = 0.11 + random() * 0.085;
+        const height = 0.16 + random() * 0.24;
+        const bend = (random() - 0.35) * 0.085;
         const moisture = 1 - clamp01(Math.abs(x - riverCenter(z)) / 18);
-        const variation = 0.9 + random() * 0.16;
+        const variation = 0.94 + random() * 0.11;
         const color: [number, number, number] = [
-          (0.43 - moisture * 0.035) * variation,
-          (0.51 + moisture * 0.015) * variation,
-          (0.27 + moisture * 0.025) * variation,
+          (0.54 - moisture * 0.025) * variation,
+          (0.57 + moisture * 0.01) * variation,
+          (0.34 + moisture * 0.02) * variation,
         ];
         addRibbon(data, x, y, z, baseAngle, width, height, bend, color);
-        addRibbon(data, x, y + 0.004, z, baseAngle + Math.PI * 0.5, width * 0.82, height * (0.9 + random() * 0.14), -bend * 0.65, color);
+        addRibbon(data, x, y + 0.003, z, baseAngle + Math.PI * 0.5, width * 0.86, height * (0.9 + random() * 0.12), -bend * 0.6, color);
         clumps++;
       }
     }
