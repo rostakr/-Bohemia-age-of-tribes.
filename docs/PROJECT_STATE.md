@@ -14,7 +14,7 @@
   "phase_0_5_status": "CI_PASS_EXTERNAL_QA_PENDING",
   "phase_0_5_branch": "repair/integration-phase-0",
   "phase_0_5_pr": 9,
-  "phase_0_5_validated_source_sha": "888b4e7d24ce9d4afded5c1b901d2d0f05a58f4f",
+  "phase_0_5_validated_source_sha": "5893eef9fdffc38b8d94b373f830b69b8d8300c7",
   "phase_1_authorized": true,
   "phase_1_pr": 8,
   "phase_1_status": "CHECKPOINT_HELD_PENDING_PHASE_0_5_GATE",
@@ -27,7 +27,7 @@
     "repair_branch_deployed": false
   },
   "latest_phase_0_5_validation": {
-    "workflow_run": 35238118041,
+    "workflow_run": 35238771869,
     "result": "passed",
     "node": "24.20.0",
     "npm_ci": "passed; 0 vulnerabilities",
@@ -39,7 +39,9 @@
     "failure_ui": "passed",
     "interaction_smoke": "passed",
     "lifecycle_remount_smoke": "3/3 cycles passed",
-    "webgpu_software_smoke": "passed"
+    "webgpu_software_smoke": "passed",
+    "build_artifact_id": 10504881909,
+    "webgl2_evidence_artifact_id": 10504782012
   }
 }
 ```
@@ -50,13 +52,14 @@
 - Phase 0.5 repair has separated the PlayCanvas runtime from the standalone DOM host without changing engine ownership or the fixed-step simulation model.
 - The runtime now exposes explicit initialize/start/pause/resume/resize/visibility/destroy lifecycle operations suitable for the current Vite host and a future thin host integration.
 - Browser lifecycle ownership (DOM controls, window resize, document visibility and page lifecycle) is contained in `src/main.ts`; PlayCanvas continues to own rendering and the engine update loop.
-- A central asset resolver now maps logical asset paths beneath `public/assets` while respecting relative, subpath and injected-host deployment bases.
-- CI run `35238118041` passed static validation, existing browser regressions, a new three-cycle unmount/remount test and software WebGPU validation on validated implementation SHA `888b4e7d24ce9d4afded5c1b901d2d0f05a58f4f`.
+- Failed initialization now also aborts that mount's host event listeners before releasing the runtime reference, preventing duplicated shell listeners on a later mount.
+- A central asset resolver maps logical asset paths beneath `public/assets` while respecting relative, subpath and injected-host deployment bases.
+- CI run `35238771869` passed static validation, existing browser regressions, a three-cycle unmount/remount test and software WebGPU validation on final implementation SHA `5893eef9fdffc38b8d94b373f830b69b8d8300c7`.
 
 ## CURRENT REPOSITORY STATE
 
 - `main` remains the accepted Phase 0 reference at `17d0e23c6b70fd8cb3a00ebaad79d717e8bea455`; the repair has not overwritten it.
-- Draft PR #9 contains the Phase 0.5 integration repair and remains pending external QA/merge review.
+- Draft PR #9 contains the Phase 0.5 integration repair and remains pending independent QA/merge review.
 - PR #8 contains the separate Phase 1 environment checkpoint. It must not bypass the Phase 0.5 infrastructure gate; after Phase 0.5 acceptance it should be rebased or otherwise integrated against the accepted repair baseline before Phase 1 acceptance work resumes.
 - Floot/React was not introduced because the current Vite/GitHub Pages route is already functional. If Floot is later required, it should be a thin host that supplies the canvas and calls the host-neutral PlayCanvas lifecycle API; it must not own the game loop.
 
@@ -67,7 +70,7 @@
 - `npm test`: 9/9 passed, consisting of the five existing fixed-step/telemetry tests and four asset-resolver tests.
 - `npm run build`: passed with Vite 8.3.0.
 - `npm run smoke:webgl2`: passed in Chrome 152 software rendering, including automatic WebGPU-to-WebGL2 fallback and explicit renderer-failure UI.
-- `npm run smoke:interactions`: passed pause/resume, 10+ second hidden-tab behavior, resize, WebGL context loss/restoration and repeated reload checks.
+- `npm run smoke:interactions`: passed pause/resume, hidden-tab behavior, resize, WebGL context loss/restoration and repeated reload checks.
 - `npm run smoke:lifecycle`: passed three full unmount/mount cycles on the same host canvas with no failed/device-lost/destroyed final state.
 - `npm run smoke:webgpu`: passed using Vulkan SwiftShader and reported renderer `webgpu`.
 
@@ -82,7 +85,7 @@ These CI renderer results demonstrate browser/runtime correctness in software-ba
 
 ## NEXT TASK
 
-External QA should inspect PR #9 and its final CI result. If accepted, merge the Phase 0.5 repair without force-pushing `main`. Then rebase/port the Phase 1 checkpoint onto the accepted Phase 0.5 baseline and resume Phase 1 implementation/QA from that foundation.
+Independent QA should inspect PR #9 and its final CI result. If accepted, merge the Phase 0.5 repair without force-pushing `main`. Then rebase/port the Phase 1 checkpoint onto the accepted Phase 0.5 baseline and resume Phase 1 implementation/QA from that foundation.
 
 ## PHASE GATE
 
