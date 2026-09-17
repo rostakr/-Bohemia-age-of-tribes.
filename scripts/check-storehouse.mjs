@@ -16,6 +16,7 @@ test('procedural Boii storehouse geometry stays finite, indexed and within the P
   }
 
   const stats = storehouseStats(geometry);
+  console.log(`storehouse-stats ${JSON.stringify(stats)}`);
   assert.ok(stats.triangles >= 15_000 && stats.triangles <= 35_000, `triangle target missed: ${stats.triangles}`);
   assert.ok(stats.vertices >= 8_000 && stats.vertices <= 30_000, `unexpected vertex count: ${stats.vertices}`);
   assert.ok(stats.width >= 3.0 && stats.width <= 4.5, `unexpected width: ${stats.width}`);
