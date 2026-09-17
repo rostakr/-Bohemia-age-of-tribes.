@@ -1,0 +1,29 @@
+{
+  "generated": "2026-09-17",
+  "provider": "Microsoft TRELLIS.2 official Hugging Face Space",
+  "source": "https://huggingface.co/spaces/microsoft/TRELLIS.2",
+  "route": "free public Gradio API; no paid endpoint",
+  "input": "assets/source/phase1/boii-dwelling-concept.png",
+  "input_sha256": "11203eeb9b4c59a040f337635a78cdd634ad7ed0876a73ce079e545377f57b92",
+  "seed": 17092026,
+  "resolution": "1024",
+  "decimation_target": 100000,
+  "texture_size": 2048,
+  "model_license_reference": "https://github.com/microsoft/TRELLIS.2/blob/main/LICENSE",
+  "project_use": "noncommercial, per user instruction",
+  "output": "public/assets/buildings/boii_dwelling_rectangular.glb",
+  "bytes": 5621848,
+  "sha256": "faa41587ee4631017dc0cf8abdaceb06a4b7ef93996c4914458b5ed80c9382aa",
+  "vertices": 105019,
+  "triangles": 99298,
+  "textures": [
+    {"mime_type": "image/webp", "dimensions": [2048, 2048]},
+    {"mime_type": "image/webp", "dimensions": [2048, 2048]}
+  ],
+  "extensions_required": ["EXT_texture_webp"],
+  "dimensions_at_4_5m_height": [8.002, 4.5, 5.443],
+  "lod": "none",
+  "validation": "GLB chunks, embedded buffer/image ranges, finite attributes, index bounds, texture decoding passed; EXT_texture_webp support found in pinned engine parser",
+  "visual_qa": "pending",
+  "historical_qa": "pending"
+}

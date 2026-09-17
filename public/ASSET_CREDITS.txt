@@ -1,0 +1,15 @@
+Phase 1 terrain materials: Poly Haven, CC0-1.0
+https://polyhaven.com/license
+https://polyhaven.com/a/grass_path_2
+https://polyhaven.com/a/forest_ground_04
+https://polyhaven.com/a/brown_mud_02
+Each set includes Diffuse, OpenGL normal and Roughness JPG maps.
+Exact download URLs and hashes: assets/source/phase1/terrain-receipt.json (source package).
+Terrain, meadow ribbons and analytic ripple data are original procedural scene geometry/data.
+PlayCanvas: see PLAYCANVAS-LICENSE.txt.
+
+Rectangular Boii dwelling: original project concept converted with Microsoft TRELLIS.2
+Official free Hugging Face Space: https://huggingface.co/spaces/microsoft/TRELLIS.2
+TRELLIS.2 model/code license reference (MIT): https://github.com/microsoft/TRELLIS.2/blob/main/LICENSE
+Exact generation settings and hashes: assets/source/phase1/dwelling-receipt.json (source package).
+Current project use is noncommercial per user instruction; visual and historical QA are pending.
