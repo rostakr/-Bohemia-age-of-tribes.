@@ -30,6 +30,7 @@ import {
 } from './landscape';
 import { InspectionCamera, type ViewName } from './inspection-camera';
 import { createMeadow } from './meadow';
+import { createBoiiStorehouse } from './storehouse';
 
 export interface BenchmarkModels {
   dwelling: string | null;
@@ -48,6 +49,10 @@ export const ADMITTED_MODELS: BenchmarkModels = {
   tree: null,
 };
 
+// Explicit WIP content candidate. This is project-owned procedural geometry, not an
+// admitted production GLB and not a generic primitive fallback.
+export const USE_PROCEDURAL_STOREHOUSE_CANDIDATE = true;
+
 export class BenchmarkScene implements RuntimeScene {
   private root: Entity | undefined;
   private assets: SceneAssets | undefined;
@@ -63,6 +68,7 @@ export class BenchmarkScene implements RuntimeScene {
   private trees = 0;
   private grassClumps = 0;
   private drawCalls = 0;
+  private storehouseTriangles = 0;
   private readonly foliage: Entity[] = [];
   private app: Application | undefined;
   private destroyed = false;
@@ -269,6 +275,18 @@ export class BenchmarkScene implements RuntimeScene {
       this.buildings++;
     }
 
+    if (USE_PROCEDURAL_STOREHOUSE_CANDIDATE && !this.models.storehouse && this.active && this.app && this.root) {
+      const candidate = createBoiiStorehouse(this.app);
+      const pad = SETTLEMENT[1]!;
+      candidate.entity.setPosition(pad.x, pad.y, pad.z);
+      candidate.entity.setEulerAngles(0, -25, 0);
+      this.root.addChild(candidate.entity);
+      this.meshes.push(...candidate.meshes);
+      this.materials.push(...candidate.materials);
+      this.storehouseTriangles = candidate.stats.triangles;
+      this.buildings++;
+    }
+
     if (this.models.inhabitant && this.assets) {
       const resource = await this.assets.model(this.models.inhabitant);
       if (!this.active) return;
@@ -327,6 +345,8 @@ export class BenchmarkScene implements RuntimeScene {
       inhabitants: this.inhabitants,
       trees: this.trees,
       grassClumps: this.grassClumps,
+      storehouseCandidate: this.storehouseTriangles > 0 ? 'procedural-project-owned' : 'absent',
+      storehouseTriangles: this.storehouseTriangles,
       drawCalls: this.drawCalls,
     };
   }
@@ -350,6 +370,7 @@ export class BenchmarkScene implements RuntimeScene {
     this.assets = undefined;
     this.foliage.length = 0;
     this.water = undefined;
+    this.storehouseTriangles = 0;
     this.app = undefined;
   }
 }
