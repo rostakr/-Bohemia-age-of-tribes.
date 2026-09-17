@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test scripts/check-core.mjs scripts/check-assets.mjs scripts/check-landscape.mjs",
+    "test": "node --experimental-strip-types --test scripts/check-core.mjs scripts/check-assets.mjs scripts/check-landscape.mjs scripts/check-glb-tools.mjs",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
     "smoke:webgl2": "node scripts/browser-smoke.mjs",
@@ -16,7 +16,8 @@
     "smoke:webgpu": "node scripts/browser-webgpu-smoke.mjs",
     "smoke:phase1": "node scripts/browser-phase1-smoke.mjs",
     "check:glb": "node scripts/check-glb.mjs",
-    "check:phase1-assets": "node --check scripts/check-glb.mjs && node --check scripts/check-phase1-assets.mjs && node scripts/check-phase1-assets.mjs",
+    "prepare:glb-normals": "node scripts/add-glb-normals.mjs",
+    "check:phase1-assets": "node --check scripts/check-glb.mjs && node --check scripts/add-glb-normals.mjs && node --check scripts/check-phase1-assets.mjs && node scripts/check-phase1-assets.mjs",
     "validate": "npm run typecheck && npm test && npm run check:phase1-assets && npm run build"
   },
   "dependencies": { "playcanvas": "2.22.1" },
