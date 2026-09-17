@@ -28,12 +28,12 @@ test('procedural storehouse triangles are non-degenerate', () => {
   const geometry = createStorehouseGeometry();
   for (const [name, data] of Object.entries(geometry)) {
     for (let i = 0; i < data.indices.length; i += 3) {
-      const ai = data.indices[i]! * 3;
-      const bi = data.indices[i + 1]! * 3;
-      const ci = data.indices[i + 2]! * 3;
-      const ax = data.positions[ai]!, ay = data.positions[ai + 1]!, az = data.positions[ai + 2]!;
-      const abx = data.positions[bi]! - ax, aby = data.positions[bi + 1]! - ay, abz = data.positions[bi + 2]! - az;
-      const acx = data.positions[ci]! - ax, acy = data.positions[ci + 1]! - ay, acz = data.positions[ci + 2]! - az;
+      const ai = data.indices[i] * 3;
+      const bi = data.indices[i + 1] * 3;
+      const ci = data.indices[i + 2] * 3;
+      const ax = data.positions[ai], ay = data.positions[ai + 1], az = data.positions[ai + 2];
+      const abx = data.positions[bi] - ax, aby = data.positions[bi + 1] - ay, abz = data.positions[bi + 2] - az;
+      const acx = data.positions[ci] - ax, acy = data.positions[ci + 1] - ay, acz = data.positions[ci + 2] - az;
       const cx = aby * acz - abz * acy;
       const cy = abz * acx - abx * acz;
       const cz = abx * acy - aby * acx;
