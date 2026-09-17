@@ -99,23 +99,24 @@ class PlayCanvasGameRuntime implements GameRuntime {
 
     let device: GraphicsDevice | undefined;
     try {
-      device = await createGraphicsDevice(canvas, {
+      const createdDevice = await createGraphicsDevice(canvas, {
         deviceTypes: this.rendererPreference === 'webgl2' ? [DEVICETYPE_WEBGL2] : [DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL2],
         antialias: true,
         powerPreference: 'high-performance',
       });
+      device = createdDevice;
       if (this.destroyed) {
-        device.destroy();
+        createdDevice.destroy();
         return;
       }
 
-      this.device = device;
-      this.lastRenderer = device.deviceType;
-      const app = new Application(canvas, { graphicsDevice: device });
+      this.device = createdDevice;
+      this.lastRenderer = createdDevice.deviceType;
+      const app = new Application(canvas, { graphicsDevice: createdDevice });
       this.app = app;
       app.setCanvasResolution(RESOLUTION_AUTO);
-      device.on('devicelost', this.handleDeviceLost);
-      device.on('devicerestored', this.handleDeviceRestored);
+      createdDevice.on('devicelost', this.handleDeviceLost);
+      createdDevice.on('devicerestored', this.handleDeviceRestored);
       app.on('update', this.handleUpdate);
       this.applyResize();
       await scene.enter(app);
@@ -132,6 +133,7 @@ class PlayCanvasGameRuntime implements GameRuntime {
       throw error;
     } finally {
       this.initializePromise = undefined;
+      if (this.destroyed && device && !this.app) device.destroy();
     }
   }
 
