@@ -1,10 +1,159 @@
+import { mkdtempSync, rmSync } from 'node:fs';
 import { spawn, spawnSync } from 'node:child_process';
 import { once } from 'node:events';
-import { resolve } from 'node:path';
-const host='127.0.0.1', port=4176, baseUrl=`http://${host}:${port}/?renderer=webgl2&debug=1`;
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-function chromePath(){for(const c of [process.env.CHROME_BIN,'google-chrome-stable','google-chrome','chromium','chromium-browser'].filter(Boolean)){const f=spawnSync('which',[c],{encoding:'utf8'});if(f.status===0&&f.stdout.trim())return f.stdout.trim();}throw new Error('No Chrome/Chromium executable found');}
-async function waitForServer(){const d=Date.now()+20000;while(Date.now()<d){try{if((await fetch(baseUrl)).ok)return;}catch{}await sleep(200);}throw new Error('Phase 1 preview did not become ready');}
-async function stop(c){if(c.exitCode!==null)return;c.kill('SIGTERM');await Promise.race([once(c,'exit'),sleep(1500)]);if(c.exitCode===null)c.kill('SIGKILL');}
-const preview=spawn(process.execPath,[resolve('node_modules/vite/bin/vite.js'),'preview','--host',host,'--port',String(port),'--strictPort'],{stdio:['ignore','pipe','pipe'],env:{...process.env,CI:'1'}});
-try{await waitForServer();const r=spawnSync(chromePath(),['--headless=new','--no-sandbox','--disable-dev-shm-usage','--enable-unsafe-swiftshader','--use-gl=angle','--use-angle=swiftshader','--window-size=1920,1080','--virtual-time-budget=7000','--dump-dom',baseUrl],{encoding:'utf8',timeout:30000,maxBuffer:20*1024*1024});if(r.error)throw r.error;if(r.status!==0)throw new Error(`Chrome exited ${r.status}: ${r.stderr}`);const dom=r.stdout;if(!dom.includes('WEBGL2 · Scene running'))throw new Error('Phase 1 scene did not report running WebGL2 status');if(!/"milestone"\s*:\s*"phase-1"/.test(dom))throw new Error('Phase 1 diagnostics missing');if(!/"failed"\s*:\s*false/.test(dom)||!/"deviceLost"\s*:\s*false/.test(dom))throw new Error('Phase 1 runtime unhealthy');const structures=Number(dom.match(/"structures"\s*:\s*(\d+)/)?.[1]||0);const grassClumps=Number(dom.match(/"grassClumps"\s*:\s*(\d+)/)?.[1]||0);if(structures<1)throw new Error(`Expected admitted dwelling, structures=${structures}`);if(grassClumps<1)throw new Error(`Expected procedural meadow, grassClumps=${grassClumps}`);console.log('Phase 1 browser smoke passed.');console.log(JSON.stringify({structures,grassClumps},null,2));}finally{await stop(preview);}
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+
+const host = '127.0.0.1';
+const previewPort = 4176;
+const debugPort = 9226;
+const baseUrl = `http://${host}:${previewPort}/?renderer=webgl2&debug=1`;
+const debugBase = `http://${host}:${debugPort}`;
+const sleep = ms => new Promise(resolvePromise => setTimeout(resolvePromise, ms));
+
+function findChrome() {
+  for (const candidate of [process.env.CHROME_BIN, 'google-chrome-stable', 'google-chrome', 'chromium', 'chromium-browser'].filter(Boolean)) {
+    const result = spawnSync('which', [candidate], { encoding: 'utf8' });
+    if (result.status === 0 && result.stdout.trim()) return result.stdout.trim();
+  }
+  throw new Error('No Chrome/Chromium executable found');
+}
+
+async function waitForHttp(url, timeoutMs = 20_000) {
+  const deadline = Date.now() + timeoutMs;
+  let lastError;
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(url);
+      if (response.ok) return response;
+      lastError = new Error(`HTTP ${response.status}`);
+    } catch (error) { lastError = error; }
+    await sleep(200);
+  }
+  throw new Error(`Timed out waiting for ${url}: ${String(lastError)}`);
+}
+
+async function stopProcess(child) {
+  if (!child || child.exitCode !== null) return;
+  child.kill('SIGTERM');
+  await Promise.race([once(child, 'exit'), sleep(1500)]);
+  if (child.exitCode === null) {
+    child.kill('SIGKILL');
+    await Promise.race([once(child, 'exit'), sleep(1500)]);
+  }
+}
+
+class Cdp {
+  constructor(socket) {
+    this.socket = socket;
+    this.id = 0;
+    this.pending = new Map();
+    socket.addEventListener('message', event => {
+      const message = JSON.parse(String(event.data));
+      if (!message.id) return;
+      const pending = this.pending.get(message.id);
+      if (!pending) return;
+      this.pending.delete(message.id);
+      if (message.error) pending.reject(new Error(`${message.error.code}: ${message.error.message}`));
+      else pending.resolve(message.result ?? {});
+    });
+  }
+  send(method, params = {}) {
+    const id = ++this.id;
+    return new Promise((resolvePromise, reject) => {
+      this.pending.set(id, { resolve: resolvePromise, reject });
+      this.socket.send(JSON.stringify({ id, method, params }));
+    });
+  }
+  close() { this.socket.close(); }
+}
+
+async function connectCdp(wsUrl) {
+  const socket = new WebSocket(wsUrl);
+  await new Promise((resolvePromise, reject) => {
+    socket.addEventListener('open', resolvePromise, { once: true });
+    socket.addEventListener('error', reject, { once: true });
+  });
+  return new Cdp(socket);
+}
+
+async function evaluate(cdp, expression) {
+  const result = await cdp.send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true });
+  if (result.exceptionDetails) throw new Error(`Runtime.evaluate failed: ${result.exceptionDetails.text}`);
+  return result.result?.value;
+}
+
+const stateExpression = `(() => {
+  let diagnostics = null;
+  try { diagnostics = JSON.parse(document.querySelector('#diagnostics')?.textContent || 'null'); } catch {}
+  return {
+    status: document.querySelector('#status')?.textContent || '',
+    errorHidden: document.querySelector('#error')?.hidden ?? null,
+    errorText: document.querySelector('#error-text')?.textContent || '',
+    canvasCount: document.querySelectorAll('canvas').length,
+    diagnostics,
+  };
+})()`;
+
+const preview = spawn(process.execPath, [resolve('node_modules/vite/bin/vite.js'), 'preview', '--host', host, '--port', String(previewPort), '--strictPort'], {
+  stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, CI: '1' },
+});
+const profileDir = mkdtempSync(join(tmpdir(), 'bohemia-phase1-chrome-'));
+let chrome;
+let cdp;
+
+try {
+  await waitForHttp(`http://${host}:${previewPort}/`);
+  const chromePath = findChrome();
+  chrome = spawn(chromePath, [
+    '--headless=new', '--no-sandbox', '--disable-dev-shm-usage',
+    '--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader',
+    `--remote-debugging-address=${host}`, `--remote-debugging-port=${debugPort}`,
+    `--user-data-dir=${profileDir}`, '--window-size=1920,1080', 'about:blank',
+  ], { stdio: ['ignore', 'pipe', 'pipe'] });
+  await waitForHttp(`${debugBase}/json/list`);
+  const targets = await (await fetch(`${debugBase}/json/list`)).json();
+  const page = targets.find(target => target.type === 'page');
+  if (!page?.webSocketDebuggerUrl) throw new Error('No debuggable page target found');
+  cdp = await connectCdp(page.webSocketDebuggerUrl);
+  await cdp.send('Runtime.enable');
+  await cdp.send('Page.enable');
+  await cdp.send('Page.navigate', { url: baseUrl });
+
+  const deadline = Date.now() + 30_000;
+  let state;
+  while (Date.now() < deadline) {
+    state = await evaluate(cdp, stateExpression);
+    if (state?.errorHidden === false || state?.status === 'Renderer unavailable') {
+      throw new Error(`Phase 1 runtime error: ${JSON.stringify(state)}`);
+    }
+    const diagnostics = state?.diagnostics;
+    if (
+      state?.status === 'WEBGL2 · Scene running' &&
+      state.canvasCount === 1 &&
+      diagnostics?.milestone === 'phase-1' &&
+      diagnostics.renderer === 'webgl2' &&
+      diagnostics.failed === false &&
+      diagnostics.deviceLost === false &&
+      Number(diagnostics.structures) >= 1 &&
+      Number(diagnostics.grassClumps) >= 1
+    ) {
+      console.log('Phase 1 browser smoke passed.');
+      console.log(JSON.stringify({
+        tick: diagnostics.tick,
+        structures: diagnostics.structures,
+        grassClumps: diagnostics.grassClumps,
+        drawCalls: diagnostics.drawCalls,
+      }, null, 2));
+      state = null;
+      break;
+    }
+    await sleep(250);
+  }
+  if (state) throw new Error(`Timed out waiting for healthy Phase 1 scene: ${JSON.stringify(state)}`);
+} finally {
+  cdp?.close();
+  await stopProcess(chrome);
+  await stopProcess(preview);
+  rmSync(profileDir, { recursive: true, force: true });
+}
