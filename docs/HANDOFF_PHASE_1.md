@@ -1,114 +1,155 @@
-# Phase 1 checkpoint — RECONCILED / VISUAL GATE BLOCKED / NOT ACCEPTED
+# Phase 1 checkpoint — RECONCILED / VISUAL PASS V2 / CONTENT GATE BLOCKED
 
 ## STATUS
 
-The Phase 1 environment checkpoint has been rebuilt on top of the verified Phase 0.5 baseline rather than merging the stale pre-repair branch directly.
+The Phase 1 environment checkpoint is running on the verified Phase 0.5 baseline rather than the stale pre-repair runtime.
 
-Source checkpoint PR: `#8` (`a144a6f3e4d0c395086c2d296a0af661109fd14f`)  
-Reconciliation PR: `#14`  
-Validated reconciliation runtime SHA: `6ad76483cde4e2cf5c18e41c930af8cd347573f1`  
-Validation workflow run: `35262530231`  
+Source checkpoint PR: `#8` (audit/source only; do not merge directly)  
+Authoritative reconciliation PR: `#14`  
+Authoritative branch: `integrate/phase1-on-phase0_5`  
+Current branch state after v2 regression sync + asset-intake updates: descendant of `f90efc1bd60b75e967844bfebc2c4b8f9e6ec4f4`  
+Current verified visual-pass evidence run: `35267593823`  
 Technical result: **CI PASS**.  
-Professional visual result: **NOT ACCEPTED — implementation blocker Issue #16**.  
-Historical and actual-hardware GPU acceptance: **pending**.
+Professional Phase 1 result: **NOT ACCEPTED — content/composition + historical + real-GPU gates remain open**.
 
 Phase 0.5 remains authoritative for runtime lifecycle, host ownership, fixed-step timing, WebGPU/WebGL2 fallback and asset addressing.
 
 ## IMPLEMENTED
 
-- 220 m rolling South/Central Bohemian environment study.
-- Recessed stream bed with animated ripple material.
-- Feathered earth path and woodland leaf-litter surface.
-- Procedural meadow detail; CI diagnostics reported 4,678 grass clumps.
-- Terrain-aware inspection camera with orbit, pan, zoom, keyboard movement/rotation and three preset views.
-- Nine acquired Poly Haven CC0 terrain textures (three diffuse/OpenGL-normal/roughness sets).
-- One rectangular Boii dwelling candidate integrated for runtime evaluation.
+- 220 m rolling South/Central Bohemian benchmark landscape.
+- Stream with terrain-following sediment shoulders and shallow-edge → channel opacity/color variation.
+- Softer variable-width terrain-following worn path.
+- Clustered/lower/lighter procedural meadow with deliberate negative space.
+- Larger/warped ground UV presentation to reduce obvious terrain tiling.
+- More neutral Central-European daylight/grading than the original yellow-green checkpoint.
+- Terrain-aware inspection camera with orbit/pan/zoom and preset views.
+- Nine Poly Haven CC0 terrain textures.
+- One rectangular Boii dwelling evaluation candidate.
 - Asynchronous scene initialization and scene-scoped GLB/texture ownership.
 - Bounds-based model normalization and grounding.
-- Scene diagnostics merged into the existing host-neutral `GameRuntime.snapshot()` without replacing the Phase 0.5 runtime contract.
-- Default route displays the Phase 1 benchmark; `?scene=calibration` preserves the Phase 0 regression scene.
+- Scene diagnostics merged into the existing host-neutral `GameRuntime.snapshot()`.
+- Default route displays Phase 1 benchmark; `?scene=calibration` preserves Phase 0 regression scene.
+- Generic GLB admission checker and Phase 1 generated-asset intake gate.
 
-The storehouse, workshop, inhabitant and tree model slots remain intentionally empty. No primitive substitutes are silently used for missing production assets.
+No primitive stand-ins are silently substituted for missing production assets.
 
-## PHASE 0.5 RECONCILIATION
+## PHASE 0.5 RECONCILIATION INVARIANTS
 
-The old Phase 1 checkpoint used the pre-repair `createRuntime` API and owned browser resize/visibility listeners inside runtime code. Those changes were not ported. The reconciliation instead:
+The reconciliation retains:
 
-- retains `createGameRuntime()` with explicit initialize/start/pause/resume/resize/visibility/destroy operations;
-- retains the debug mount/unmount/remount bridge and three-cycle lifecycle regression;
-- retains host-owned window/document/UI event wiring in `src/main.ts`;
-- retains PlayCanvas ownership of rendering and fixed-step integration;
-- adds only the optional scene diagnostics needed by the benchmark;
-- routes scene GLB/texture loads through the central `resolveAsset()` pipeline;
-- keeps every Phase 0 browser test on `?scene=calibration` while adding a separate `smoke:phase1` gate.
+- `createGameRuntime()` initialize/start/pause/resume/resize/visibility/destroy lifecycle;
+- host-owned window/document/UI event wiring;
+- debug mount/unmount/remount bridge and three-cycle lifecycle regression;
+- PlayCanvas ownership of rendering and fixed-step integration;
+- central `resolveAsset()` runtime asset addressing;
+- automatic WebGPU → WebGL2 fallback and explicit WebGL2 QA;
+- Phase 0 browser tests on `?scene=calibration` plus separate `smoke:phase1`.
 
-## ASSETS
+Do not regress these while adding Phase 1 content.
 
-The original checkpoint's binary asset blobs were reused directly in Git rather than downloaded and re-uploaded. The current dwelling candidate is:
+## CURRENT VISUAL-PASS V2 EVIDENCE
 
-- file: `public/assets/buildings/boii_dwelling_rectangular.glb`
-- size: 5,621,848 bytes
-- SHA-256: `faa41587ee4631017dc0cf8abdaceb06a4b7ef93996c4914458b5ed80c9382aa`
-- vertices: 105,019
-- triangles: 99,298
-- embedded textures: two 2048×2048 WebP maps
-- LOD: none
+Run `35267593823` passed:
 
-The dwelling was generated through the free official Microsoft TRELLIS.2 Hugging Face Space for the user's authorized noncommercial project use. Structural/container/texture checks passed, but this does **not** establish historical, visual or final production acceptance. Its 99,298 triangles are above the 25k–60k target in the asset brief, so optimization/LOD review is required before treating it as a production-ready RTS asset.
+- strict TypeScript
+- Node tests: **14/14**
+- production Vite build
+- Phase 0 WebGL2 / fallback / failure UI
+- Phase 0 interactions
+- Phase 0 lifecycle remount 3/3
+- Phase 0 software WebGPU
+- Phase 1 WebGL2 benchmark smoke
 
-Terrain provenance, licenses and hashes remain recorded in `assets/source/phase1/terrain-receipt.json`, `public/ASSET_CREDITS.txt` and `docs/ASSET_MANIFEST.md`.
-
-## VALIDATION — RUN 35262530231
-
-The reconciled branch passed the combined Phase 0 + Phase 1 CI suite:
-
-- `npm ci`: PASS; 0 vulnerabilities reported.
-- strict TypeScript: PASS.
-- Node tests: **11/11 PASS** — fixed-step/telemetry, central asset resolver and landscape geometry checks.
-- production Vite build: PASS.
-- Phase 0 WebGL2 smoke: PASS, including automatic fallback and failure UI.
-- Phase 0 interactions: PASS.
-- Phase 0 lifecycle remount: PASS, 3/3 cycles on the same canvas.
-- Phase 0 software WebGPU: PASS (`webgpu` under Vulkan SwiftShader).
-- Phase 1 benchmark WebGL2 smoke: PASS.
-
-Phase 1 smoke diagnostics at evidence capture:
+Phase 1 capture diagnostics:
 
 ```text
 structures:   1
 inhabitants:  0
 trees:        0
-grassClumps:  4678
-drawCalls:    124
+grassClumps:  1161
+drawCalls:    126
 tick:         2
-fps:          ~15.0
-frameMs:      ~66.65
+fps:          ~15.0   # SwiftShader CI only
+frameMs:      ~66.65  # SwiftShader CI only
 ```
 
-The ~15 FPS value is from software SwiftShader CI and is **not** a real-GPU performance benchmark or a 60 FPS failure determination.
+Evidence artifact: `10517456076`  
+ZIP SHA-256: `5f55bcdb62bd2fc3e7cf131eb324778f7e8a488c26a9a862aff9f8ebedb91300`
 
-Evidence artifacts from run `35262530231`:
+The software FPS value is not actual-GPU performance evidence.
 
-- static build: artifact `10515331207`, ZIP SHA-256 `1e453155d5b3a8f29aece4d18caf49f80d8bb8327897c4ee029ed74a1284cd76`
-- Phase 0 screenshot: artifact `10515136710`
-- Phase 1 screenshot: artifact `10515106681`, ZIP SHA-256 `8aa9b8dfbb2421c6510b415f6a36c5fe762c83e8cf947686c20d49d80b769809`
+## VISUAL QA RESULT
 
-## VISUAL EVIDENCE REVIEW
+Compared with the original Phase 1 evidence:
 
-The Phase 1 screenshot artifact was opened and reviewed at 1920×1080. Runtime state is healthy, but the frame does not yet satisfy the professional visual benchmark gate.
+- grass clumps fell from `4,678` to `1,161` without a draw-call explosion (`124 → 126`);
+- the path is softer, less graphic and variable-width;
+- water/bank transition is less artificial and includes a real shallow/channel gradient;
+- the palette is less yellow-green;
+- terrain tiling is reduced but broad macro repetition remains visible in sparse areas.
 
-Blocking observations:
+The environment itself is materially improved. The current dominant blocker is now **missing real content/composition**, not a need for more procedural grass.
 
-- obvious repeated terrain texture patterning at RTS scale;
-- stream reads as a hard cut trench with uniform saturated teal water;
-- 4,678 grass clumps read as widespread thin needle-noise rather than coherent meadow clusters;
-- path is too dark, straight and constant-width;
-- palette/lighting is strongly yellow-green and lacks convincing local material variation;
-- settlement is necessarily sparse because storehouse/workshop/inhabitants/trees are still absent;
-- the dwelling is readable but remains evaluation-only and needs closer visual/historical/optimization review.
+Full review: `docs/PHASE_1_VISUAL_QA.md`.  
+Environment blocker tracking: Issue `#16`.  
+Missing built/character asset production: Issue `#17`.
 
-Detailed QA: `docs/PHASE_1_VISUAL_QA.md`.  
-Isolated implementation task: GitHub Issue `#16`.
+## ASSET STATE
+
+### Dwelling — evaluation candidate
+
+`public/assets/buildings/boii_dwelling_rectangular.glb`
+
+- size: `5,621,848` bytes
+- SHA-256: `faa41587ee4631017dc0cf8abdaceb06a4b7ef93996c4914458b5ed80c9382aa`
+- vertices: `105,019`
+- triangles: `99,298`
+- embedded textures: two 2048×2048 WebP maps
+- LOD: none
+
+Still above the 25k–60k brief target. Requires optimization/LOD or replacement and historical review.
+
+### Storehouse
+
+No GLB candidate captured yet. Target runtime path remains:
+
+`public/assets/buildings/boii_storehouse_small.glb`
+
+Budget: 15k–35k triangles.
+
+### Open carpentry/work shelter
+
+First manual to3D output was structurally readable and visually the correct open-workshop type, but rejected as-is:
+
+- SHA-256: `079a36689153538124c388faf84b0ab6e49b4b3b6d41c41a1f8de2aae5e32b1f`
+- vertices: `65,301`
+- triangles: **`89,778`**
+- embedded 1024×1024 PNG
+- no external dependencies / no required glTF extensions
+- 0 degenerate triangles
+
+Reason for rejection: exceeds the agreed 20k–45k budget by ~2×. Regenerate/decimate cleanly to ≤45k before runtime admission.
+
+### Adult worker
+
+First manual to3D output was structurally compact but rejected after textured preview:
+
+- SHA-256: `40f00021016c8157459cc4dab9612bba849654afe89c82c45795cdb0d0d21a0c`
+- vertices: `9,805`
+- triangles: `14,106`
+- embedded 1024×1024 PNG
+- no external dependencies / no required glTF extensions
+- 0 degenerate triangles
+
+Polygon count itself is acceptable for a repeated RTS unit. The problem is visible texture projection corruption/patchwork on face, clothing and rear surfaces. Regenerate for clean texture projection instead of adding polygons.
+
+The worker intake floor was therefore adjusted from 25k to **12k** triangles while retaining the 50k maximum. This allows efficient clean RTS workers without rewarding unnecessary geometry.
+
+Detailed receipt: `assets/source/phase1/TO3D_INTAKE_2026-09-17.md`.
+
+### Trees
+
+Production Central-European tree assets remain missing. Vegetation batching/instancing/LOD policy should be finalized only after real tree assets exist.
 
 ## DEPLOYMENT
 
@@ -116,24 +157,22 @@ The public GitHub Pages URL remains the verified Phase 0.5 release:
 
 `https://rostakr.github.io/-Bohemia-age-of-tribes./`
 
-PR #14 has **not** been promoted to the reference public deployment. Pages publishing remains manual-only. Do not describe the public URL as a Phase 1 release until a reviewed Phase 1 publish and production smoke have occurred.
+PR #14 has not been promoted to public deployment. Pages publishing remains manual-only.
 
-## REMAINING QA / BLOCKERS
+## NEXT IMPLEMENTATION ORDER
 
-Before Phase 1 acceptance:
-
-1. Implement Issue #16: terrain macro breakup, softer/more natural stream banks/water, clustered meadow presentation, less graphic path and more natural Central-European lighting/palette.
-2. Re-run the complete combined CI suite and capture updated settlement/workshop-site/stream evidence.
-3. Compare the new evidence against `docs/PHASE_1_VISUAL_QA.md`; do not promote the milestone while the listed visual blockers remain obvious.
-4. Inspect the updated scene on an actual GPU at the intended desktop resolution.
-5. Perform historical review of the dwelling against Late La Tène Boii construction evidence.
-6. Optimize or replace the 99,298-triangle dwelling and define LOD policy if it is retained.
-7. Acquire/integrate historically plausible storehouse, workshop, inhabitants and Central-European trees through approved free/noncommercial routes; record provenance before admission.
-8. Add batching/instancing/LOD strategy once actual vegetation assets exist.
-9. Keep Phase 0 calibration regressions passing throughout.
-
-No Phase 2 acceptance should be inferred from this checkpoint.
+1. Generate a clean small storehouse candidate and admit it structurally.
+2. Regenerate/optimize the open workshop to ≤45k tris with clean UV/texture projection.
+3. Regenerate the adult worker with clean front/side/rear texture projection; keep efficient geometry if visually sound.
+4. Add production Central-European tree assets.
+5. Wire only admitted models into `ADMITTED_MODELS`; target initial benchmark counts: 3 structures + ~5 inhabitants + first forest-edge trees.
+6. Re-run full combined Phase 0 + Phase 1 CI and capture settlement/workshop/stream evidence.
+7. Reassess visual composition and remaining macro terrain repetition.
+8. Perform actual-GPU review and historical review before Phase 1 acceptance.
+9. Optimize/replace the 99,298-triangle dwelling and define LOD if retained.
 
 ## HANDOFF RULE
 
-Continue implementation only from the reconciled Phase 0.5-based branch/PR #14 or its accepted descendant. Do not merge old PR #8 directly and do not restore its obsolete runtime/bootstrap implementations. PR #8 remains useful as an audit/source checkpoint until reconciliation is fully accepted.
+Continue only from PR #14 / `integrate/phase1-on-phase0_5` or its accepted descendant. Do not merge old PR #8 directly and do not restore its obsolete runtime/bootstrap implementations.
+
+**PHASE 1 remains technically healthy but not accepted. Phase 2 is not released.**
