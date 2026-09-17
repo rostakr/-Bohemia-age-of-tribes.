@@ -49,7 +49,7 @@ jobs:
           2aaf4400e7892d643a4f64d7347f2a0ca65051b5cb0c1b5d0ef383a65a5fa172  public/assets/materials/terrain/grass_path_2_rough_1k.jpg
           EOF
           sha256sum -c /tmp/phase1.sha256
-      - name: Preserve Phase 0 browser regression and extend CI
+      - name: Preserve Phase 0 browser regression URLs
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -59,19 +59,9 @@ jobs:
           s=s.replace("'?debug=1'", "'?scene=calibration&debug=1'")
           p.write_text(s)
           p=Path('scripts/browser-interactions.mjs')
-          s=p.read_text().replace('/?renderer=webgl2&debug=1','/?scene=calibration&renderer=webgl2&debug=1')
-          p.write_text(s)
+          p.write_text(p.read_text().replace('/?renderer=webgl2&debug=1','/?scene=calibration&renderer=webgl2&debug=1'))
           p=Path('scripts/browser-webgpu-smoke.mjs')
-          s=p.read_text().replace('/?debug=1','/?scene=calibration&debug=1')
-          p.write_text(s)
-          p=Path('.github/workflows/validate.yml')
-          s=p.read_text()
-          needle='      - name: Phase 0 software WebGPU smoke\n        run: npm run smoke:webgpu\n'
-          addition=needle+'      - name: Phase 1 benchmark browser smoke\n        run: npm run smoke:phase1\n'
-          if 'Phase 1 benchmark browser smoke' not in s:
-              if needle not in s: raise SystemExit('validate insertion point missing')
-              s=s.replace(needle, addition)
-          p.write_text(s)
+          p.write_text(p.read_text().replace('/?debug=1','/?scene=calibration&debug=1'))
           PY
       - name: Commit unpacked checkpoint files
         shell: bash
@@ -79,6 +69,6 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/source/phase1/boii-dwelling-concept.png public/assets scripts/browser-smoke.mjs scripts/browser-interactions.mjs scripts/browser-webgpu-smoke.mjs .github/workflows/validate.yml
+          git add assets/source/phase1/boii-dwelling-concept.png public/assets scripts/browser-smoke.mjs scripts/browser-interactions.mjs scripts/browser-webgpu-smoke.mjs
           git commit -m 'feat: import unpacked Phase 1 checkpoint assets'
           git push origin HEAD:integrate/phase1-checkpoint
