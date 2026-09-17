@@ -93,8 +93,6 @@ export function terrainMesh(segments = 180): MeshData {
       const x = -WORLD_HALF_SIZE + xi / segments * WORLD_HALF_SIZE * 2;
       positions.push(x, landscape.heightAt(x, z), z);
 
-      // World-space UVs with low-frequency warp reduce obvious grid repetition without
-      // introducing another texture dependency or a custom shader path.
       const u = x / 8.5 + 0.21 * Math.sin(z * 0.052) + 0.11 * Math.sin((x + z) * 0.021);
       const v = z / 8.5 + 0.18 * Math.sin(x * 0.047 + 0.7) - 0.1 * Math.cos((x - z) * 0.019);
       uvs.push(u, v);
@@ -130,6 +128,36 @@ export function riverMesh(): MeshData {
     if (i < 220) indices.push(i * 2, i * 2 + 2, i * 2 + 1, i * 2 + 1, i * 2 + 2, i * 2 + 3);
   }
   return { positions, indices, uvs };
+}
+
+/** Thin, terrain-following sediment strips soften the water/grass boundary without another texture asset. */
+export function riverMarginMesh(): MeshData {
+  const positions: number[] = [], indices: number[] = [], uvs: number[] = [], colors: number[] = [];
+  const rows = 220;
+  const columns = 4;
+  for (let i = 0; i <= rows; i++) {
+    const z = i - WORLD_HALF_SIZE;
+    const center = riverCenter(z);
+    const width = riverWidth(z);
+    const inner = width + 0.12;
+    const outer = width + 3.25 + 0.35 * Math.sin(z * 0.053 + 0.4);
+    const xs = [center - outer, center - inner, center + inner, center + outer];
+    for (let j = 0; j < columns; j++) {
+      const x = xs[j]!;
+      positions.push(x, landscape.heightAt(x, z) + 0.018, z);
+      uvs.push(z / 6.5, j === 0 || j === 3 ? 0 : 1);
+      const alpha = j === 0 || j === 3 ? 0 : 0.58;
+      const damp = 0.84 + 0.05 * Math.sin(z * 0.071 + j * 0.9);
+      colors.push(damp * 0.88, damp * 0.9, damp * 0.8, alpha);
+    }
+    if (i < rows) {
+      const base = i * columns;
+      const next = base + columns;
+      indices.push(base, next, base + 1, base + 1, next, next + 1);
+      indices.push(base + 2, next + 2, base + 3, base + 3, next + 2, next + 3);
+    }
+  }
+  return { positions, indices, uvs, colors };
 }
 
 export function pathMesh(): MeshData {
