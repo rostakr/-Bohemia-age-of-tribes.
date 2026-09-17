@@ -10,13 +10,14 @@
   "integration_pr": 1,
   "browser_smoke_pr": 2,
   "interaction_qa_pr": 3,
+  "software_webgpu_pr": 4,
   "active_milestone": "PHASE_0_FOUNDATION",
-  "status": "phase_0_ci_browser_qa_extended_awaiting_hardware_gpu_qa",
+  "status": "phase_0_ci_webgl2_and_software_webgpu_passed_awaiting_hardware_gpu_qa",
   "engine": "playcanvas@2.22.1",
   "next_phase_authorized": false,
   "deployment": null,
   "latest_qa": {
-    "github_actions": "passed: run 35201007076 full validation + browser + interaction smoke",
+    "github_actions": "passed: run 35206022276 full validation + WebGL2 + interaction + software WebGPU smoke",
     "npm_ci": "passed on Node 24.20.0",
     "typescript": "passed",
     "focused_node_tests": "5/5 passed",
@@ -26,6 +27,7 @@
     "license_notice": "passed",
     "forced_webgl2_ci_software": "passed",
     "automatic_fallback_ci_software": "passed with WebGPU disabled; renderer reported webgl2",
+    "webgpu_ci_software": "passed: Chrome 152.0.7977.82, vulkan-swiftshader, renderer webgpu, failed=false, deviceLost=false; diagnostic snapshot tick=0",
     "pause_resume_ci": "passed; tick remained stable while paused and resumed afterward",
     "visibility_handler_ci": "passed synthetically for >10 seconds with no catch-up burst",
     "resize_ci": "passed; drawing buffer changed with live viewport size",
@@ -55,10 +57,11 @@
 - GitHub Actions validation and manual-only Pages deployment workflows integrated.
 - Asset categories and provenance/rights gate; project/art/architecture documents integrated.
 - Repeatable software-WebGL2 startup/render smoke, screenshot capture, fallback simulation, failure-UI validation and CDP interaction regression checks are covered in CI.
+- Default PlayCanvas WebGPU preference path is also exercised in CI through Chrome/Dawn `vulkan-swiftshader`; this is software backend coverage, not hardware acceptance.
 
 ## QA evidence
 
-- GitHub Actions run `35201007076` passed the complete Phase 0 validation sequence on Ubuntu 24.04 with Node 24.20.0 and Chrome 152.0.7977.82.
+- GitHub Actions run `35206022276` passed the complete Phase 0 validation sequence on Ubuntu 24.04 with Node 24.20.0 and Chrome 152.0.7977.82.
 - `npm ci` installs the pinned dependency set and reports 0 vulnerabilities.
 - `npm run validate` passes strict TypeScript, all 5 focused Node tests, and the Vite production build.
 - Build output remains approximately 2.03 MB minified / 520.79 kB gzip plus source map; the known Vite chunk-size advisory remains.
@@ -68,12 +71,13 @@
 - With WebGPU disabled in CI, the default renderer path reaches healthy WebGL2, demonstrating the fallback code path in the software environment.
 - With WebGL disabled, the app shows the renderer failure status and actionable recovery UI instead of a silent blank screen.
 - Interaction smoke passed: Pause froze tick, Resume restarted it, the visibility-change handler stayed hidden for more than 10 seconds without catch-up, live resize changed drawing-buffer dimensions, `WEBGL_lose_context` reached device loss/restoration successfully, and three production reloads returned to one healthy canvas/runtime.
-- These SwiftShader/headless results are functional evidence only; they do not count as real WebGPU, real-GPU performance, native background-tab, or hardware device-loss acceptance.
+- Software WebGPU smoke passed with the `vulkan-swiftshader` probe: the production page reported `WEBGPU · Foundation running`, `renderer: webgpu`, `failed: false`, and `deviceLost: false`. Its diagnostic snapshot was captured at tick `0`, so it is not used as timing/performance evidence.
+- These software/headless results are functional evidence only; they do not count as real-GPU performance, native background-tab, hardware device-loss or hardware WebGPU acceptance.
 
 ## Known broken or unverified systems
 
-- No observed Phase 0 failures in dependency installation, typecheck, focused Node tests, production build, static-path serving, software WebGL2 startup/rendering, pause/resume handling, synthetic visibility handling, resize, software context loss/restoration, repeated production reload, fallback simulation, or renderer failure UI.
-- Actual WebGPU rendering remains unverified on a real desktop GPU/browser.
+- No observed Phase 0 failures in dependency installation, typecheck, focused Node tests, production build, static-path serving, software WebGL2 startup/rendering, software WebGPU initialization/render path, pause/resume handling, synthetic visibility handling, resize, software context loss/restoration, repeated production reload, fallback simulation, or renderer failure UI.
+- Real hardware WebGPU remains unverified on a desktop GPU/browser with normal advancing simulation.
 - Hardware WebGL2 and fallback on a browser/device where WebGPU is genuinely unavailable remain unverified.
 - Native background-tab behavior remains unverified; CI exercises the same application visibility handler synthetically.
 - Repeated development HMR resource behavior remains unverified; CI covers full production reloads.
@@ -85,14 +89,14 @@
 
 - Build includes an approximately 2.03 MB minified engine/application JS chunk (~521 kB gzip), plus source map. Vite reports the 500 kB chunk advisory; no code-splitting requirement is claimed for Phase 0.
 - Engine browser bundle produces `node:worker_threads` externalization warnings from optional Draco/Gaussian-splat worker paths. Revalidate before those features are admitted.
-- 60 FPS / 1080p and hundreds of units are targets only. SwiftShader CI results are functional evidence only and make no GPU-performance claim.
+- 60 FPS / 1080p and hundreds of units are targets only. SwiftShader/Dawn CI results are functional evidence only and make no GPU-performance claim.
 - No custom GLSL, KTX2, Meshopt/Draco decoder configuration, asset loader wrapper, navigation library, or worker simulation has been added.
 - Fixed-step scheduling is not a cross-platform deterministic multiplayer guarantee.
 
 ## Phase gate
 
-**Phase 0 code/CI/software-browser QA now passes a substantially broader automated gate, but the phase remains OPEN until real desktop browser/GPU acceptance is completed. Phase 1 is not authorized.**
+**Phase 0 code/CI/software-WebGL2/software-WebGPU QA now passes a broader automated gate, but the phase remains OPEN until real desktop browser/GPU acceptance is completed. Phase 1 is not authorized.**
 
 ## Next work
 
-Complete the remaining hardware-dependent checks from `docs/HANDOFF_PHASE_0.md`: real WebGPU with diagnostics explicitly reporting `webgpu`, real hardware WebGL2/fallback, native 10-second background-tab return, repeated development HMR resource inspection, hardware graphics-device loss/restoration, and an idle 1080p hardware baseline with browser/OS/GPU recorded. Do not begin Phase 1 until this evidence is accepted.
+Complete the remaining hardware-dependent checks from `docs/HANDOFF_PHASE_0.md`: real WebGPU with diagnostics explicitly reporting `webgpu` and normal advancing simulation, real hardware WebGL2/fallback, native 10-second background-tab return, repeated development HMR resource inspection, hardware graphics-device loss/restoration, and an idle 1080p hardware baseline with browser/OS/GPU recorded. Do not begin Phase 1 until this evidence is accepted.
