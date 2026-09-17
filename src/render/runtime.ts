@@ -97,14 +97,12 @@ class PlayCanvasGameRuntime implements GameRuntime {
     const scene = this.scene;
     if (!canvas || !scene) throw new Error('Runtime has no canvas or scene');
 
-    let device: GraphicsDevice | undefined;
     try {
       const createdDevice = await createGraphicsDevice(canvas, {
         deviceTypes: this.rendererPreference === 'webgl2' ? [DEVICETYPE_WEBGL2] : [DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL2],
         antialias: true,
         powerPreference: 'high-performance',
       });
-      device = createdDevice;
       if (this.destroyed) {
         createdDevice.destroy();
         return;
@@ -133,7 +131,6 @@ class PlayCanvasGameRuntime implements GameRuntime {
       throw error;
     } finally {
       this.initializePromise = undefined;
-      if (this.destroyed && device && !this.app) device.destroy();
     }
   }
 
