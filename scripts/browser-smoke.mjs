@@ -14,14 +14,7 @@ function sleep(ms) {
 }
 
 function findChrome() {
-  const candidates = [
-    process.env.CHROME_BIN,
-    'google-chrome-stable',
-    'google-chrome',
-    'chromium',
-    'chromium-browser',
-  ].filter(Boolean);
-
+  const candidates = [process.env.CHROME_BIN, 'google-chrome-stable', 'google-chrome', 'chromium', 'chromium-browser'].filter(Boolean);
   for (const candidate of candidates) {
     const result = spawnSync('which', [candidate], { encoding: 'utf8' });
     if (result.status === 0 && result.stdout.trim()) return result.stdout.trim();
@@ -37,71 +30,45 @@ async function waitForServer(url, timeoutMs = 20_000) {
       const response = await fetch(url);
       if (response.ok) return;
       lastError = new Error(`HTTP ${response.status}`);
-    } catch (error) {
-      lastError = error;
-    }
+    } catch (error) { lastError = error; }
     await sleep(250);
   }
   throw new Error(`Preview server did not become ready: ${String(lastError)}`);
 }
 
-function runChrome(chrome, width, height, extraArgs = []) {
-  const url = `${baseUrl}?renderer=webgl2&debug=1`;
-  const args = [
-    '--headless=new',
-    '--no-sandbox',
-    '--disable-dev-shm-usage',
-    '--enable-unsafe-swiftshader',
-    '--use-gl=angle',
-    '--use-angle=swiftshader',
-    `--window-size=${width},${height}`,
-    '--virtual-time-budget=2500',
-    ...extraArgs,
-    url,
-  ];
-  return spawnSync(chrome, args, {
-    encoding: 'utf8',
-    timeout: 25_000,
-    maxBuffer: 16 * 1024 * 1024,
-  });
+function runChrome(chrome, width, height, extraArgs = [], query = '?renderer=webgl2&debug=1', softwareGraphics = true) {
+  const args = ['--headless=new', '--no-sandbox', '--disable-dev-shm-usage'];
+  if (softwareGraphics) args.push('--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader');
+  args.push(`--window-size=${width},${height}`, '--virtual-time-budget=2500', ...extraArgs, `${baseUrl}${query}`);
+  return spawnSync(chrome, args, { encoding: 'utf8', timeout: 25_000, maxBuffer: 16 * 1024 * 1024 });
 }
 
 function assertDom(result, label) {
   if (result.error) throw result.error;
-  if (result.status !== 0) {
-    throw new Error(`${label}: Chrome exited ${result.status}\n${result.stderr}`);
-  }
+  if (result.status !== 0) throw new Error(`${label}: Chrome exited ${result.status}\n${result.stderr}`);
   const dom = result.stdout;
-  if (!dom.includes('WEBGL2 · Foundation running')) {
-    throw new Error(`${label}: expected running WebGL2 status not found.\n${dom.slice(-5000)}`);
-  }
-  if (dom.includes('Renderer unavailable')) {
-    throw new Error(`${label}: renderer failure UI was shown.`);
-  }
+  if (!dom.includes('WEBGL2 · Foundation running')) throw new Error(`${label}: expected running WebGL2 status not found.\n${dom.slice(-5000)}`);
+  if (dom.includes('Renderer unavailable')) throw new Error(`${label}: renderer failure UI was shown.`);
   const tickMatch = dom.match(/"tick"\s*:\s*(\d+)/);
-  if (!tickMatch || Number(tickMatch[1]) < 1) {
-    throw new Error(`${label}: simulation tick did not advance.\n${dom.slice(-5000)}`);
-  }
-  if (!/"failed"\s*:\s*false/.test(dom)) {
-    throw new Error(`${label}: diagnostics did not report failed=false.`);
-  }
-  if (!/"deviceLost"\s*:\s*false/.test(dom)) {
-    throw new Error(`${label}: diagnostics did not report deviceLost=false.`);
-  }
-
+  if (!tickMatch || Number(tickMatch[1]) < 1) throw new Error(`${label}: simulation tick did not advance.\n${dom.slice(-5000)}`);
+  if (!/"failed"\s*:\s*false/.test(dom)) throw new Error(`${label}: diagnostics did not report failed=false.`);
+  if (!/"deviceLost"\s*:\s*false/.test(dom)) throw new Error(`${label}: diagnostics did not report deviceLost=false.`);
   const widthMatch = dom.match(/"width"\s*:\s*(\d+)/);
   const heightMatch = dom.match(/"height"\s*:\s*(\d+)/);
-  return {
-    tick: Number(tickMatch[1]),
-    width: widthMatch ? Number(widthMatch[1]) : 0,
-    height: heightMatch ? Number(heightMatch[1]) : 0,
-  };
+  return { tick: Number(tickMatch[1]), width: widthMatch ? Number(widthMatch[1]) : 0, height: heightMatch ? Number(heightMatch[1]) : 0 };
+}
+
+function assertFailureUi(result) {
+  if (result.error) throw result.error;
+  if (result.status !== 0) throw new Error(`failure-ui: Chrome exited ${result.status}\n${result.stderr}`);
+  const dom = result.stdout;
+  if (!dom.includes('Renderer unavailable')) throw new Error(`failure-ui: renderer failure status not shown.\n${dom.slice(-5000)}`);
+  if (!dom.includes('The 3D scene could not continue')) throw new Error(`failure-ui: actionable error message not shown.\n${dom.slice(-5000)}`);
 }
 
 const viteBin = resolve('node_modules/vite/bin/vite.js');
 const preview = spawn(process.execPath, [viteBin, 'preview', '--host', host, '--port', String(port), '--strictPort'], {
-  stdio: ['ignore', 'pipe', 'pipe'],
-  env: { ...process.env, CI: '1' },
+  stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, CI: '1' },
 });
 let previewOutput = '';
 preview.stdout.on('data', chunk => { previewOutput += chunk.toString(); });
@@ -125,24 +92,20 @@ try {
 
   const small = assertDom(runChrome(chrome, 1280, 720, ['--dump-dom']), '1280x720');
   const large = assertDom(runChrome(chrome, 1920, 1080, ['--dump-dom']), '1920x1080');
+  if (small.width < 1 || small.height < 1 || large.width < 1 || large.height < 1) throw new Error(`Invalid canvas dimensions: ${JSON.stringify({ small, large })}`);
+  if (large.width < small.width || large.height < small.height) throw new Error(`Canvas did not grow with viewport: ${JSON.stringify({ small, large })}`);
 
-  if (small.width < 1 || small.height < 1 || large.width < 1 || large.height < 1) {
-    throw new Error(`Invalid canvas dimensions: ${JSON.stringify({ small, large })}`);
-  }
-  if (large.width < small.width || large.height < small.height) {
-    throw new Error(`Canvas did not grow with viewport: ${JSON.stringify({ small, large })}`);
-  }
+  const fallback = assertDom(runChrome(chrome, 1280, 720, ['--disable-features=WebGPU', '--dump-dom'], '?debug=1'), 'automatic WebGPU-to-WebGL2 fallback');
+  assertFailureUi(runChrome(chrome, 1280, 720, ['--disable-gpu', '--disable-webgl', '--dump-dom'], '?renderer=webgl2&debug=1', false));
 
   const screenshotPath = resolve(artifactsDir, 'phase0-webgl2-1920x1080.png');
   const screenshot = runChrome(chrome, 1920, 1080, [`--screenshot=${screenshotPath}`]);
   if (screenshot.error) throw screenshot.error;
-  if (screenshot.status !== 0) {
-    throw new Error(`Screenshot Chrome exited ${screenshot.status}\n${screenshot.stderr}`);
-  }
+  if (screenshot.status !== 0) throw new Error(`Screenshot Chrome exited ${screenshot.status}\n${screenshot.stderr}`);
   readFileSync(screenshotPath);
 
   console.log('Phase 0 WebGL2 browser smoke passed.');
-  console.log(JSON.stringify({ small, large, screenshot: screenshotPath }, null, 2));
+  console.log(JSON.stringify({ small, large, fallback, failureUi: 'passed', screenshot: screenshotPath }, null, 2));
 } finally {
   await stopPreview();
   if (preview.exitCode && preview.exitCode !== 0 && previewOutput) console.error(previewOutput);
