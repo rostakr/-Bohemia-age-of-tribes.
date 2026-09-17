@@ -24,6 +24,8 @@ jobs:
         run: npm run smoke:interactions
       - name: Phase 0 software WebGPU smoke
         run: npm run smoke:webgpu
+      - name: Phase 1 benchmark browser smoke
+        run: npm run smoke:phase1
       - uses: actions/upload-artifact@v4
         with:
           name: bohemia-static-build
