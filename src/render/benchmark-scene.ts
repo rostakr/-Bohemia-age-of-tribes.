@@ -2,7 +2,7 @@ import { BLEND_NORMAL, CameraFrame, Color, Entity, FOG_LINEAR, PIXELFORMAT_RGBA8
   StandardMaterial, Texture, TONEMAP_ACES, Vec2, type Application, type Mesh, type ContainerResource } from 'playcanvas';
 import type { RuntimeScene } from './scene';
 import { SceneAssets, instantiateAtHeight } from './scene-assets';
-import { createSurface, landscape, pathMesh, riverMesh, terrainMesh, SETTLEMENT, randomGenerator, riverCenter, smoothstep } from './landscape';
+import { createSurface, landscape, pathMesh, riverMarginMesh, riverMesh, terrainMesh, SETTLEMENT, randomGenerator, riverCenter, smoothstep } from './landscape';
 import { InspectionCamera, type ViewName } from './inspection-camera';
 import { createMeadow } from './meadow';
 
@@ -47,22 +47,22 @@ export class BenchmarkScene implements RuntimeScene {
     app.root.addChild(this.root);
     this.assets = new SceneAssets(app);
 
-    const background = new Color(0.61, 0.68, 0.66);
-    app.scene.ambientLight = new Color(0.5, 0.57, 0.64);
+    const background = new Color(0.59, 0.64, 0.63);
+    app.scene.ambientLight = new Color(0.47, 0.51, 0.5);
     app.scene.fog.type = FOG_LINEAR;
     app.scene.fog.color = background;
-    app.scene.fog.start = 95;
-    app.scene.fog.end = 225;
+    app.scene.fog.start = 112;
+    app.scene.fog.end = 240;
     const cameraEntity = new Entity('Benchmark inspection camera');
     cameraEntity.addComponent('camera', { clearColor: background, fov: 43, nearClip: 0.2, farClip: 350 });
     this.root.addChild(cameraEntity);
     this.camera = new InspectionCamera(cameraEntity, app.graphicsDevice.canvas as HTMLCanvasElement, landscape);
 
-    const sun = new Entity('Late afternoon sun');
-    sun.addComponent('light', { type: 'directional', color: new Color(1, 0.92, 0.76), intensity: 1.8,
+    const sun = new Entity('Soft daylight');
+    sun.addComponent('light', { type: 'directional', color: new Color(1, 0.96, 0.89), intensity: 1.28,
       castShadows: true, shadowDistance: 130, shadowResolution: 2048, numCascades: 3,
       shadowBias: 0.16, normalOffsetBias: 0.08 });
-    sun.setEulerAngles(48, -32, 0);
+    sun.setEulerAngles(53, -36, 0);
     this.root.addChild(sun);
 
     const [ground, mud, forest] = await Promise.all([
@@ -71,11 +71,12 @@ export class BenchmarkScene implements RuntimeScene {
     ground.diffuseVertexColor = true;
     ground.update();
     this.surface('Rolling Bohemian ground', terrainMesh(), ground);
+
     const forestMesh = terrainMesh(110);
     for (let i = 0; i < forestMesh.positions.length; i += 3) {
       const x = forestMesh.positions[i]!, z = forestMesh.positions[i + 2]!;
       forestMesh.positions[i + 1]! += 0.025;
-      const alpha = smoothstep(20, 45, -x) * smoothstep(-10, 20, -z) * 0.9;
+      const alpha = smoothstep(20, 45, -x) * smoothstep(-10, 20, -z) * 0.84;
       forestMesh.colors![i / 3 * 4 + 3] = alpha;
     }
     forest.blendType = BLEND_NORMAL;
@@ -84,6 +85,7 @@ export class BenchmarkScene implements RuntimeScene {
     forest.depthWrite = false;
     forest.update();
     this.surface('Woodland leaf litter', forestMesh, forest);
+
     mud.blendType = BLEND_NORMAL;
     mud.opacityVertexColor = true;
     mud.opacityVertexColorChannel = 'a';
@@ -91,9 +93,11 @@ export class BenchmarkScene implements RuntimeScene {
     mud.depthWrite = false;
     mud.update();
     this.surface('Worn earthen path', pathMesh(), mud);
+    this.surface('Damp stream margins', riverMarginMesh(), mud);
 
     this.water = this.waterMaterial(app);
     this.surface('Stream surface', riverMesh(), this.water);
+
     const meadow = createMeadow(app);
     this.materials.push(meadow.material);
     this.grassClumps = meadow.clumps;
@@ -104,15 +108,15 @@ export class BenchmarkScene implements RuntimeScene {
     this.frame.rendering.toneMapping = TONEMAP_ACES;
     this.frame.rendering.samples = 1;
     this.frame.ssao.type = SSAOTYPE_LIGHTING;
-    this.frame.ssao.intensity = 0.35;
-    this.frame.ssao.radius = 1.2;
-    this.frame.ssao.power = 1.8;
+    this.frame.ssao.intensity = 0.3;
+    this.frame.ssao.radius = 1.15;
+    this.frame.ssao.power = 1.65;
     this.frame.ssao.samples = 8;
     this.frame.ssao.scale = 0.5;
     this.frame.taa.enabled = true;
     this.frame.grading.enabled = true;
-    this.frame.grading.saturation = 0.93;
-    this.frame.grading.contrast = 1.03;
+    this.frame.grading.saturation = 0.88;
+    this.frame.grading.contrast = 1.045;
     this.frame.update();
   }
 
@@ -125,7 +129,7 @@ export class BenchmarkScene implements RuntimeScene {
     material.name = name;
     material.diffuseMap = color;
     material.normalMap = normal;
-    material.bumpiness = 0.7;
+    material.bumpiness = 0.62;
     material.glossMap = rough;
     material.glossMapChannel = 'r';
     material.glossInvert = true;
@@ -144,8 +148,8 @@ export class BenchmarkScene implements RuntimeScene {
     const pixels = texture.lock() as Uint8Array;
     for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
       const u = x / size * Math.PI * 2, v = y / size * Math.PI * 2;
-      const nx = Math.cos(u * 3 + v * 2) * 0.12 + Math.cos(u * 7 - v * 3) * 0.07;
-      const ny = Math.cos(u * 2 + v * 5) * 0.15;
+      const nx = Math.cos(u * 3 + v * 2) * 0.1 + Math.cos(u * 7 - v * 3) * 0.055;
+      const ny = Math.cos(u * 2 + v * 5) * 0.115;
       const length = Math.hypot(nx, ny, 1), index = (y * size + x) * 4;
       pixels[index] = (nx / length * 0.5 + 0.5) * 255;
       pixels[index + 1] = (ny / length * 0.5 + 0.5) * 255;
@@ -154,15 +158,16 @@ export class BenchmarkScene implements RuntimeScene {
     }
     texture.unlock();
     this.textures.push(texture);
+
     const material = new StandardMaterial();
     material.name = 'Shallow rippled stream';
-    material.diffuse = new Color(0.16, 0.29, 0.27);
-    material.specular = new Color(0.35, 0.4, 0.38);
-    material.gloss = 0.88;
+    material.diffuse = new Color(0.105, 0.19, 0.17);
+    material.specular = new Color(0.3, 0.34, 0.33);
+    material.gloss = 0.82;
     material.normalMap = texture;
-    material.normalMapTiling = new Vec2(3, 2);
-    material.bumpiness = 0.5;
-    material.opacity = 0.88;
+    material.normalMapTiling = new Vec2(2.35, 1.65);
+    material.bumpiness = 0.36;
+    material.opacity = 0.76;
     material.blendType = BLEND_NORMAL;
     material.depthWrite = false;
     material.update();
@@ -219,14 +224,16 @@ export class BenchmarkScene implements RuntimeScene {
   update(dt: number, _alpha: number): void {
     this.camera?.update(dt);
     this.elapsed += dt;
-    if (this.water) this.water.normalMapOffset.set(this.elapsed * 0.009, this.elapsed * 0.015);
+    if (this.water) this.water.normalMapOffset.set(this.elapsed * 0.006, this.elapsed * 0.01);
     this.frame?.update();
     this.drawCalls = this.app?.stats.drawCalls.total ?? 0;
   }
+
   diagnostics(): Record<string, string | number | boolean> {
     return { milestone: 'phase-1', artGatePassed: false, terrainMetres: 220, structures: this.buildings,
       inhabitants: this.inhabitants, trees: this.trees, grassClumps: this.grassClumps, drawCalls: this.drawCalls };
   }
+
   destroy(): void {
     this.camera?.destroy(); this.camera = undefined;
     this.frame?.destroy(); this.frame = undefined;
