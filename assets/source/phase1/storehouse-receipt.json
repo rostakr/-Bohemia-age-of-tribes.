@@ -7,6 +7,7 @@
     "type": "original_project_code",
     "path": "src/render/storehouse.ts",
     "initial_source_commit": "15f3f5559b68ca961743d8adeba9e3137e8482ef",
+    "validated_source_commit": "6ae630ce219d0c4e26cde659ff9f7522c8197bf4",
     "third_party_art": false,
     "external_generator": null,
     "cost": 0,
@@ -41,7 +42,7 @@
     "lod": false
   },
   "validated_geometry": {
-    "workflow_run": 35275629712,
+    "workflow_run": 35276404714,
     "node_tests": "13/13 passed",
     "triangles": 15550,
     "vertices": 15910,
@@ -54,10 +55,11 @@
     "valid_indices": true,
     "non_degenerate_triangles": true,
     "target_triangle_budget": "15000-35000",
-    "budget_passed": true
+    "budget_passed": true,
+    "roof_basis_winding": "right-handed on both slopes"
   },
   "runtime_validation": {
-    "workflow_run": 35275629712,
+    "workflow_run": 35276404714,
     "renderer": "software WebGL2 via ANGLE/SwiftShader",
     "structures_observed": 2,
     "storehouse_diagnostic": "procedural-project-owned",
@@ -65,8 +67,10 @@
     "phase1_draw_calls_observed": 144,
     "lifecycle_remount_cycles": "3/3 passed",
     "phase0_webgpu_regression": "passed",
-    "screenshot_artifact_id": 10520776615,
-    "screenshot_review": "visible and readable as the smaller second settlement structure; WIP candidate only"
+    "phase1_smoke_requires_two_structures": true,
+    "screenshot_artifact_id": 10520877524,
+    "screenshot_artifact_sha256": "597a172856c9b246d4cc48135a8cef5b0fd1b1e54969bb44c549ea8974c29e35",
+    "screenshot_review": "visible and readable as the smaller second settlement structure after roof winding fix; WIP candidate only"
   },
   "admission": {
     "admitted_models_storehouse": null,
