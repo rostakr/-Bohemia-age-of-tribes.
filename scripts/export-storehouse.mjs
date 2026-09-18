@@ -29,20 +29,26 @@ try {
   gltf.images = [];
   gltf.textures = [];
   gltf.samplers = [{ magFilter: 9729, minFilter: 9987, wrapS: 10497, wrapT: 10497 }];
-  for (const [material, file] of [
-    ['timber', 'weathered-oak-basecolor.png'],
-    ['thatch', 'straw-thatch-basecolor.png'],
-    ['daub', 'clay-daub-basecolor.png'],
-  ]) {
-    const bytes = readFileSync(new URL(`../assets/source/phase1/materials/${file}`, import.meta.url));
+  const textureSpecs = [
+    { material: 'timber', file: 'runtime/weathered-oak-basecolor-runtime-512.jpg', mimeType: 'image/jpeg', width: 512, height: 512,
+      derivative: 'Pillow 12.3.0; LANCZOS resize; JPEG quality 90; 4:4:4; optimize+progressive' },
+    { material: 'thatch', file: 'runtime/straw-thatch-basecolor-runtime-512.jpg', mimeType: 'image/jpeg', width: 512, height: 512,
+      derivative: 'Pillow 12.3.0; LANCZOS resize; JPEG quality 90; 4:4:4; optimize+progressive' },
+    { material: 'daub', file: 'clay-daub-basecolor.png', mimeType: 'image/png' },
+  ];
+  for (const spec of textureSpecs) {
+    const bytes = readFileSync(new URL(`../assets/source/phase1/materials/${spec.file}`, import.meta.url));
     const padding = (4 - byteLength % 4) % 4;
     if (padding) { chunks.push(Buffer.alloc(padding)); byteLength += padding; }
     const bufferView = gltf.bufferViews.push({ buffer: 0, byteOffset: byteLength, byteLength: bytes.length }) - 1;
     chunks.push(bytes); byteLength += bytes.length;
-    const imageIndex = gltf.images.push({ name: file, bufferView, mimeType: 'image/png' }) - 1;
-    textureByMaterial.set(material, gltf.textures.push({ source: imageIndex, sampler: 0 }) - 1);
-    textureRecords.push({ name: file, material, embedded: true,
-      width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20), bytes: bytes.length,
+    const imageIndex = gltf.images.push({ name: spec.file.split('/').at(-1), bufferView, mimeType: spec.mimeType }) - 1;
+    textureByMaterial.set(spec.material, gltf.textures.push({ source: imageIndex, sampler: 0 }) - 1);
+    const width = spec.width ?? bytes.readUInt32BE(16);
+    const height = spec.height ?? bytes.readUInt32BE(20);
+    textureRecords.push({ name: spec.file, material: spec.material, embedded: true,
+      mime: spec.mimeType, width, height, bytes: bytes.length,
+      ...(spec.derivative ? { derivative: spec.derivative } : { derivative: 'source image embedded unchanged' }),
       sha256: createHash('sha256').update(bytes).digest('hex') });
   }
   function accessor(values, width, type, componentType, target, bounds = false) {
@@ -102,13 +108,14 @@ try {
       roof: 'local Z/ridge versus local X/slope UV orientation from source geometry',
     },
     textures: textureRecords,
-    texture_transfer_note: 'Original source PNGs are preserved and embedded unchanged. No established image encoder/compressor is currently part of the repository toolchain, so this export does not introduce an ad-hoc compression implementation.',
+    texture_transfer_note: 'Original source PNGs remain unchanged. Timber and thatch reuse the established project 512px JPEG runtime derivatives produced with Pillow 12.3.0 (LANCZOS, quality 90, 4:4:4, optimize+progressive). Daub remains its original PNG in this pass.',
     lod: 'none', status: 'Exported WIP candidate; QA-only supplied-storehouse preview route',
     validation: 'Exporter output requires strict GLB check plus browser/visual QA after regeneration',
-    limitations: ['Timber, thatch and daub have base-color textures; wattle and earth use solid factors',
-      'No normal or roughness maps; generated albedo tileability and baked shading require review',
-      'Source PNG transfer size remains high until an established free encoder is adopted and pinned',
+    limitations: ['Timber/thatch use lossy 512px base-color runtime derivatives; daub uses its source base-color PNG; wattle and earth use solid factors',
+      'No normal or roughness maps are inferred from base color',
+      'Daub remains the largest unoptimized source texture in this pass',
+      '512px JPEG visual parity and generated albedo tileability require QA at intended RTS distance',
       'Roughness uses scalar factors only; visual parity requires external review'] };
   writeFileSync(receipt, JSON.stringify(record, null, 2) + '\n');
-  console.log(JSON.stringify({ output: record.output, bytes: record.bytes, stats: record.stats, uv: record.uv_strategy }));
+  console.log(JSON.stringify({ output: record.output, bytes: record.bytes, stats: record.stats, textures: record.textures, uv: record.uv_strategy }));
 } finally { rmSync(temporary, { force: true }); }
