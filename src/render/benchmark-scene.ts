@@ -26,12 +26,14 @@ import {
   SETTLEMENT,
   randomGenerator,
   riverCenter,
+  pathCenter,
   smoothstep,
 } from './landscape';
 import { InspectionCamera, type ViewName } from './inspection-camera';
 import { createMeadow } from './meadow';
 import { createBoiiStorehouse } from './storehouse';
 import { createBoiiWorkshop } from './workshop.ts';
+import { createCentralEuropeanTree } from './tree.ts';
 
 export interface BenchmarkModels {
   dwelling: string | null;
@@ -54,6 +56,7 @@ export const ADMITTED_MODELS: BenchmarkModels = {
 // admitted production GLB and not a generic primitive fallback.
 export const USE_PROCEDURAL_STOREHOUSE_CANDIDATE = true;
 export const USE_PROCEDURAL_WORKSHOP_CANDIDATE = true;
+export const USE_PROCEDURAL_TREE_CANDIDATE = true;
 
 export class BenchmarkScene implements RuntimeScene {
   private root: Entity | undefined;
@@ -72,6 +75,7 @@ export class BenchmarkScene implements RuntimeScene {
   private drawCalls = 0;
   private storehouseTriangles = 0;
   private workshopTriangles = 0;
+  private treeTriangles = 0;
   private readonly foliage: Entity[] = [];
   private app: Application | undefined;
   private destroyed = false;
@@ -319,6 +323,12 @@ export class BenchmarkScene implements RuntimeScene {
       const resource = await this.assets.model(this.models.tree);
       if (!this.active) return;
       this.plantTrees(resource);
+    } else if (USE_PROCEDURAL_TREE_CANDIDATE && this.active && this.app && this.root) {
+      const candidate = createCentralEuropeanTree(this.app);
+      this.meshes.push(...candidate.meshes);
+      this.materials.push(...candidate.materials);
+      this.treeTriangles = candidate.stats.triangles;
+      this.plantProceduralTrees(candidate.entity);
     }
   }
 
@@ -335,6 +345,34 @@ export class BenchmarkScene implements RuntimeScene {
       this.foliage.push(tree);
       this.trees++;
     }
+  }
+
+  private plantProceduralTrees(template: Entity): void {
+    if (!this.root) {
+      template.destroy();
+      return;
+    }
+    const random = randomGenerator(271828);
+    let planted = 0;
+    for (let attempt = 0; attempt < 180 && planted < 32; attempt++) {
+      const x = -92 + random() * 166;
+      const z = -88 + random() * 164;
+      if (Math.hypot(x, z) < 34) continue;
+      if (Math.abs(x - riverCenter(z)) < 10) continue;
+      if (Math.abs(z - pathCenter(x)) < 5.5) continue;
+
+      const tree = planted === 0 ? template : template.clone();
+      tree.name = `Procedural deciduous tree ${planted + 1}`;
+      const scale = 0.80 + random() * 0.32;
+      tree.setLocalScale(scale, scale * (0.94 + random() * 0.12), scale);
+      tree.setPosition(x, landscape.heightAt(x, z), z);
+      tree.setEulerAngles(0, random() * 360, 0);
+      this.root.addChild(tree);
+      this.foliage.push(tree);
+      this.trees++;
+      planted++;
+    }
+    if (planted === 0) template.destroy();
   }
 
   setView(view: ViewName): void {
@@ -364,6 +402,8 @@ export class BenchmarkScene implements RuntimeScene {
       storehouseTriangles: this.storehouseTriangles,
       workshopCandidate: this.workshopTriangles > 0 ? 'procedural-project-owned' : 'absent',
       workshopTriangles: this.workshopTriangles,
+      treeCandidate: this.treeTriangles > 0 ? 'procedural-project-owned' : 'absent',
+      treeCandidateTriangles: this.treeTriangles,
       drawCalls: this.drawCalls,
     };
   }
@@ -389,6 +429,7 @@ export class BenchmarkScene implements RuntimeScene {
     this.water = undefined;
     this.storehouseTriangles = 0;
     this.workshopTriangles = 0;
+    this.treeTriangles = 0;
     this.app = undefined;
   }
 }

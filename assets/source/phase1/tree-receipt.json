@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "asset": "Central European mature deciduous tree procedural candidate",
+  "project": "BOHEMIA: AGE OF TRIBES",
+  "created": "2026-09-18",
+  "source": {
+    "type": "original_project_code",
+    "path": "src/render/tree.ts",
+    "initial_source_commit": "28e4f4e04919b6d549e0ca21467a9f2b8a00747c",
+    "refined_source_commit": "ce8b64875906614d8a3178e0e9dbcec56da15195",
+    "third_party_art": false,
+    "external_generator": null,
+    "cost": 0,
+    "license_note": "Internal project work; no third-party mesh or texture is incorporated."
+  },
+  "design_basis": {
+    "brief": "assets/source/PHASE1_ASSET_REQUESTS.md#oak_mature_central_europe.glb--birch_young_central_europe.glb",
+    "intended_region": "south/central Bohemia",
+    "intended_use": "mature broadleaf forest-edge composition candidate",
+    "candidate_description": "broad irregular oak-like silhouette with stout branching and dense summer crown",
+    "botanical_acceptance": "pending",
+    "historical_acceptance": "pending"
+  },
+  "generation": {
+    "method": "deterministic procedural PlayCanvas mesh generation at runtime",
+    "deterministic_seed": 20260918,
+    "runtime_placement_seed": 271828,
+    "material_groups": 2,
+    "material_names": ["Tree bark", "Summer foliage"],
+    "external_textures": false,
+    "vertex_colored_foliage": true,
+    "runtime_instances": 32,
+    "shared_meshes": true,
+    "lod0_present": true,
+    "lod_plan": {
+      "status": "pending_implementation",
+      "lod1_target_triangles": "6000-8000",
+      "lod2_target_triangles": "1500-2500 or billboard/impostor after pipeline approval",
+      "switching_note": "Implement distance-based LOD only after actual-hardware benchmark establishes useful thresholds."
+    }
+  },
+  "validated_geometry": {
+    "workflow_run": 35293542861,
+    "node_tests": "17/17 passed",
+    "triangles": 15980,
+    "vertices": 8980,
+    "bounds_metres": {
+      "width": 11.106874439122981,
+      "height": 13.289766870663216,
+      "depth": 11.402900414546375
+    },
+    "finite_attributes": true,
+    "valid_indices": true,
+    "non_degenerate_triangles": true,
+    "foliage_vertex_color_stream": true,
+    "target_lod0_triangle_budget": "15000-40000",
+    "budget_passed": true,
+    "target_height_metres": "10-15",
+    "height_passed": true
+  },
+  "runtime_validation": {
+    "workflow_run": 35293542861,
+    "renderer": "software WebGL2 via ANGLE/SwiftShader",
+    "trees_observed": 32,
+    "tree_diagnostic": "procedural-project-owned",
+    "tree_triangles_observed": 15980,
+    "phase1_draw_calls_observed": 287,
+    "lifecycle_remount_cycles": "3/3 passed",
+    "phase0_webgpu_regression": "passed",
+    "screenshot_artifact_id": 10527079036,
+    "screenshot_review": "forest-edge composition remains outside the settlement clearing and does not block the path or stream; refined crown is darker and less spherical than the first candidate, but remains stylized WIP rather than production vegetation"
+  },
+  "admission": {
+    "admitted_models_tree": null,
+    "candidate_integrated": true,
+    "art_gate_passed": false,
+    "visual_acceptance": "pending",
+    "botanical_acceptance": "pending",
+    "historical_acceptance": "pending",
+    "actual_hardware_performance": "pending",
+    "production_asset_status": "candidate_not_final"
+  }
+}
