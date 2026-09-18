@@ -151,6 +151,9 @@ try {
       Number(diagnostics.oakTrees) >= 20 &&
       Number(diagnostics.birchTrees) >= 4 &&
       Number(diagnostics.treeTriangles) >= 10_000 && Number(diagnostics.treeTriangles) <= 24_000 &&
+      diagnostics.inhabitantCandidate === 'procedural-project-owned-generic-worker-study' &&
+      Number(diagnostics.inhabitants) >= 5 &&
+      Number(diagnostics.inhabitantTriangles) >= 1_200 && Number(diagnostics.inhabitantTriangles) <= 3_000 &&
       Number(diagnostics.grassClumps) >= 1
     ) {
       healthyState = state;
@@ -177,7 +180,10 @@ try {
     Number(diagnostics?.trees) < 30 ||
     Number(diagnostics?.oakTrees) < 20 ||
     Number(diagnostics?.birchTrees) < 4 ||
-    Number(diagnostics?.treeTriangles) < 10_000 || Number(diagnostics?.treeTriangles) > 24_000
+    Number(diagnostics?.treeTriangles) < 10_000 || Number(diagnostics?.treeTriangles) > 24_000 ||
+    diagnostics?.inhabitantCandidate !== 'procedural-project-owned-generic-worker-study' ||
+    Number(diagnostics?.inhabitants) < 5 ||
+    Number(diagnostics?.inhabitantTriangles) < 1_200 || Number(diagnostics?.inhabitantTriangles) > 3_000
   ) {
     throw new Error(`Phase 1 scene became unhealthy before evidence capture: ${JSON.stringify(finalState)}`);
   }
@@ -191,6 +197,8 @@ try {
     tick: diagnostics.tick,
     structures: diagnostics.structures,
     inhabitants: diagnostics.inhabitants,
+    inhabitantCandidate: diagnostics.inhabitantCandidate,
+    inhabitantTriangles: diagnostics.inhabitantTriangles,
     trees: diagnostics.trees,
     grassClumps: diagnostics.grassClumps,
     storehouseCandidate: diagnostics.storehouseCandidate,
