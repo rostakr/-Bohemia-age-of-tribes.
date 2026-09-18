@@ -34,12 +34,12 @@ test('procedural Boii inhabitant is finite, indexed and readable at RTS scale', 
 test('procedural Boii inhabitant has no degenerate triangles', () => {
   const data = createBoiiInhabitantGeometry();
   for (let i = 0; i < data.indices.length; i += 3) {
-    const ia = data.indices[i]! * 3;
-    const ib = data.indices[i + 1]! * 3;
-    const ic = data.indices[i + 2]! * 3;
-    const ax = data.positions[ia]!, ay = data.positions[ia + 1]!, az = data.positions[ia + 2]!;
-    const abx = data.positions[ib]! - ax, aby = data.positions[ib + 1]! - ay, abz = data.positions[ib + 2]! - az;
-    const acx = data.positions[ic]! - ax, acy = data.positions[ic + 1]! - ay, acz = data.positions[ic + 2]! - az;
+    const ia = data.indices[i] * 3;
+    const ib = data.indices[i + 1] * 3;
+    const ic = data.indices[i + 2] * 3;
+    const ax = data.positions[ia], ay = data.positions[ia + 1], az = data.positions[ia + 2];
+    const abx = data.positions[ib] - ax, aby = data.positions[ib + 1] - ay, abz = data.positions[ib + 2] - az;
+    const acx = data.positions[ic] - ax, acy = data.positions[ic + 1] - ay, acz = data.positions[ic + 2] - az;
     const nx = aby * acz - abz * acy;
     const ny = abz * acx - abx * acz;
     const nz = abx * acy - aby * acx;
