@@ -45,18 +45,31 @@
     "target_height_metres": "1.65-1.80"
   },
   "validation": {
-    "pull_request": null,
-    "workflow_run": null,
-    "result": "pending",
-    "node_tests": "pending",
-    "phase0_regressions": "pending",
-    "phase1_webgl2_smoke": "pending",
-    "observed_inhabitants": null,
-    "observed_prototype_triangles": null,
-    "observed_prototype_vertices": null,
-    "observed_bounds_metres": null,
-    "observed_draw_calls": null,
-    "screenshot_artifact_id": null
+    "pull_request": 31,
+    "workflow_run": 35295204001,
+    "workflow_head_sha": "ce385be1db17d06db79c1b59d1d2cd170013fc74",
+    "result": "passed",
+    "node_tests": "19/19 passed",
+    "phase0_webgl2_regression": "passed",
+    "phase0_interaction_regression": "passed",
+    "lifecycle_remount": "3/3 passed",
+    "phase0_software_webgpu_regression": "passed",
+    "phase1_webgl2_smoke": "passed",
+    "observed_inhabitants": 5,
+    "observed_prototype_triangles": 1404,
+    "observed_prototype_vertices": 910,
+    "observed_bounds_metres": {
+      "width": 0.8403896193541825,
+      "height": 1.7169999999999999,
+      "depth": 0.395
+    },
+    "observed_tree_instances": 32,
+    "observed_tree_candidate_triangles": 15980,
+    "observed_draw_calls": 307,
+    "screenshot_artifact_id": 10527691989,
+    "screenshot_artifact_sha256": "97ba65f5d78aaf0fada4826c6d8800fea2672237e50993ffccfc76c90ed4bd9d",
+    "screenshot_review": "Five inhabitants are visible at settlement RTS scale on the authoritative current-main tree implementation. Human scale is plausible and no obvious terrain penetration is visible. Shared static pose and simplified face/clothing remain WIP; production visual acceptance is open.",
+    "ci_performance_note": "SwiftShader/software CI only; FPS/frame time are not actual-hardware performance evidence."
   },
   "admission": {
     "candidate_integrated_on_branch": true,
