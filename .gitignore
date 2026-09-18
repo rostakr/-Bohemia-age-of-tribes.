@@ -5,3 +5,5 @@ dist/
 .env*
 !.env.example
 artifacts/
+public/assets/buildings/boii_dwelling_rectangular_lod1.glb
+public/assets/buildings/boii_dwelling_rectangular_lod2.glb

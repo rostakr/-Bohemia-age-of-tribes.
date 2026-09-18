@@ -46,7 +46,7 @@ export interface BenchmarkModels {
 
 // Never silently replace missing production models with primitives.
 export const ADMITTED_MODELS: BenchmarkModels = {
-  dwelling: 'buildings/boii_dwelling_rectangular.glb',
+  dwelling: 'buildings/boii_dwelling_rectangular_lod1.glb',
   storehouse: null,
   workshop: null,
   inhabitant: null,
@@ -59,6 +59,7 @@ export const USE_PROCEDURAL_STOREHOUSE_CANDIDATE = true;
 export const USE_PROCEDURAL_WORKSHOP_CANDIDATE = true;
 export const USE_PROCEDURAL_TREE_CANDIDATE = true;
 export const USE_PROCEDURAL_INHABITANT_CANDIDATE = true;
+export const DWELLING_LOD1_TRIANGLES = 53_538;
 
 export class BenchmarkScene implements RuntimeScene {
   private root: Entity | undefined;
@@ -75,6 +76,7 @@ export class BenchmarkScene implements RuntimeScene {
   private trees = 0;
   private grassClumps = 0;
   private drawCalls = 0;
+  private dwellingTriangles = 0;
   private storehouseTriangles = 0;
   private workshopTriangles = 0;
   private treeTriangles = 0;
@@ -282,6 +284,9 @@ export class BenchmarkScene implements RuntimeScene {
       entity.setPosition(pad.x, pad.y, pad.z);
       entity.setEulerAngles(0, index === 0 ? 15 : -25, 0);
       this.root!.addChild(entity);
+      if (index === 0 && path === ADMITTED_MODELS.dwelling) {
+        this.dwellingTriangles = DWELLING_LOD1_TRIANGLES;
+      }
       this.buildings++;
     }
 
@@ -419,6 +424,9 @@ export class BenchmarkScene implements RuntimeScene {
       inhabitantTriangles: this.inhabitantTriangles,
       trees: this.trees,
       grassClumps: this.grassClumps,
+      dwellingCandidate: this.dwellingTriangles > 0 ? 'trellis-derived-generated-lod1' : 'custom-or-absent',
+      dwellingLod: this.dwellingTriangles > 0 ? 1 : 0,
+      dwellingTriangles: this.dwellingTriangles,
       storehouseCandidate: this.storehouseTriangles > 0 ? 'procedural-project-owned' : 'absent',
       storehouseTriangles: this.storehouseTriangles,
       workshopCandidate: this.workshopTriangles > 0 ? 'procedural-project-owned' : 'absent',
@@ -448,6 +456,7 @@ export class BenchmarkScene implements RuntimeScene {
     this.assets = undefined;
     this.foliage.length = 0;
     this.water = undefined;
+    this.dwellingTriangles = 0;
     this.storehouseTriangles = 0;
     this.workshopTriangles = 0;
     this.treeTriangles = 0;

@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "asset": "Rectangular Boii dwelling generated LOD set",
+  "project": "BOHEMIA: AGE OF TRIBES",
+  "created": "2026-09-18",
+  "source": {
+    "path": "public/assets/buildings/boii_dwelling_rectangular.glb",
+    "sha256": "faa41587ee4631017dc0cf8abdaceb06a4b7ef93996c4914458b5ed80c9382aa",
+    "bytes": 5621848,
+    "vertices": 105019,
+    "triangles": 99298,
+    "origin": "Existing TRELLIS.2-converted dwelling candidate; see dwelling-receipt.json",
+    "source_preserved_as_lod0": true
+  },
+  "generator": {
+    "path": "scripts/generate-dwelling-lods.mjs",
+    "dependencies": "Node.js standard library only",
+    "method": "deterministic position/UV vertex clustering, degenerate and duplicate triangle removal, vertex compaction, area-weighted normal recomputation, GLB rebuild",
+    "embedded_images": "original embedded WebP image bytes copied unchanged",
+    "material_contract": "one source material preserved with EXT_texture_webp",
+    "generated_outputs_git_tracked": false,
+    "generation_hooks": ["pretest", "prebuild", "predev"]
+  },
+  "lods": [
+    {
+      "name": "LOD1",
+      "path": "public/assets/buildings/boii_dwelling_rectangular_lod1.glb",
+      "voxel": 0.015,
+      "uv_step": 0.05,
+      "vertices": 55089,
+      "triangles": 53538,
+      "bytes": 3153728,
+      "sha256": "e0b247ef3fd8d3a943999053c5414734e4e940392650209471f4f0e970cdf006",
+      "benchmark_default_on_branch": true
+    },
+    {
+      "name": "LOD2",
+      "path": "public/assets/buildings/boii_dwelling_rectangular_lod2.glb",
+      "voxel": 0.025,
+      "uv_step": 0.05,
+      "vertices": 34205,
+      "triangles": 31286,
+      "bytes": 2351928,
+      "sha256": "ae8ea6e88fa3c2a9eb0b3d53cb01363b4bf61a41e8f553aeb2dcebe35bd311f7",
+      "benchmark_default_on_branch": false
+    }
+  ],
+  "validation": {
+    "pull_request": null,
+    "workflow_run": null,
+    "result": "pending",
+    "node_tests": "pending",
+    "phase0_regressions": "pending",
+    "phase1_webgl2_smoke": "pending",
+    "visual_comparison": "pending",
+    "actual_hardware_performance": "pending"
+  },
+  "acceptance": {
+    "lod_pipeline_status": "candidate_pending_ci",
+    "historical_acceptance": "inherits unresolved source dwelling review",
+    "visual_acceptance": "pending",
+    "art_gate_passed": false
+  }
+}
