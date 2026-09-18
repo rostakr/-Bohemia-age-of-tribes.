@@ -1,0 +1,40 @@
+{
+  "purpose": "Phase 1 QA-renderable copies of the two supplied GLBs with explicit NORMAL accessors",
+  "source_policy": "Archived user-supplied originals remain byte-for-byte unchanged. Preview outputs are generated during validation/build and are not canonical runtime admission.",
+  "license_status": "Project owner confirms every supplied asset is licensed for this noncommercial personal-use project; exact licence identifier/text remains pending archival where not already recorded.",
+  "generator": "scripts/add-glb-normals.mjs",
+  "generator_method": "Area-weighted vertex normals computed from existing indexed TRIANGLES geometry; existing POSITION, UV, materials and embedded textures are preserved.",
+  "candidates": [
+    {
+      "asset": "boii_carpentry_shed_open",
+      "source": "assets/source/phase1/user-supplied/boii_carpentry_shed_open.original.glb",
+      "source_sha256": "079a36689153538124c388faf84b0ab6e49b4b3b6d41c41a1f8de2aae5e32b1f",
+      "source_bytes": 3923436,
+      "triangles": 89778,
+      "vertices": 65301,
+      "output": "public/assets/buildings/boii_carpentry_shed_open_qa_preview.glb",
+      "status": "technical QA preview only; above the current 20k-45k workshop target and not canonical-admitted"
+    },
+    {
+      "asset": "boii_adult_worker",
+      "source": "assets/source/phase1/user-supplied/boii_adult_worker.original.glb",
+      "source_sha256": "40f00021016c8157459cc4dab9612bba849654afe89c82c45795cdb0d0d21a0c",
+      "source_bytes": 1639660,
+      "triangles": 14106,
+      "vertices": 9805,
+      "output": "public/assets/characters/boii_adult_worker_qa_preview.glb",
+      "status": "technical QA preview only; below the current production character triangle brief and not canonical-admitted"
+    }
+  ],
+  "required_checks": [
+    "strict GLB parse",
+    "all primitives TRIANGLES",
+    "finite POSITION/NORMAL/TEXCOORD_0",
+    "explicit NORMAL on every primitive",
+    "UV0 retained",
+    "triangle counts remain within narrow source-derived structural guards",
+    "separate visual/historical QA before any runtime admission"
+  ],
+  "validation": "pending CI on this branch",
+  "art_gate": false
+}
