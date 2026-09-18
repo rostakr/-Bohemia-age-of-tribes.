@@ -17,6 +17,7 @@
     "smoke:lifecycle": "node scripts/browser-lifecycle.mjs",
     "smoke:webgpu": "node scripts/browser-webgpu-smoke.mjs",
     "smoke:phase1": "node scripts/browser-phase1-smoke.mjs",
+    "smoke:supplied-storehouse": "node scripts/browser-supplied-storehouse-smoke.mjs",
     "check:glb": "node scripts/check-glb.mjs",
     "prepare:glb-normals": "node scripts/add-glb-normals.mjs",
     "check:phase1-assets": "node --check scripts/check-glb.mjs && node --check scripts/add-glb-normals.mjs && node --check scripts/check-phase1-assets.mjs && node scripts/check-phase1-assets.mjs",
