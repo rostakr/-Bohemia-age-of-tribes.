@@ -33,6 +33,7 @@ import { createMeadow } from './meadow';
 import { createBoiiStorehouse } from './storehouse';
 import { createBoiiWorkshop } from './workshop.ts';
 import { createCentralEuropeanTreeStudy } from './trees';
+import { createBoiiInhabitantCandidate } from './inhabitant';
 
 export interface BenchmarkModels {
   dwelling: string | null;
@@ -56,6 +57,7 @@ export const ADMITTED_MODELS: BenchmarkModels = {
 export const USE_PROCEDURAL_STOREHOUSE_CANDIDATE = true;
 export const USE_PROCEDURAL_WORKSHOP_CANDIDATE = true;
 export const USE_PROCEDURAL_TREE_STUDY = true;
+export const USE_PROCEDURAL_INHABITANT_CANDIDATE = true;
 
 export class BenchmarkScene implements RuntimeScene {
   private root: Entity | undefined;
@@ -77,6 +79,7 @@ export class BenchmarkScene implements RuntimeScene {
   private oakTrees = 0;
   private birchTrees = 0;
   private treeTriangles = 0;
+  private inhabitantTriangles = 0;
   private readonly foliage: Entity[] = [];
   private app: Application | undefined;
   private destroyed = false;
@@ -336,6 +339,22 @@ export class BenchmarkScene implements RuntimeScene {
         this.root!.addChild(entity);
         this.inhabitants++;
       }
+    } else if (USE_PROCEDURAL_INHABITANT_CANDIDATE && this.active && this.app && this.root) {
+      const candidate = createBoiiInhabitantCandidate(this.app);
+      this.meshes.push(candidate.mesh);
+      this.materials.push(candidate.material);
+      this.inhabitantTriangles = candidate.stats.triangles;
+      const positions: [number, number][] = [[-5, 1], [-2, 3], [4, -5], [-10, 9], [12, 1]];
+      for (const [index, [x, z]] of positions.entries()) {
+        const entity = index === 0 ? candidate.entity : candidate.entity.clone();
+        entity.name = `Boii inhabitant candidate ${index + 1}`;
+        const scale = 0.97 + index * 0.012;
+        entity.setLocalScale(scale, scale, scale);
+        entity.setPosition(x, landscape.heightAt(x, z), z);
+        entity.setEulerAngles(0, index * 67, 0);
+        this.root.addChild(entity);
+        this.inhabitants++;
+      }
     }
 
     if (this.models.tree && this.assets) {
@@ -381,6 +400,8 @@ export class BenchmarkScene implements RuntimeScene {
       terrainMetres: 220,
       structures: this.buildings,
       inhabitants: this.inhabitants,
+      inhabitantCandidate: this.inhabitantTriangles > 0 ? 'procedural-project-owned-generic-worker-study' : 'absent',
+      inhabitantTriangles: this.inhabitantTriangles,
       trees: this.trees,
       grassClumps: this.grassClumps,
       storehouseCandidate: this.storehouseTriangles > 0 ? 'procedural-project-owned' : 'absent',
@@ -419,6 +440,7 @@ export class BenchmarkScene implements RuntimeScene {
     this.oakTrees = 0;
     this.birchTrees = 0;
     this.treeTriangles = 0;
+    this.inhabitantTriangles = 0;
     this.app = undefined;
   }
 }
