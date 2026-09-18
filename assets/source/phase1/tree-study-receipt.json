@@ -28,7 +28,10 @@
     "method": "deterministic procedural PlayCanvas mesh generation at runtime",
     "deterministic_seed": 271828,
     "runtime_batches": 2,
-    "batch_names": ["bark", "foliage"],
+    "batch_names": [
+      "bark",
+      "foliage"
+    ],
     "materials": 2,
     "production_tree_glb_slot": null
   },
@@ -42,16 +45,24 @@
   },
   "validation": {
     "pull_request": 28,
-    "workflow_run": null,
-    "node_tests": "pending",
-    "phase0_regressions": "pending",
-    "phase1_webgl2_smoke": "pending",
-    "observed_tree_count": null,
-    "observed_oaks": null,
-    "observed_birches": null,
-    "observed_triangles": null,
-    "observed_draw_calls": null,
-    "screenshot_artifact_id": null
+    "workflow_run": 35293221711,
+    "workflow_head_sha": "cf32097d5e8edeadf557216cfbdcc73bf60016be",
+    "result": "passed",
+    "node_tests": "16/16 passed",
+    "phase0_webgl2_regression": "passed",
+    "phase0_interaction_regression": "passed",
+    "lifecycle_remount": "3/3 passed",
+    "phase0_software_webgpu_regression": "passed",
+    "phase1_webgl2_smoke": "passed",
+    "observed_tree_count": 36,
+    "observed_oaks": 24,
+    "observed_birches": 12,
+    "observed_triangles": 16272,
+    "observed_draw_calls": 170,
+    "screenshot_artifact_id": 10526818907,
+    "screenshot_artifact_sha256": "a3b8c1972297a3087fdb1577f61670902f104709d4f987d459f8480b28ded159",
+    "screenshot_review": "Forest-edge composition is present and readable at the benchmark camera. Crown geometry remains intentionally low-poly/WIP; visual production acceptance remains open.",
+    "ci_performance_note": "SwiftShader/software CI only; FPS/frame time are not actual-hardware performance evidence."
   },
   "admission": {
     "candidate_integrated_on_branch": true,
