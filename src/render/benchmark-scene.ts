@@ -44,10 +44,12 @@ export interface BenchmarkModels {
   tree: string | null;
 }
 
+export const SUPPLIED_STOREHOUSE_PATH = 'buildings/boii_storehouse_small.glb';
+
 // Never silently replace missing production models with primitives.
 export const ADMITTED_MODELS: BenchmarkModels = {
   dwelling: 'buildings/boii_dwelling_rectangular_lod1.glb',
-  storehouse: 'buildings/boii_storehouse_small.glb',
+  storehouse: null,
   workshop: null,
   inhabitant: null,
   tree: null,
@@ -288,7 +290,7 @@ export class BenchmarkScene implements RuntimeScene {
       if (index === 0 && path === ADMITTED_MODELS.dwelling) {
         this.dwellingTriangles = DWELLING_LOD1_TRIANGLES;
       }
-      if (index === 1 && path === ADMITTED_MODELS.storehouse) {
+      if (index === 1 && path === SUPPLIED_STOREHOUSE_PATH) {
         this.storehouseTriangles = STOREHOUSE_GLB_TRIANGLES;
       }
       this.buildings++;
