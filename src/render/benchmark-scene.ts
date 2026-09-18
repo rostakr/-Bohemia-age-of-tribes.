@@ -47,7 +47,7 @@ export interface BenchmarkModels {
 // Never silently replace missing production models with primitives.
 export const ADMITTED_MODELS: BenchmarkModels = {
   dwelling: 'buildings/boii_dwelling_rectangular_lod1.glb',
-  storehouse: null,
+  storehouse: 'buildings/boii_storehouse_small.glb',
   workshop: null,
   inhabitant: null,
   tree: null,
@@ -427,8 +427,10 @@ export class BenchmarkScene implements RuntimeScene {
       dwellingCandidate: this.dwellingTriangles > 0 ? 'trellis-derived-generated-lod1' : 'custom-or-absent',
       dwellingLod: this.dwellingTriangles > 0 ? 1 : 0,
       dwellingTriangles: this.dwellingTriangles,
-      storehouseCandidate: this.storehouseTriangles > 0 ? 'procedural-project-owned' : 'absent',
-      storehouseTriangles: this.storehouseTriangles,
+      storehouseCandidate: this.models.storehouse
+        ? 'project-owned-textured-glb-wip'
+        : this.storehouseTriangles > 0 ? 'procedural-project-owned' : 'absent',
+      storehouseTriangles: this.models.storehouse ? 15_550 : this.storehouseTriangles,
       workshopCandidate: this.workshopTriangles > 0 ? 'procedural-project-owned' : 'absent',
       workshopTriangles: this.workshopTriangles,
       treeCandidate: this.treeTriangles > 0 ? 'procedural-project-owned' : 'absent',

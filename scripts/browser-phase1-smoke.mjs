@@ -145,8 +145,8 @@ try {
       diagnostics.dwellingCandidate === 'trellis-derived-generated-lod1' &&
       Number(diagnostics.dwellingLod) === 1 &&
       Number(diagnostics.dwellingTriangles) === 53_538 &&
-      diagnostics.storehouseCandidate === 'procedural-project-owned' &&
-      Number(diagnostics.storehouseTriangles) >= 15_000 &&
+      diagnostics.storehouseCandidate === 'project-owned-textured-glb-wip' &&
+      Number(diagnostics.storehouseTriangles) === 15_550 &&
       diagnostics.workshopCandidate === 'procedural-project-owned' &&
       Number(diagnostics.workshopTriangles) >= 20_000 &&
       diagnostics.treeCandidate === 'procedural-project-owned' &&
@@ -176,8 +176,8 @@ try {
     diagnostics?.dwellingCandidate !== 'trellis-derived-generated-lod1' ||
     Number(diagnostics?.dwellingLod) !== 1 ||
     Number(diagnostics?.dwellingTriangles) !== 53_538 ||
-    diagnostics?.storehouseCandidate !== 'procedural-project-owned' ||
-    Number(diagnostics?.storehouseTriangles) < 15_000 ||
+    diagnostics?.storehouseCandidate !== 'project-owned-textured-glb-wip' ||
+    Number(diagnostics?.storehouseTriangles) !== 15_550 ||
     diagnostics?.workshopCandidate !== 'procedural-project-owned' ||
     Number(diagnostics?.workshopTriangles) < 20_000 ||
     diagnostics?.treeCandidate !== 'procedural-project-owned' ||
