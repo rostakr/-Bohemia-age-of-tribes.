@@ -1,0 +1,77 @@
+{
+  "schema_version": 2,
+  "asset": "Generic Boii adult inhabitant low-poly readability prototype",
+  "project": "BOHEMIA: AGE OF TRIBES",
+  "updated": "2026-09-18",
+  "source": {
+    "type": "original_project_code_with_prior_user_visual_reference",
+    "path": "src/render/inhabitant.ts",
+    "third_party_mesh_or_texture": false,
+    "external_generator": null,
+    "cost": 0,
+    "reference_scope": "Broad adult proportions and earth-tone tunic/trouser silhouette only; no source pixels/textures and no identity reproduction."
+  },
+  "design_basis": {
+    "culture": "Boii / Late La Tene readability study",
+    "role": "generic adult worker / settlement inhabitant",
+    "target_population": 5,
+    "production_brief": "assets/source/PHASE1_ASSET_REQUESTS.md#boii_adult_workerglb",
+    "production_target": "1.72 m; 25k-50k triangles; one 2K atlas; rig optional for milestone",
+    "prototype_deviation": "Current procedural prototype is intentionally only 1,404 triangles with vertex colours and no texture atlas/rig. It must not be treated as satisfying the production character request.",
+    "historical_acceptance": "pending"
+  },
+  "runtime": {
+    "method": "one shared procedural PlayCanvas mesh and shared vertex-colour material cloned across five static entities",
+    "production_glb_slot": null,
+    "rigged": false,
+    "animation": false,
+    "prototype_triangle_gate": "1200-3000",
+    "production_triangle_gate": "25000-50000 (not met by prototype by design)",
+    "target_height_metres": "1.65-1.80 prototype gate; 1.72 m production target"
+  },
+  "handoff_evidence": {
+    "source_pull_request": 30,
+    "source_workflow_run": 35294218995,
+    "result": "passed on superseded forest-base branch; used only as prior evidence before reconciliation",
+    "observed_inhabitants": 5,
+    "observed_prototype_triangles": 1404,
+    "observed_prototype_vertices": 910,
+    "observed_bounds_metres": {
+      "width": 0.8403896193541825,
+      "height": 1.7169999999999999,
+      "depth": 0.395
+    }
+  },
+  "reconciled_validation": {
+    "pull_request": 33,
+    "workflow_run": 35335770768,
+    "workflow_head_sha": "106a821f0849ccd071e92c2688388301d4e6e775",
+    "result": "passed",
+    "node_tests": "19/19 passed",
+    "phase0_webgl2_regression": "passed",
+    "phase0_interaction_regression": "passed",
+    "lifecycle_remount": "3/3 passed with 32 tree instances and 5 inhabitant prototypes",
+    "phase0_software_webgpu_regression": "passed",
+    "phase1_webgl2_smoke": "passed",
+    "observed_structures": 3,
+    "observed_trees": 32,
+    "observed_inhabitants": 5,
+    "observed_prototype_triangles": 1404,
+    "observed_prototype_vertices": 910,
+    "observed_draw_calls": 307,
+    "screenshot_artifact_id": 10542528341,
+    "screenshot_artifact_sha256": "026a6778162347088bf6a30301005bf96236da4de6a5d7ad51d7ce2c62aec23a",
+    "screenshot_review": "All five static inhabitants are visible at RTS benchmark scale with plausible human scale and no obvious terrain penetration. They remain low-detail silhouette/readability prototypes only; production character detail, texture atlas, rig/animation and historical visual acceptance remain open.",
+    "ci_performance_note": "SwiftShader/software CI only; FPS/frame-time values are not actual-hardware performance evidence."
+  },
+  "admission": {
+    "candidate_integrated_on_branch": true,
+    "admitted_models_inhabitant": null,
+    "art_gate_passed": false,
+    "production_brief_satisfied": false,
+    "visual_acceptance": "pending production character replacement",
+    "historical_acceptance": "pending",
+    "actual_hardware_performance": "pending",
+    "production_asset_status": "low_poly_readability_prototype_not_final"
+  }
+}
