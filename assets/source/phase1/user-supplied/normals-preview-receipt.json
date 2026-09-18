@@ -1,0 +1,69 @@
+{
+  "purpose": "Phase 1 QA-renderable copies of the two supplied GLBs with explicit NORMAL accessors",
+  "source_policy": "Archived user-supplied originals remain byte-for-byte unchanged. Preview outputs are generated during validation/build and are not canonical runtime admission.",
+  "license_status": "Project owner confirms every supplied asset is licensed for this noncommercial personal-use project; exact licence identifier/text remains pending archival where not already recorded.",
+  "generator": "scripts/add-glb-normals.mjs",
+  "generator_method": "Area-weighted vertex normals computed from existing indexed TRIANGLES geometry; existing POSITION, UV, materials and embedded textures are preserved.",
+  "candidates": [
+    {
+      "asset": "boii_carpentry_shed_open",
+      "source": "assets/source/phase1/user-supplied/boii_carpentry_shed_open.original.glb",
+      "source_sha256": "079a36689153538124c388faf84b0ab6e49b4b3b6d41c41a1f8de2aae5e32b1f",
+      "source_bytes": 3923436,
+      "triangles": 89778,
+      "vertices": 65301,
+      "output": "public/assets/buildings/boii_carpentry_shed_open_qa_preview.glb",
+      "output_bytes": 4707200,
+      "output_sha256": "86008b2cab9f5df653c18967e46734fc48fd34c03188ca6034e0bce8c0cb20e2",
+      "primitives": 1,
+      "normal_primitives": 1,
+      "uv0_primitives": 1,
+      "materials": 1,
+      "embedded_images": 1,
+      "status": "technical QA preview only; above the current 20k-45k workshop target and not canonical-admitted"
+    },
+    {
+      "asset": "boii_adult_worker",
+      "source": "assets/source/phase1/user-supplied/boii_adult_worker.original.glb",
+      "source_sha256": "40f00021016c8157459cc4dab9612bba849654afe89c82c45795cdb0d0d21a0c",
+      "source_bytes": 1639660,
+      "triangles": 14106,
+      "vertices": 9805,
+      "output": "public/assets/characters/boii_adult_worker_qa_preview.glb",
+      "output_bytes": 1757468,
+      "output_sha256": "c0faf805add95da38efeb3439d8c40cabc3295e9eb351fb364397554e165b953",
+      "primitives": 1,
+      "normal_primitives": 1,
+      "uv0_primitives": 1,
+      "materials": 1,
+      "embedded_images": 1,
+      "status": "technical QA preview only; below the current production character triangle brief and not canonical-admitted"
+    }
+  ],
+  "required_checks": [
+    "strict GLB parse",
+    "all primitives TRIANGLES",
+    "finite POSITION/NORMAL/TEXCOORD_0",
+    "explicit NORMAL on every primitive",
+    "UV0 retained",
+    "triangle counts remain within narrow source-derived structural guards",
+    "separate visual/historical QA before any runtime admission"
+  ],
+  "validation": {
+    "prior_equivalent_pull_request": 50,
+    "prior_equivalent_workflow_run": 35407528961,
+    "prior_equivalent_result": "PASS",
+    "prior_equivalent_node_tests": "22/22 passed",
+    "prior_equivalent_strict_preview_checks": "passed for workshop and worker",
+    "prior_equivalent_webgl2": "passed",
+    "prior_equivalent_interactions": "passed",
+    "prior_equivalent_lifecycle_remount_3x": "passed",
+    "prior_equivalent_software_webgpu": "passed",
+    "prior_equivalent_phase1_benchmark_smoke": "passed; default benchmark did not render these preview candidates",
+    "prior_equivalent_static_build_artifact": 10573041949,
+    "prior_equivalent_artifact_hashes_verified_after_download": true,
+    "current_base": "ec259865fc57b2afbfd6aa807d806740e25a8d43",
+    "current_base_note": "Rebuilt on latest QA head to preserve new supplied-storehouse workflow/smoke changes; fresh CI required before this replacement branch is handed off as final."
+  },
+  "art_gate": false
+}
