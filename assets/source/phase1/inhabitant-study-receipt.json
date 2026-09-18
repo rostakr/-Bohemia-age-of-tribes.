@@ -45,16 +45,29 @@
     "target_height_metres": "1.65-1.80"
   },
   "validation": {
-    "pull_request": null,
-    "workflow_run": null,
-    "result": "pending",
-    "node_tests": "pending",
-    "phase0_regressions": "pending",
-    "phase1_webgl2_smoke": "pending",
-    "observed_inhabitants": null,
-    "observed_prototype_triangles": null,
-    "observed_draw_calls": null,
-    "screenshot_artifact_id": null
+    "pull_request": 30,
+    "workflow_run": 35293962252,
+    "workflow_head_sha": "79a02aa9392bb6d3798b4b510c942de3eebd022c",
+    "result": "passed",
+    "node_tests": "18/18 passed",
+    "phase0_webgl2_regression": "passed",
+    "phase0_interaction_regression": "passed",
+    "lifecycle_remount": "3/3 passed",
+    "phase0_software_webgpu_regression": "passed",
+    "phase1_webgl2_smoke": "passed",
+    "observed_inhabitants": 5,
+    "observed_prototype_triangles": 1404,
+    "observed_prototype_vertices": 910,
+    "observed_bounds_metres": {
+      "width": 0.8403896193541825,
+      "height": 1.7169999999999999,
+      "depth": 0.395
+    },
+    "observed_draw_calls": 190,
+    "screenshot_artifact_id": 10527019711,
+    "screenshot_artifact_sha256": "6187f04097b23538e0daebe51d19a50704642424d4b30f6859e47da607d27adc",
+    "screenshot_review": "Five inhabitants are visible at settlement RTS scale with plausible human scale and no obvious terrain penetration. Shared static pose and low-detail face/clothing remain WIP; production visual acceptance is open.",
+    "ci_performance_note": "SwiftShader/software CI only; FPS/frame time are not actual-hardware performance evidence."
   },
   "admission": {
     "candidate_integrated_on_branch": true,
