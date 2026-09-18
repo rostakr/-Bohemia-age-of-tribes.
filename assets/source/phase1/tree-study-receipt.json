@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "asset": "Central-European oak/birch forest-edge procedural candidate",
+  "project": "BOHEMIA: AGE OF TRIBES",
+  "created": "2026-09-18",
+  "source": {
+    "type": "original_project_code",
+    "path": "src/render/trees.ts",
+    "third_party_art": false,
+    "external_generator": null,
+    "external_textures": false,
+    "cost": 0,
+    "license_note": "Internal project work; no third-party mesh or texture is incorporated."
+  },
+  "design_basis": {
+    "intended_region": "Bohemia / Central Europe",
+    "milestone_use": "Phase 1 forest-edge composition study",
+    "species_mix": "oak-dominant with silver-birch minority",
+    "target_tree_count": 36,
+    "placement_exclusions": [
+      "settlement pads plus clearance",
+      "stream plus bank clearance",
+      "worn path plus clearance"
+    ],
+    "historical_acceptance": "pending"
+  },
+  "generation": {
+    "method": "deterministic procedural PlayCanvas mesh generation at runtime",
+    "deterministic_seed": 271828,
+    "runtime_batches": 2,
+    "batch_names": ["bark", "foliage"],
+    "materials": 2,
+    "production_tree_glb_slot": null
+  },
+  "technical_target": {
+    "total_triangle_budget": "10000-24000",
+    "target_oaks_minimum": 20,
+    "target_birches_minimum": 4,
+    "finite_attributes_required": true,
+    "valid_indices_required": true,
+    "determinism_required": true
+  },
+  "validation": {
+    "pull_request": 28,
+    "workflow_run": null,
+    "node_tests": "pending",
+    "phase0_regressions": "pending",
+    "phase1_webgl2_smoke": "pending",
+    "observed_tree_count": null,
+    "observed_oaks": null,
+    "observed_birches": null,
+    "observed_triangles": null,
+    "observed_draw_calls": null,
+    "screenshot_artifact_id": null
+  },
+  "admission": {
+    "candidate_integrated_on_branch": true,
+    "admitted_models_tree": null,
+    "art_gate_passed": false,
+    "visual_acceptance": "pending",
+    "historical_acceptance": "pending",
+    "actual_hardware_performance": "pending",
+    "production_asset_status": "candidate_not_final"
+  }
+}
