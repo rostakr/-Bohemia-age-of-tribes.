@@ -32,6 +32,7 @@ import { InspectionCamera, type ViewName } from './inspection-camera';
 import { createMeadow } from './meadow';
 import { createBoiiStorehouse } from './storehouse';
 import { createBoiiWorkshop } from './workshop.ts';
+import { createCentralEuropeanTreeStudy } from './trees';
 
 export interface BenchmarkModels {
   dwelling: string | null;
@@ -54,6 +55,7 @@ export const ADMITTED_MODELS: BenchmarkModels = {
 // admitted production GLB and not a generic primitive fallback.
 export const USE_PROCEDURAL_STOREHOUSE_CANDIDATE = true;
 export const USE_PROCEDURAL_WORKSHOP_CANDIDATE = true;
+export const USE_PROCEDURAL_TREE_STUDY = true;
 
 export class BenchmarkScene implements RuntimeScene {
   private root: Entity | undefined;
@@ -72,6 +74,9 @@ export class BenchmarkScene implements RuntimeScene {
   private drawCalls = 0;
   private storehouseTriangles = 0;
   private workshopTriangles = 0;
+  private oakTrees = 0;
+  private birchTrees = 0;
+  private treeTriangles = 0;
   private readonly foliage: Entity[] = [];
   private app: Application | undefined;
   private destroyed = false;
@@ -168,6 +173,24 @@ export class BenchmarkScene implements RuntimeScene {
       }
       this.root!.addChild(surface.entity);
       this.meshes.push(surface.mesh);
+    }
+
+    if (USE_PROCEDURAL_TREE_STUDY && !this.models.tree && this.active && this.app && this.root) {
+      const treeStudy = createCentralEuropeanTreeStudy(this.app);
+      this.materials.push(...treeStudy.materials);
+      this.trees = treeStudy.trees;
+      this.oakTrees = treeStudy.oaks;
+      this.birchTrees = treeStudy.birches;
+      this.treeTriangles = treeStudy.triangles;
+      for (const surface of treeStudy.surfaces) {
+        if (!this.active) {
+          surface.mesh.destroy();
+          surface.entity.destroy();
+          continue;
+        }
+        this.root.addChild(surface.entity);
+        this.meshes.push(surface.mesh);
+      }
     }
 
     await this.populate();
@@ -364,6 +387,10 @@ export class BenchmarkScene implements RuntimeScene {
       storehouseTriangles: this.storehouseTriangles,
       workshopCandidate: this.workshopTriangles > 0 ? 'procedural-project-owned' : 'absent',
       workshopTriangles: this.workshopTriangles,
+      treeCandidate: this.treeTriangles > 0 ? 'procedural-project-owned-central-european-study' : 'absent',
+      oakTrees: this.oakTrees,
+      birchTrees: this.birchTrees,
+      treeTriangles: this.treeTriangles,
       drawCalls: this.drawCalls,
     };
   }
@@ -389,6 +416,9 @@ export class BenchmarkScene implements RuntimeScene {
     this.water = undefined;
     this.storehouseTriangles = 0;
     this.workshopTriangles = 0;
+    this.oakTrees = 0;
+    this.birchTrees = 0;
+    this.treeTriangles = 0;
     this.app = undefined;
   }
 }
