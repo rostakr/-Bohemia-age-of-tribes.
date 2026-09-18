@@ -136,25 +136,26 @@ try {
       state?.status === 'WEBGL2 · Scene running' &&
       state.canvasCount === 1 &&
       diagnostics?.milestone === 'phase-1' &&
+      diagnostics.artGatePassed === false &&
       diagnostics.renderer === 'webgl2' &&
       diagnostics.failed === false &&
       diagnostics.deviceLost === false &&
       Number(diagnostics.tick) >= 1 &&
       Number(diagnostics.drawCalls) >= 1 &&
-      Number(diagnostics.structures) >= 3 &&
+      Number(diagnostics.structures) === 3 &&
       diagnostics.dwellingCandidate === 'trellis-derived-generated-lod1' &&
       Number(diagnostics.dwellingLod) === 1 &&
       Number(diagnostics.dwellingTriangles) === 53_538 &&
-      diagnostics.storehouseCandidate === 'procedural-project-owned' &&
-      Number(diagnostics.storehouseTriangles) >= 15_000 &&
-      diagnostics.workshopCandidate === 'procedural-project-owned' &&
-      Number(diagnostics.workshopTriangles) >= 20_000 &&
+      diagnostics.storehouseCandidate === 'project-owned-glb' &&
+      Number(diagnostics.storehouseTriangles) === 15_550 &&
+      diagnostics.workshopCandidate === 'user-supplied-glb' &&
+      Number(diagnostics.workshopTriangles) === 89_778 &&
       diagnostics.treeCandidate === 'procedural-project-owned' &&
       Number(diagnostics.treeCandidateTriangles) >= 15_000 &&
-      Number(diagnostics.trees) >= 24 &&
-      diagnostics.inhabitantCandidate === 'procedural-project-owned-readability-prototype' &&
-      Number(diagnostics.inhabitants) >= 5 &&
-      Number(diagnostics.inhabitantTriangles) >= 1_200 && Number(diagnostics.inhabitantTriangles) <= 3_000 &&
+      Number(diagnostics.trees) === 32 &&
+      diagnostics.inhabitantCandidate === 'user-supplied-glb' &&
+      Number(diagnostics.inhabitants) === 5 &&
+      Number(diagnostics.inhabitantTriangles) === 14_106 &&
       Number(diagnostics.grassClumps) >= 1
     ) {
       healthyState = state;
@@ -170,22 +171,23 @@ try {
   if (
     finalState?.status !== 'WEBGL2 · Scene running' ||
     finalState.canvasCount !== 1 ||
+    diagnostics?.artGatePassed !== false ||
     diagnostics?.failed !== false || diagnostics?.deviceLost !== false ||
     Number(diagnostics?.tick) < 1 || Number(diagnostics?.drawCalls) < 1 ||
-    Number(diagnostics?.structures) < 3 ||
+    Number(diagnostics?.structures) !== 3 ||
     diagnostics?.dwellingCandidate !== 'trellis-derived-generated-lod1' ||
     Number(diagnostics?.dwellingLod) !== 1 ||
     Number(diagnostics?.dwellingTriangles) !== 53_538 ||
-    diagnostics?.storehouseCandidate !== 'procedural-project-owned' ||
-    Number(diagnostics?.storehouseTriangles) < 15_000 ||
-    diagnostics?.workshopCandidate !== 'procedural-project-owned' ||
-    Number(diagnostics?.workshopTriangles) < 20_000 ||
+    diagnostics?.storehouseCandidate !== 'project-owned-glb' ||
+    Number(diagnostics?.storehouseTriangles) !== 15_550 ||
+    diagnostics?.workshopCandidate !== 'user-supplied-glb' ||
+    Number(diagnostics?.workshopTriangles) !== 89_778 ||
     diagnostics?.treeCandidate !== 'procedural-project-owned' ||
     Number(diagnostics?.treeCandidateTriangles) < 15_000 ||
-    Number(diagnostics?.trees) < 24 ||
-    diagnostics?.inhabitantCandidate !== 'procedural-project-owned-readability-prototype' ||
-    Number(diagnostics?.inhabitants) < 5 ||
-    Number(diagnostics?.inhabitantTriangles) < 1_200 || Number(diagnostics?.inhabitantTriangles) > 3_000
+    Number(diagnostics?.trees) !== 32 ||
+    diagnostics?.inhabitantCandidate !== 'user-supplied-glb' ||
+    Number(diagnostics?.inhabitants) !== 5 ||
+    Number(diagnostics?.inhabitantTriangles) !== 14_106
   ) {
     throw new Error(`Phase 1 scene became unhealthy before evidence capture: ${JSON.stringify(finalState)}`);
   }
