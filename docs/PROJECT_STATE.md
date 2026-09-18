@@ -23,7 +23,9 @@
   "phase_1_storehouse_merge_sha": "b7ca7e822c054227aed3bf9510abd2f3ff0a9a76",
   "phase_1_workshop_pr": 25,
   "phase_1_workshop_merge_sha": "2b0e2f522c1a2d09478879a298796141e4305249",
-  "phase_1_status": "THREE_STRUCTURE_CONTENT_CHECKPOINT_ART_GATE_OPEN",
+  "phase_1_tree_pr": 29,
+  "phase_1_tree_merge_sha": "89c482e99452a125757b26a37dde4622efddb0ee",
+  "phase_1_status": "THREE_STRUCTURE_VEGETATION_CHECKPOINT_ART_GATE_OPEN",
   "hosting_strategy": "Vite/GitHub Pages reference build; no Floot migration performed",
   "deployment": {
     "provider": "github_pages",
@@ -68,7 +70,7 @@
     "phase_1_webgl2_render_smoke": "passed",
     "benchmark_structures": 1,
     "benchmark_inhabitants": 0,
-    "benchmark_trees": 0,
+    "benchmark_trees": 32,
     "benchmark_grass_clumps": 4678,
     "benchmark_draw_calls_ci": 124,
     "art_gate_passed": false
@@ -76,10 +78,11 @@
   "phase_1_content_validation": {
     "storehouse_post_merge_main_workflow_run": 35284536145,
     "workshop_post_merge_main_workflow_run": 35285571215,
+    "tree_post_merge_main_workflow_run": 35293965484,
     "result": "passed",
     "npm_ci": "passed; 0 vulnerabilities",
     "typescript": "passed",
-    "node_tests": "15/15 passed",
+    "node_tests": "17/17 passed",
     "production_build": "passed",
     "phase_0_webgl2_regression": "passed",
     "phase_0_interaction_regression": "passed",
@@ -92,7 +95,8 @@
     "benchmark_grass_clumps": 4678,
     "benchmark_storehouse_triangles": 15550,
     "benchmark_workshop_triangles": 22480,
-    "benchmark_draw_calls_ci": 160,
+    "benchmark_tree_triangles": 15980,
+    "benchmark_draw_calls_ci": 287,
     "art_gate_passed": false
   },
   "production_deployment_validation": {
@@ -120,15 +124,15 @@
 - Async scene teardown is guarded so unmount during texture/GLB loading cannot resurrect a destroyed scene.
 - A fresh scene instance is created for every mount/remount.
 - Runtime-authoritative diagnostics cannot be overwritten by scene diagnostics.
-- Phase 1 currently contains the 220 m Stream Valley terrain, stream, path, procedural meadow, inspection camera, one admitted rectangular Boii dwelling candidate, and explicit project-owned procedural storehouse and workshop WIP candidates.
+- Phase 1 currently contains the 220 m Stream Valley terrain, stream, path, procedural meadow, inspection camera, one admitted rectangular Boii dwelling candidate, explicit project-owned procedural storehouse/workshop WIP candidates, and a shared-mesh mature deciduous-tree WIP candidate distributed across the forest edge.
 - Phase 1 reconciliation CI passed 11/11 Node tests, production build, all Phase 0 browser regressions, three Phase 1 async remount cycles, software WebGPU regression and a rendered Phase 1 WebGL2 smoke.
-- Storehouse PR #21 and workshop PR #25 are merged. Post-merge `main` validation passed through 15/15 Node tests, all browser/lifecycle regressions, software WebGPU and a rendered three-structure Phase 1 smoke.
+- Storehouse PR #21, workshop PR #25 and deciduous-tree PR #29 are merged. Post-merge `main` validation passed through 17/17 Node tests, all browser/lifecycle regressions, software WebGPU and a rendered three-structure / 32-tree Phase 1 smoke.
 
 ## CURRENT REPOSITORY STATE
 
-- `main` contains the verified Phase 0.5 runtime foundation, the reconciled Phase 1 environment checkpoint, and the merged storehouse/workshop content candidates.
+- `main` contains the verified Phase 0.5 runtime foundation, the reconciled Phase 1 environment checkpoint, and merged storehouse/workshop/tree content candidates.
 - The Phase 1 checkpoint is technically integrated but is not a completed art milestone: runtime diagnostics explicitly report `artGatePassed=false`.
-- Current benchmark content: three visible structures (dwelling plus project-owned procedural storehouse/workshop candidates), no inhabitants, no trees, and procedural meadow ground cover. Production GLB slots for storehouse/workshop/inhabitant/tree remain intentionally unfilled.
+- Current benchmark content: three visible structures (dwelling plus project-owned procedural storehouse/workshop candidates), 32 shared-mesh deciduous-tree instances, no inhabitants, and procedural meadow ground cover. Production GLB slots for storehouse/workshop/inhabitant/tree remain intentionally unfilled.
 - The current public GitHub Pages deployment is still the previously verified Phase 0.5 foundation. Phase 1 has not been published through the manual release workflow.
 - Floot/React remains unnecessary. If introduced later it must remain a thin host around the PlayCanvas runtime and must not own the game loop.
 
@@ -152,15 +156,15 @@ These graphics checks establish integration/runtime correctness in software-back
 ## CURRENT LIMITS / RISKS
 
 - `artGatePassed=false`: the Phase 1 visual benchmark is incomplete.
-- Missing benchmark content is now concentrated in suitable south/central Bohemian deciduous trees/forest composition and five readable Boii inhabitants.
-- The current dwelling, storehouse and workshop candidates still require visual, historical and actual-hardware performance acceptance; none has a production LOD.
+- Missing benchmark content is now concentrated in five readable Boii inhabitants.
+- The current dwelling, storehouse, workshop and deciduous-tree candidates still require final visual/historical (and for the tree botanical) acceptance plus actual-hardware performance review; production LOD work remains open.
 - Terrain, stream banks, vegetation distribution, lighting/material balance and settlement composition need production art polish after the missing object classes exist.
 - Actual-hardware GPU performance remains unmeasured.
 - Known non-blocking build advisories remain: Vite large-chunk advisory and optional PlayCanvas `node:worker_threads` browser-externalization warnings.
 
 ## NEXT TASK
 
-Continue Phase 1 content production. Prioritize the remaining visible benchmark objects before adding new gameplay systems: (1) a suitable central-European deciduous tree/vegetation set, then (2) five readable Boii inhabitants. Keep provenance/receipts for every candidate/admitted asset, preserve lifecycle remount safety, and rerun the complete regression suite and rendered Phase 1 smoke. After all required content exists, perform visual/historical review and actual-hardware performance/LOD QA before setting `artGatePassed=true`.
+Continue Phase 1 content production with the last missing visible benchmark class: five readable Boii inhabitants. Keep provenance/receipts for the inhabitant candidate, preserve lifecycle remount safety, and rerun the complete regression suite and rendered Phase 1 smoke. Once all required content classes exist, perform visual/historical/botanical review, actual-hardware performance and LOD QA before setting `artGatePassed=true`.
 
 ## PHASE GATE
 
