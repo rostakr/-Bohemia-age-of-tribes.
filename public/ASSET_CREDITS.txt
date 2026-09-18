@@ -13,3 +13,18 @@ Official free Hugging Face Space: https://huggingface.co/spaces/microsoft/TRELLI
 TRELLIS.2 model/code license reference (MIT): https://github.com/microsoft/TRELLIS.2/blob/main/LICENSE
 Exact generation settings and hashes: assets/source/phase1/dwelling-receipt.json (source package).
 Current project use is noncommercial per user instruction; visual and historical QA are pending.
+
+Supplied Phase 1 preview content:
+- public/assets/buildings/boii_carpentry_shed_open.glb
+- public/assets/characters/boii_adult_worker.glb
+Source: user-supplied project attachments. Original provider/license not supplied.
+Integrated for noncommercial preview only; no redistribution/release license is asserted.
+Original uploads, hashes and intake evidence: assets/source/phase1/user-supplied/.
+Visual, historical and licensing clearance remain pending.
+
+Small Boii storehouse GLB:
+public/assets/buildings/boii_storehouse_small.glb
+Original project procedural geometry exported offline by scripts/export-storehouse.mjs.
+Embedded base-color textures are original generated project material inputs; no third-party
+photograph or external material license is asserted. Exact receipts and hashes are under
+assets/source/phase1/. This remains WIP production art with visual/performance QA pending.
