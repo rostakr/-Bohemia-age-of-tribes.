@@ -81,6 +81,7 @@ const stateExpression = `(() => {
   return {
     canvasCount: document.querySelectorAll('canvas').length,
     errorHidden: document.querySelector('#error')?.hidden ?? null,
+    errorText: document.querySelector('#error-text')?.textContent || '',
     status: document.querySelector('#status')?.textContent || '',
     debugBridge: Boolean(window.__BOHEMIA_DEBUG__),
     mounted: Boolean(window.__BOHEMIA_DEBUG__?.snapshot?.()),
