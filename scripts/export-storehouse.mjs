@@ -10,7 +10,7 @@ const receipt = new URL('../assets/source/phase1/storehouse-glb-receipt.json', i
 // Node strip-types requires an explicit extension for this bundler-style import.
 writeFileSync(temporary, readFileSync(source, 'utf8').replace("from './landscape';", "from './landscape.ts';"), { flag: 'wx' });
 try {
-  const { createStorehouseGeometry, storehouseStats } = await import(temporary.href);
+  const { createStorehouseGeometry, storehouseStats, STOREHOUSE_UV_REPEAT_METRES } = await import(temporary.href);
   const geometry = createStorehouseGeometry();
   const materials = [
     ['timber', [0.34, 0.23, 0.13], 0.95],
@@ -42,7 +42,7 @@ try {
     const imageIndex = gltf.images.push({ name: file, bufferView, mimeType: 'image/png' }) - 1;
     textureByMaterial.set(material, gltf.textures.push({ source: imageIndex, sampler: 0 }) - 1);
     textureRecords.push({ name: file, material, embedded: true,
-      width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20),
+      width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20), bytes: bytes.length,
       sha256: createHash('sha256').update(bytes).digest('hex') });
   }
   function accessor(values, width, type, componentType, target, bounds = false) {
@@ -67,11 +67,6 @@ try {
   for (const [name, color, roughness] of materials) {
     const mesh = geometry[name];
     const texture = textureByMaterial.get(name);
-    // Continuous roof-space UVs: U follows the ridge, V follows the roof slope.
-    // Avoid rotating the straw with the individual box face UV conventions.
-    const uvs = name === 'thatch' ? mesh.positions.flatMap((value, index, positions) =>
-      index % 3 === 0 ? [positions[index + 2] / 0.65,
-        Math.abs(value) * Math.hypot(1.72, 1.2) / 1.72 / 0.65] : []) : mesh.uvs;
     const material = gltf.materials.push({ name, pbrMetallicRoughness: {
       baseColorFactor: texture !== undefined ? [1, 1, 1, 1] : [...color.map(linear), 1],
       ...(texture !== undefined ? { baseColorTexture: { index: texture, texCoord: 0 } } : {}),
@@ -80,7 +75,7 @@ try {
     gltf.meshes[0].primitives.push({ mode: 4, material, attributes: {
       POSITION: accessor(new Float32Array(mesh.positions), 3, 'VEC3', 5126, 34962, true),
       NORMAL: accessor(new Float32Array(calculateNormals(mesh.positions, mesh.indices)), 3, 'VEC3', 5126, 34962),
-      TEXCOORD_0: accessor(new Float32Array(uvs), 2, 'VEC2', 5126, 34962),
+      TEXCOORD_0: accessor(new Float32Array(mesh.uvs), 2, 'VEC2', 5126, 34962),
     }, indices: accessor(new Uint32Array(mesh.indices), 1, 'SCALAR', 5125, 34963) });
   }
   gltf.buffers.push({ byteLength });
@@ -100,13 +95,20 @@ try {
     sha256: createHash('sha256').update(glb).digest('hex'), bytes: glb.length,
     stats: storehouseStats(geometry), material_groups: materials.map(x => x[0]),
     units: 'metres', up_axis: 'Y', pivot: 'ground-centred source origin',
+    uv_strategy: {
+      repeat_metres: STOREHOUSE_UV_REPEAT_METRES,
+      boxes: 'physical-size UVs per face; repeat sampler preserves approximately constant texel density',
+      cylinders: 'duplicated U=0/U=1 seam vertices; V follows member length',
+      roof: 'local Z/ridge versus local X/slope UV orientation from source geometry',
+    },
     textures: textureRecords,
-    lod: 'none', status: 'Exported WIP candidate; used by benchmark storehouse slot',
-    validation: 'No tests or renderer QA run; delegated to external QA',
+    texture_transfer_note: 'Original source PNGs are preserved and embedded unchanged. No established image encoder/compressor is currently part of the repository toolchain, so this export does not introduce an ad-hoc compression implementation.',
+    lod: 'none', status: 'Exported WIP candidate; QA-only supplied-storehouse preview route',
+    validation: 'Exporter output requires strict GLB check plus browser/visual QA after regeneration',
     limitations: ['Timber, thatch and daub have base-color textures; wattle and earth use solid factors',
-      'No normal or roughness maps; generated albedo tileability and shading require review',
-      'Existing cylinder seam and box UVs need a production unwrap to avoid grain stretching',
-      'Roughness mapped from source gloss; visual parity requires external review'] };
+      'No normal or roughness maps; generated albedo tileability and baked shading require review',
+      'Source PNG transfer size remains high until an established free encoder is adopted and pinned',
+      'Roughness uses scalar factors only; visual parity requires external review'] };
   writeFileSync(receipt, JSON.stringify(record, null, 2) + '\n');
-  console.log(JSON.stringify({ output: record.output, bytes: record.bytes, stats: record.stats }));
+  console.log(JSON.stringify({ output: record.output, bytes: record.bytes, stats: record.stats, uv: record.uv_strategy }));
 } finally { rmSync(temporary, { force: true }); }
