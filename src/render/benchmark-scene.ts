@@ -13,6 +13,7 @@ import {
   type Application,
   type ContainerResource,
   type Mesh,
+  type RenderComponent,
 } from 'playcanvas';
 import { resolveAsset, type AssetResolver } from '../assets/resolve-asset';
 import type { RuntimeScene } from './scene';
@@ -44,7 +45,7 @@ export interface BenchmarkModels {
   tree: string | null;
 }
 
-// Never silently replace missing production models with primitives.
+// Art-admitted production slots. Unknown-license supplied GLBs must not be represented here.
 export const ADMITTED_MODELS: BenchmarkModels = {
   dwelling: 'buildings/boii_dwelling_rectangular_lod1.glb',
   storehouse: null,
@@ -53,13 +54,31 @@ export const ADMITTED_MODELS: BenchmarkModels = {
   tree: null,
 };
 
-// Explicit WIP content candidate. This is project-owned procedural geometry, not an
-// admitted production GLB and not a generic primitive fallback.
+// Noncommercial Phase 1 preview slots. Source/license clearance and art acceptance remain open.
+export const PREVIEW_MODELS: BenchmarkModels = {
+  ...ADMITTED_MODELS,
+  storehouse: 'buildings/boii_storehouse_small.glb',
+  workshop: 'buildings/boii_carpentry_shed_open.glb',
+  inhabitant: 'characters/boii_adult_worker.glb',
+};
+
+// Explicit WIP content candidates used only when a model slot is null.
 export const USE_PROCEDURAL_STOREHOUSE_CANDIDATE = true;
 export const USE_PROCEDURAL_WORKSHOP_CANDIDATE = true;
 export const USE_PROCEDURAL_TREE_CANDIDATE = true;
 export const USE_PROCEDURAL_INHABITANT_CANDIDATE = true;
 export const DWELLING_LOD1_TRIANGLES = 53_538;
+
+function countEntityTriangles(entity: Entity): number {
+  const renders = entity.findComponents('render') as RenderComponent[];
+  let triangles = 0;
+  for (const render of renders) {
+    for (const instance of render.meshInstances) {
+      for (const primitive of instance.mesh.primitive) triangles += (primitive.count ?? 0) / 3;
+    }
+  }
+  return Math.round(triangles);
+}
 
 export class BenchmarkScene implements RuntimeScene {
   private root: Entity | undefined;
@@ -86,7 +105,7 @@ export class BenchmarkScene implements RuntimeScene {
   private destroyed = false;
 
   constructor(
-    private readonly models: BenchmarkModels = ADMITTED_MODELS,
+    private readonly models: BenchmarkModels = PREVIEW_MODELS,
     private readonly assetResolver: AssetResolver = resolveAsset,
   ) {}
 
@@ -272,7 +291,7 @@ export class BenchmarkScene implements RuntimeScene {
   private async populate(): Promise<void> {
     const entries: [string | null, string, number, number][] = [
       [this.models.dwelling, 'Boii dwelling', 4.5, 0],
-      [this.models.storehouse, 'Boii storehouse', 3.2, 1],
+      [this.models.storehouse, 'Boii storehouse', 3.3762917082335404, 1],
       [this.models.workshop, 'Boii craft shelter', 3.5, 2],
     ];
     for (const [path, name, height, index] of entries) {
@@ -280,13 +299,14 @@ export class BenchmarkScene implements RuntimeScene {
       const resource = await this.assets.model(path);
       if (!this.active) return;
       const entity = instantiateAtHeight(resource, name, height);
+      const triangles = countEntityTriangles(entity);
       const pad = SETTLEMENT[index]!;
       entity.setPosition(pad.x, pad.y, pad.z);
       entity.setEulerAngles(0, index === 0 ? 15 : -25, 0);
       this.root!.addChild(entity);
-      if (index === 0 && path === ADMITTED_MODELS.dwelling) {
-        this.dwellingTriangles = DWELLING_LOD1_TRIANGLES;
-      }
+      if (index === 0 && path === ADMITTED_MODELS.dwelling) this.dwellingTriangles = DWELLING_LOD1_TRIANGLES;
+      if (index === 1) this.storehouseTriangles = triangles;
+      if (index === 2) this.workshopTriangles = triangles;
       this.buildings++;
     }
 
@@ -317,9 +337,14 @@ export class BenchmarkScene implements RuntimeScene {
     if (this.models.inhabitant && this.assets) {
       const resource = await this.assets.model(this.models.inhabitant);
       if (!this.active) return;
-      for (const [index, position] of [[-5,1],[-2,3],[4,-5],[-10,9],[12,1]].entries()) {
-        const [x, z] = position as [number, number];
-        const entity = instantiateAtHeight(resource, `Inhabitant ${index + 1}`, 1.68 + index * 0.025);
+      const template = instantiateAtHeight(resource, 'Boii adult worker 1', 1.72);
+      this.inhabitantTriangles = countEntityTriangles(template);
+      const positions: [number, number][] = [[-5, 1], [-2, 3], [4, -5], [-10, 9], [12, 1]];
+      for (const [index, [x, z]] of positions.entries()) {
+        const entity = index === 0 ? template : template.clone();
+        entity.name = `Boii adult worker ${index + 1}`;
+        const scale = 0.975 + index * 0.0125;
+        entity.setLocalScale(scale, scale, scale);
         entity.setPosition(x, landscape.heightAt(x, z), z);
         entity.setEulerAngles(0, index * 67, 0);
         this.root!.addChild(entity);
@@ -420,16 +445,22 @@ export class BenchmarkScene implements RuntimeScene {
       terrainMetres: 220,
       structures: this.buildings,
       inhabitants: this.inhabitants,
-      inhabitantCandidate: this.inhabitantTriangles > 0 ? 'procedural-project-owned-readability-prototype' : 'absent',
+      inhabitantCandidate: this.inhabitantTriangles > 0
+        ? (this.models.inhabitant ? 'user-supplied-glb' : 'procedural-project-owned-readability-prototype')
+        : 'absent',
       inhabitantTriangles: this.inhabitantTriangles,
       trees: this.trees,
       grassClumps: this.grassClumps,
       dwellingCandidate: this.dwellingTriangles > 0 ? 'trellis-derived-generated-lod1' : 'custom-or-absent',
       dwellingLod: this.dwellingTriangles > 0 ? 1 : 0,
       dwellingTriangles: this.dwellingTriangles,
-      storehouseCandidate: this.storehouseTriangles > 0 ? 'procedural-project-owned' : 'absent',
+      storehouseCandidate: this.storehouseTriangles > 0
+        ? (this.models.storehouse ? 'project-owned-glb' : 'procedural-project-owned')
+        : 'absent',
       storehouseTriangles: this.storehouseTriangles,
-      workshopCandidate: this.workshopTriangles > 0 ? 'procedural-project-owned' : 'absent',
+      workshopCandidate: this.workshopTriangles > 0
+        ? (this.models.workshop ? 'user-supplied-glb' : 'procedural-project-owned')
+        : 'absent',
       workshopTriangles: this.workshopTriangles,
       treeCandidate: this.treeTriangles > 0 ? 'procedural-project-owned' : 'absent',
       treeCandidateTriangles: this.treeTriangles,
