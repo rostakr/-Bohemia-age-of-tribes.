@@ -142,6 +142,9 @@ try {
       Number(diagnostics.tick) >= 1 &&
       Number(diagnostics.drawCalls) >= 1 &&
       Number(diagnostics.structures) >= 3 &&
+      diagnostics.dwellingCandidate === 'trellis-derived-generated-lod1' &&
+      Number(diagnostics.dwellingLod) === 1 &&
+      Number(diagnostics.dwellingTriangles) === 53_538 &&
       diagnostics.storehouseCandidate === 'procedural-project-owned' &&
       Number(diagnostics.storehouseTriangles) >= 15_000 &&
       diagnostics.workshopCandidate === 'procedural-project-owned' &&
@@ -167,6 +170,9 @@ try {
     diagnostics?.failed !== false || diagnostics?.deviceLost !== false ||
     Number(diagnostics?.tick) < 1 || Number(diagnostics?.drawCalls) < 1 ||
     Number(diagnostics?.structures) < 3 ||
+    diagnostics?.dwellingCandidate !== 'trellis-derived-generated-lod1' ||
+    Number(diagnostics?.dwellingLod) !== 1 ||
+    Number(diagnostics?.dwellingTriangles) !== 53_538 ||
     diagnostics?.storehouseCandidate !== 'procedural-project-owned' ||
     Number(diagnostics?.storehouseTriangles) < 15_000 ||
     diagnostics?.workshopCandidate !== 'procedural-project-owned' ||
@@ -189,6 +195,9 @@ try {
     inhabitants: diagnostics.inhabitants,
     trees: diagnostics.trees,
     grassClumps: diagnostics.grassClumps,
+    dwellingCandidate: diagnostics.dwellingCandidate,
+    dwellingLod: diagnostics.dwellingLod,
+    dwellingTriangles: diagnostics.dwellingTriangles,
     storehouseCandidate: diagnostics.storehouseCandidate,
     storehouseTriangles: diagnostics.storehouseTriangles,
     workshopCandidate: diagnostics.workshopCandidate,
