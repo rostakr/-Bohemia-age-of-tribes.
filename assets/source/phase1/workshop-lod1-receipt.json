@@ -1,0 +1,34 @@
+{
+  "asset": "boii_carpentry_shed_project_lod1",
+  "source": "public/assets/buildings/boii_carpentry_shed_project.glb",
+  "source_branch": "phase1/project-workshop-glb",
+  "source_head_observed": "8b536c94ba7d0cd320ae1bec5c6c661d8528da68",
+  "source_sha256_from_ci_static_build": "4954b5db7800ce472a5b99ba4ecd7f105fd68ccd2bc91ce8b46e84a774c55a53",
+  "source_bytes": 1021200,
+  "generator": "scripts/generate-workshop-lod.mjs",
+  "method": "deterministic position/UV vertex clustering adapted from the existing project dwelling LOD workflow",
+  "parameters": {
+    "position_voxel_m": 0.03,
+    "uv_step": 0.1
+  },
+  "output": "public/assets/buildings/boii_carpentry_shed_project_lod1.glb",
+  "output_tracking": "Generated during npm prevalidate/build and expected in CI static-build artifact; not committed as a duplicate binary",
+  "prototype_sha256": "f8c79fcdd5f59e47d6ce3c7b76e565e389720740cae6f64639cca1c069172c2a",
+  "prototype_bytes": 416256,
+  "vertices": 10423,
+  "triangles": 10509,
+  "primitives": 4,
+  "materials": 4,
+  "embedded_textures": 2,
+  "normals": "regenerated from clustered triangles",
+  "uv0": "preserved through UV-aware clustering",
+  "status": "QA candidate only; no runtime admission",
+  "validation": "Local artifact reproduction completed from PR #43 CI static-build output; PR #48 CI confirmation pending",
+  "qa_requested": [
+    "confirm deterministic counts/hash against current source GLB",
+    "compare LOD1 silhouette and roof edge with LOD0 at RTS camera distance",
+    "check bench, trestles and woodworking-tool readability",
+    "confirm four material groups and both embedded JPEG base colors survive",
+    "do not enable runtime LOD switching before visual acceptance"
+  ]
+}
