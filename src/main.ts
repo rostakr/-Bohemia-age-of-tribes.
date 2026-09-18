@@ -39,6 +39,7 @@ const debug = parameters.get('debug') === '1';
 const forceWebGL2 = parameters.get('renderer') === 'webgl2';
 const calibration = parameters.get('scene') === 'calibration';
 const suppliedStorehouse = parameters.get('storehouse') === 'supplied';
+const projectWorkshop = parameters.get('workshop') === 'project';
 const runningLabel = calibration ? 'Foundation running' : 'Scene running';
 
 let runtime: GameRuntime | undefined;
@@ -49,9 +50,12 @@ let mountGeneration = 0;
 
 function createScene(): RuntimeScene {
   if (calibration) return new CalibrationScene();
-  const benchmark = suppliedStorehouse
-    ? new BenchmarkScene({ ...ADMITTED_MODELS, storehouse: 'buildings/boii_storehouse_small.glb' })
-    : new BenchmarkScene();
+  const models = {
+    ...ADMITTED_MODELS,
+    ...(suppliedStorehouse ? { storehouse: 'buildings/boii_storehouse_small.glb' } : {}),
+    ...(projectWorkshop ? { workshop: 'buildings/boii_carpentry_shed_project.glb' } : {}),
+  };
+  const benchmark = suppliedStorehouse || projectWorkshop ? new BenchmarkScene(models) : new BenchmarkScene();
   activeBenchmarkScene = benchmark;
   return benchmark;
 }
@@ -80,7 +84,11 @@ function updateDiagnostics(created: GameRuntime): void {
     : sample.deviceLost
       ? 'Graphics device lost — waiting for recovery'
       : `${sample.renderer.toUpperCase()} · ${sample.paused ? 'Simulation paused' : runningLabel}`;
-  if (debug) diagnostics.textContent = JSON.stringify(sample, null, 2);
+  if (debug) {
+    diagnostics.textContent = JSON.stringify(projectWorkshop
+      ? { ...sample, workshopPreview: 'project-owned-glb' }
+      : sample, null, 2);
+  }
 }
 
 function setSelectedView(selected: HTMLButtonElement): void {
