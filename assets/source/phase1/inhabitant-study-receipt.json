@@ -17,7 +17,7 @@
     "target_population": 5,
     "production_brief": "assets/source/PHASE1_ASSET_REQUESTS.md#boii_adult_workerglb",
     "production_target": "1.72 m; 25k-50k triangles; one 2K atlas; rig optional for milestone",
-    "prototype_deviation": "Current procedural prototype is intentionally only ~1.4k triangles with vertex colours and no texture atlas/rig. It must not be treated as satisfying the production character request.",
+    "prototype_deviation": "Current procedural prototype is intentionally only 1,404 triangles with vertex colours and no texture atlas/rig. It must not be treated as satisfying the production character request.",
     "historical_acceptance": "pending"
   },
   "runtime": {
@@ -43,14 +43,33 @@
     }
   },
   "reconciled_validation": {
-    "status": "pending current-branch CI"
+    "pull_request": 33,
+    "workflow_run": 35335770768,
+    "workflow_head_sha": "106a821f0849ccd071e92c2688388301d4e6e775",
+    "result": "passed",
+    "node_tests": "19/19 passed",
+    "phase0_webgl2_regression": "passed",
+    "phase0_interaction_regression": "passed",
+    "lifecycle_remount": "3/3 passed with 32 tree instances and 5 inhabitant prototypes",
+    "phase0_software_webgpu_regression": "passed",
+    "phase1_webgl2_smoke": "passed",
+    "observed_structures": 3,
+    "observed_trees": 32,
+    "observed_inhabitants": 5,
+    "observed_prototype_triangles": 1404,
+    "observed_prototype_vertices": 910,
+    "observed_draw_calls": 307,
+    "screenshot_artifact_id": 10542528341,
+    "screenshot_artifact_sha256": "026a6778162347088bf6a30301005bf96236da4de6a5d7ad51d7ce2c62aec23a",
+    "screenshot_review": "All five static inhabitants are visible at RTS benchmark scale with plausible human scale and no obvious terrain penetration. They remain low-detail silhouette/readability prototypes only; production character detail, texture atlas, rig/animation and historical visual acceptance remain open.",
+    "ci_performance_note": "SwiftShader/software CI only; FPS/frame-time values are not actual-hardware performance evidence."
   },
   "admission": {
     "candidate_integrated_on_branch": true,
     "admitted_models_inhabitant": null,
     "art_gate_passed": false,
     "production_brief_satisfied": false,
-    "visual_acceptance": "pending",
+    "visual_acceptance": "pending production character replacement",
     "historical_acceptance": "pending",
     "actual_hardware_performance": "pending",
     "production_asset_status": "low_poly_readability_prototype_not_final"
