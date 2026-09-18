@@ -89,8 +89,9 @@ function addEllipsoid(
   center: V3,
   radii: V3,
   color: [number, number, number, number],
-  lonSegments = 10,
-  latRings = 5,
+  phase: number,
+  lonSegments = 12,
+  latRings = 6,
 ): void {
   const bottom = addVertex(data, [center[0], center[1] - radii[1], center[2]], [0.5, 0], color);
   const rings: number[][] = [];
@@ -101,9 +102,15 @@ function addEllipsoid(
     const vertices: number[] = [];
     for (let i = 0; i < lonSegments; i++) {
       const theta = i / lonSegments * Math.PI * 2;
-      const x = center[0] + Math.cos(theta) * radii[0] * ringRadius;
-      const z = center[2] + Math.sin(theta) * radii[2] * ringRadius;
-      vertices.push(addVertex(data, [x, y, z], [i / lonSegments, ring / (latRings + 1)], color));
+      const warp = 1
+        + 0.10 * Math.sin(theta * 3 + phase)
+        + 0.055 * Math.cos(theta * 5 - phase * 0.73)
+        + 0.04 * Math.sin(phi * 4 + phase * 1.31);
+      const verticalWarp = 1 + 0.045 * Math.cos(theta * 4 + phase * 0.91);
+      const x = center[0] + Math.cos(theta) * radii[0] * ringRadius * warp;
+      const z = center[2] + Math.sin(theta) * radii[2] * ringRadius * (2 - warp);
+      const warpedY = center[1] + (y - center[1]) * verticalWarp;
+      vertices.push(addVertex(data, [x, warpedY, z], [i / lonSegments, ring / (latRings + 1)], color));
     }
     rings.push(vertices);
   }
@@ -208,7 +215,7 @@ export function createCentralEuropeanTreeGeometry(): TreeGeometry {
 
   // Broad, irregular summer canopy. Clumps overlap on purpose to read as dense foliage
   // at an RTS camera distance without alpha-tested external textures.
-  for (let i = 0; i < 145; i++) {
+  for (let i = 0; i < 100; i++) {
     const vertical = random();
     const y = 5.75 + vertical * 6.15;
     const crownProfile = 1 - Math.abs(vertical - 0.48) * 0.68;
@@ -220,17 +227,17 @@ export function createCentralEuropeanTreeGeometry(): TreeGeometry {
       y + (random() - 0.5) * 0.32,
       Math.sin(angle) * radial + (random() - 0.5) * 0.45,
     ];
-    const rx = 0.66 + random() * 0.72;
-    const ry = 0.48 + random() * 0.70;
-    const rz = 0.66 + random() * 0.72;
+    const rx = 0.92 + random() * 0.98;
+    const ry = 0.68 + random() * 0.82;
+    const rz = 0.92 + random() * 0.98;
     const shade = random();
     const color: [number, number, number, number] = [
-      0.13 + shade * 0.07,
-      0.30 + shade * 0.15,
-      0.10 + shade * 0.07,
+      0.075 + shade * 0.055,
+      0.20 + shade * 0.12,
+      0.055 + shade * 0.05,
       1,
     ];
-    addEllipsoid(foliage, center, [rx, ry, rz], color, 10, 5);
+    addEllipsoid(foliage, center, [rx, ry, rz], color, random() * Math.PI * 2, 12, 6);
   }
 
   return { wood, foliage };
