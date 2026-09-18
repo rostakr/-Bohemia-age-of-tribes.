@@ -1,0 +1,112 @@
+// Offline content export, not a test or runtime dependency.
+import { readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { calculateNormals } from 'playcanvas';
+
+const source = new URL('../src/render/storehouse.ts', import.meta.url);
+const temporary = new URL('../src/render/storehouse.node-export.ts', import.meta.url);
+const output = new URL('../public/assets/buildings/boii_storehouse_small.glb', import.meta.url);
+const receipt = new URL('../assets/source/phase1/storehouse-glb-receipt.json', import.meta.url);
+// Node strip-types requires an explicit extension for this bundler-style import.
+writeFileSync(temporary, readFileSync(source, 'utf8').replace("from './landscape';", "from './landscape.ts';"), { flag: 'wx' });
+try {
+  const { createStorehouseGeometry, storehouseStats } = await import(temporary.href);
+  const geometry = createStorehouseGeometry();
+  const materials = [
+    ['timber', [0.34, 0.23, 0.13], 0.95],
+    ['wattle', [0.43, 0.30, 0.14], 0.97],
+    ['daub', [0.62, 0.53, 0.38], 0.98],
+    ['thatch', [0.49, 0.37, 0.15], 0.985],
+    ['earth', [0.28, 0.20, 0.12], 0.99],
+  ];
+  const gltf = { asset: { version: '2.0', generator: 'BOHEMIA offline storehouse export' },
+    scene: 0, scenes: [{ nodes: [0] }], nodes: [{ name: 'Boii small storehouse — WIP', mesh: 0 }],
+    meshes: [{ primitives: [] }], materials: [], buffers: [], bufferViews: [], accessors: [] };
+  const chunks = [];
+  let byteLength = 0;
+  const textureRecords = [];
+  const textureByMaterial = new Map();
+  gltf.images = [];
+  gltf.textures = [];
+  gltf.samplers = [{ magFilter: 9729, minFilter: 9987, wrapS: 10497, wrapT: 10497 }];
+  for (const [material, file] of [
+    ['timber', 'weathered-oak-basecolor.png'],
+    ['thatch', 'straw-thatch-basecolor.png'],
+    ['daub', 'clay-daub-basecolor.png'],
+  ]) {
+    const bytes = readFileSync(new URL(`../assets/source/phase1/materials/${file}`, import.meta.url));
+    const padding = (4 - byteLength % 4) % 4;
+    if (padding) { chunks.push(Buffer.alloc(padding)); byteLength += padding; }
+    const bufferView = gltf.bufferViews.push({ buffer: 0, byteOffset: byteLength, byteLength: bytes.length }) - 1;
+    chunks.push(bytes); byteLength += bytes.length;
+    const imageIndex = gltf.images.push({ name: file, bufferView, mimeType: 'image/png' }) - 1;
+    textureByMaterial.set(material, gltf.textures.push({ source: imageIndex, sampler: 0 }) - 1);
+    textureRecords.push({ name: file, material, embedded: true,
+      width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20),
+      sha256: createHash('sha256').update(bytes).digest('hex') });
+  }
+  function accessor(values, width, type, componentType, target, bounds = false) {
+    const padding = (4 - byteLength % 4) % 4;
+    if (padding) { chunks.push(Buffer.alloc(padding)); byteLength += padding; }
+    const bytes = Buffer.from(values.buffer, values.byteOffset, values.byteLength);
+    const view = gltf.bufferViews.push({ buffer: 0, byteOffset: byteLength, byteLength: bytes.length, target }) - 1;
+    chunks.push(bytes); byteLength += bytes.length;
+    const entry = { bufferView: view, componentType, count: values.length / width, type };
+    if (bounds) {
+      entry.min = Array(width).fill(Infinity); entry.max = Array(width).fill(-Infinity);
+      for (let i = 0; i < values.length; i++) {
+        const axis = i % width;
+        entry.min[axis] = Math.min(entry.min[axis], values[i]);
+        entry.max[axis] = Math.max(entry.max[axis], values[i]);
+      }
+    }
+    return gltf.accessors.push(entry) - 1;
+  }
+  // PlayCanvas diffuse colors are sRGB; glTF baseColorFactor is linear.
+  const linear = value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  for (const [name, color, roughness] of materials) {
+    const mesh = geometry[name];
+    const texture = textureByMaterial.get(name);
+    // Continuous roof-space UVs: U follows the ridge, V follows the roof slope.
+    // Avoid rotating the straw with the individual box face UV conventions.
+    const uvs = name === 'thatch' ? mesh.positions.flatMap((value, index, positions) =>
+      index % 3 === 0 ? [positions[index + 2] / 0.65,
+        Math.abs(value) * Math.hypot(1.72, 1.2) / 1.72 / 0.65] : []) : mesh.uvs;
+    const material = gltf.materials.push({ name, pbrMetallicRoughness: {
+      baseColorFactor: texture !== undefined ? [1, 1, 1, 1] : [...color.map(linear), 1],
+      ...(texture !== undefined ? { baseColorTexture: { index: texture, texCoord: 0 } } : {}),
+      metallicFactor: 0, roughnessFactor: roughness,
+    } }) - 1;
+    gltf.meshes[0].primitives.push({ mode: 4, material, attributes: {
+      POSITION: accessor(new Float32Array(mesh.positions), 3, 'VEC3', 5126, 34962, true),
+      NORMAL: accessor(new Float32Array(calculateNormals(mesh.positions, mesh.indices)), 3, 'VEC3', 5126, 34962),
+      TEXCOORD_0: accessor(new Float32Array(uvs), 2, 'VEC2', 5126, 34962),
+    }, indices: accessor(new Uint32Array(mesh.indices), 1, 'SCALAR', 5125, 34963) });
+  }
+  gltf.buffers.push({ byteLength });
+  const json = Buffer.from(JSON.stringify(gltf));
+  const jsonChunk = Buffer.concat([json, Buffer.alloc((4 - json.length % 4) % 4, 0x20)]);
+  const binary = Buffer.concat([...chunks, Buffer.alloc((4 - byteLength % 4) % 4)]);
+  const header = Buffer.alloc(12); header.writeUInt32LE(0x46546c67); header.writeUInt32LE(2, 4);
+  header.writeUInt32LE(12 + 8 + jsonChunk.length + 8 + binary.length, 8);
+  function chunkHeader(size, type) { const b = Buffer.alloc(8); b.writeUInt32LE(size); b.writeUInt32LE(type, 4); return b; }
+  const glb = Buffer.concat([header, chunkHeader(jsonChunk.length, 0x4e4f534a), jsonChunk,
+    chunkHeader(binary.length, 0x004e4942), binary]);
+  writeFileSync(output, glb);
+  const record = { asset: 'boii_storehouse_small', source: 'src/render/storehouse.ts',
+    source_sha256: createHash('sha256').update(readFileSync(source)).digest('hex'),
+    source_rights: 'Existing original project geometry; no third-party model imported',
+    exporter: 'scripts/export-storehouse.mjs', output: 'public/assets/buildings/boii_storehouse_small.glb',
+    sha256: createHash('sha256').update(glb).digest('hex'), bytes: glb.length,
+    stats: storehouseStats(geometry), material_groups: materials.map(x => x[0]),
+    units: 'metres', up_axis: 'Y', pivot: 'ground-centred source origin',
+    textures: textureRecords,
+    lod: 'none', status: 'Exported WIP candidate; used by benchmark storehouse slot',
+    validation: 'No tests or renderer QA run; delegated to external QA',
+    limitations: ['Timber, thatch and daub have base-color textures; wattle and earth use solid factors',
+      'No normal or roughness maps; generated albedo tileability and shading require review',
+      'Existing cylinder seam and box UVs need a production unwrap to avoid grain stretching',
+      'Roughness mapped from source gloss; visual parity requires external review'] };
+  writeFileSync(receipt, JSON.stringify(record, null, 2) + '\n');
+  console.log(JSON.stringify({ output: record.output, bytes: record.bytes, stats: record.stats }));
+} finally { rmSync(temporary, { force: true }); }
