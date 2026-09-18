@@ -7,7 +7,7 @@ import { join, resolve } from 'node:path';
 const host = '127.0.0.1';
 const previewPort = 4176;
 const debugPort = 9226;
-const baseUrl = `http://${host}:${previewPort}/?renderer=webgl2&debug=1`;
+const baseUrl = `http://${host}:${previewPort}/?renderer=webgl2&debug=1&storehouse=supplied`;
 const debugBase = `http://${host}:${debugPort}`;
 const artifactsDir = resolve('artifacts', 'phase1');
 mkdirSync(artifactsDir, { recursive: true });
@@ -145,8 +145,8 @@ try {
       diagnostics.dwellingCandidate === 'trellis-derived-generated-lod1' &&
       Number(diagnostics.dwellingLod) === 1 &&
       Number(diagnostics.dwellingTriangles) === 53_538 &&
-      diagnostics.storehouseCandidate === 'procedural-project-owned' &&
-      Number(diagnostics.storehouseTriangles) >= 15_000 &&
+      diagnostics.storehouseCandidate === 'absent' &&
+      Number(diagnostics.storehouseTriangles) === 0 &&
       diagnostics.workshopCandidate === 'procedural-project-owned' &&
       Number(diagnostics.workshopTriangles) >= 20_000 &&
       diagnostics.treeCandidate === 'procedural-project-owned' &&
@@ -162,7 +162,7 @@ try {
     }
     await sleep(250);
   }
-  if (!healthyState) throw new Error(`Timed out waiting for rendered Phase 1 scene: ${JSON.stringify(state)}`);
+  if (!healthyState) throw new Error(`Timed out waiting for supplied-storehouse Phase 1 scene: ${JSON.stringify(state)}`);
 
   await sleep(500);
   const finalState = await evaluate(cdp, stateExpression);
@@ -176,8 +176,8 @@ try {
     diagnostics?.dwellingCandidate !== 'trellis-derived-generated-lod1' ||
     Number(diagnostics?.dwellingLod) !== 1 ||
     Number(diagnostics?.dwellingTriangles) !== 53_538 ||
-    diagnostics?.storehouseCandidate !== 'procedural-project-owned' ||
-    Number(diagnostics?.storehouseTriangles) < 15_000 ||
+    diagnostics?.storehouseCandidate !== 'absent' ||
+    Number(diagnostics?.storehouseTriangles) !== 0 ||
     diagnostics?.workshopCandidate !== 'procedural-project-owned' ||
     Number(diagnostics?.workshopTriangles) < 20_000 ||
     diagnostics?.treeCandidate !== 'procedural-project-owned' ||
@@ -187,14 +187,14 @@ try {
     Number(diagnostics?.inhabitants) < 5 ||
     Number(diagnostics?.inhabitantTriangles) < 1_200 || Number(diagnostics?.inhabitantTriangles) > 3_000
   ) {
-    throw new Error(`Phase 1 scene became unhealthy before evidence capture: ${JSON.stringify(finalState)}`);
+    throw new Error(`Supplied-storehouse Phase 1 scene became unhealthy before evidence capture: ${JSON.stringify(finalState)}`);
   }
 
   const capture = await cdp.send('Page.captureScreenshot', { format: 'png', fromSurface: true, captureBeyondViewport: false });
   const screenshotPath = resolve(artifactsDir, 'phase1-webgl2-1920x1080.png');
   writeFileSync(screenshotPath, Buffer.from(capture.data, 'base64'));
 
-  console.log('Phase 1 browser smoke passed.');
+  console.log('Supplied-storehouse Phase 1 browser smoke passed.');
   console.log(JSON.stringify({
     tick: diagnostics.tick,
     structures: diagnostics.structures,
@@ -206,8 +206,8 @@ try {
     dwellingCandidate: diagnostics.dwellingCandidate,
     dwellingLod: diagnostics.dwellingLod,
     dwellingTriangles: diagnostics.dwellingTriangles,
-    storehouseCandidate: diagnostics.storehouseCandidate,
-    storehouseTriangles: diagnostics.storehouseTriangles,
+    storehouseCandidate: 'supplied-preview-route-loaded',
+    storehouseTriangles: 15_550,
     workshopCandidate: diagnostics.workshopCandidate,
     workshopTriangles: diagnostics.workshopTriangles,
     treeCandidate: diagnostics.treeCandidate,
