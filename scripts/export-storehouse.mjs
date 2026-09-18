@@ -30,20 +30,19 @@ try {
   gltf.textures = [];
   gltf.samplers = [{ magFilter: 9729, minFilter: 9987, wrapS: 10497, wrapT: 10497 }];
   for (const [material, file] of [
-    ['timber', 'weathered-oak-basecolor.png'],
-    ['thatch', 'straw-thatch-basecolor.png'],
-    ['daub', 'clay-daub-basecolor.png'],
+    ['timber', 'runtime/weathered-oak-basecolor-runtime-512.jpg'],
+    ['thatch', 'runtime/straw-thatch-basecolor-runtime-512.jpg'],
+    ['daub', 'runtime/clay-daub-basecolor-runtime-512.jpg'],
   ]) {
     const bytes = readFileSync(new URL(`../assets/source/phase1/materials/${file}`, import.meta.url));
     const padding = (4 - byteLength % 4) % 4;
     if (padding) { chunks.push(Buffer.alloc(padding)); byteLength += padding; }
     const bufferView = gltf.bufferViews.push({ buffer: 0, byteOffset: byteLength, byteLength: bytes.length }) - 1;
     chunks.push(bytes); byteLength += bytes.length;
-    const imageIndex = gltf.images.push({ name: file, bufferView, mimeType: 'image/png' }) - 1;
+    const imageIndex = gltf.images.push({ name: file.split('/').at(-1), bufferView, mimeType: 'image/jpeg' }) - 1;
     textureByMaterial.set(material, gltf.textures.push({ source: imageIndex, sampler: 0 }) - 1);
-    textureRecords.push({ name: file, material, embedded: true,
-      width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20), bytes: bytes.length,
-      sha256: createHash('sha256').update(bytes).digest('hex') });
+    textureRecords.push({ name: file, material, embedded: true, width: 512, height: 512,
+      bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') });
   }
   function accessor(values, width, type, componentType, target, bounds = false) {
     const padding = (4 - byteLength % 4) % 4;
@@ -102,12 +101,12 @@ try {
       roof: 'local Z/ridge versus local X/slope UV orientation from source geometry',
     },
     textures: textureRecords,
-    texture_transfer_note: 'Original source PNGs are preserved and embedded unchanged. No established image encoder/compressor is currently part of the repository toolchain, so this export does not introduce an ad-hoc compression implementation.',
+    texture_transfer_note: 'Original 1254px RGB PNGs remain unchanged. Embedded runtime base colors are documented 512px JPEG derivatives created with Pillow 12.3.0, LANCZOS resize, quality 90, 4:4:4, optimize+progressive; see materials/runtime-basecolor-receipt.json.',
     lod: 'none', status: 'Exported WIP candidate; QA-only supplied-storehouse preview route',
     validation: 'Exporter output requires strict GLB check plus browser/visual QA after regeneration',
-    limitations: ['Timber, thatch and daub have base-color textures; wattle and earth use solid factors',
+    limitations: ['Timber, thatch and daub have lossy base-color runtime derivatives; wattle and earth use solid factors',
       'No normal or roughness maps; generated albedo tileability and baked shading require review',
-      'Source PNG transfer size remains high until an established free encoder is adopted and pinned',
+      '512px runtime base colors are appropriate for the current RTS benchmark, not close-up final production acceptance',
       'Roughness uses scalar factors only; visual parity requires external review'] };
   writeFileSync(receipt, JSON.stringify(record, null, 2) + '\n');
   console.log(JSON.stringify({ output: record.output, bytes: record.bytes, stats: record.stats, uv: record.uv_strategy }));
