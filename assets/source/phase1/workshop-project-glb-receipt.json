@@ -6,8 +6,13 @@
   "exporter": "scripts/export-workshop-project.mjs",
   "output": "public/assets/buildings/boii_carpentry_shed_project.glb",
   "output_tracking": "Generated during npm prevalidate/build; included in CI static-build artifact rather than committed as a duplicate binary",
-  "sha256": "d6bb59e25f1a9ed6a2fe38024e1b7c3812bdde8dfdddf887ed048adf69463cb0",
-  "bytes": 6991176,
+  "sha256": "4954b5db7800ce472a5b99ba4ecd7f105fd68ccd2bc91ce8b46e84a774c55a53",
+  "bytes": 1021200,
+  "previous_png_embedded_output": {
+    "sha256": "d6bb59e25f1a9ed6a2fe38024e1b7c3812bdde8dfdddf887ed048adf69463cb0",
+    "bytes": 6991176,
+    "workflow_run": 35406095255
+  },
   "stats": {
     "triangles": 22480,
     "vertices": 22876,
@@ -24,24 +29,27 @@
   "pivot": "source origin; runtime normalization/ground contact still requires QA if admitted",
   "textures": [
     {
-      "name": "weathered-oak-basecolor.png",
+      "name": "runtime/weathered-oak-basecolor-runtime-512.jpg",
+      "source": "weathered-oak-basecolor.png",
       "material": "timber",
       "embedded": true,
-      "width": 1254,
-      "height": 1254,
-      "bytes": 3051445,
-      "sha256": "8b29d0d931e26337d53b252aef982be52f4679494c830fa4ae309a68e8f2323c"
+      "width": 512,
+      "height": 512,
+      "bytes": 98279,
+      "sha256": "c6abab6dd1959b80929657ffeda3a2425d6f3d965ae4d7f46ea45d774d1e8684"
     },
     {
-      "name": "straw-thatch-basecolor.png",
+      "name": "runtime/straw-thatch-basecolor-runtime-512.jpg",
+      "source": "straw-thatch-basecolor.png",
       "material": "thatch",
       "embedded": true,
-      "width": 1254,
-      "height": 1254,
-      "bytes": 2933548,
-      "sha256": "b82b91f359267218525d5a3ec39de23dad601ef7a47997128eeda2dcdf0cd77c"
+      "width": 512,
+      "height": 512,
+      "bytes": 138633,
+      "sha256": "0564f253d920fcdb6bc2e300687abe067912991b53e0e9fa72abdd1c7e5a8f0a"
     }
   ],
+  "texture_derivation": "Pillow 12.3.0; RGB LANCZOS 512x512; JPEG quality 90, 4:4:4, optimize + progressive. Exact derivation evidence is in assets/source/phase1/materials/workshop-runtime-basecolor-receipt.json. Original 1254x1254 PNGs remain unchanged.",
   "uv_strategy": {
     "timber": "existing project geometry UVs; known stretching remains a visual QA item",
     "thatch": "projected ridge/slope coordinates at 0.65 m repeat",
@@ -51,9 +59,9 @@
   "lod": "none",
   "status": "Project-owned QA candidate only; not admitted to canonical runtime",
   "validation": {
-    "workflow_run": 35406095255,
+    "workflow_run": 35406810426,
     "result": "PASS",
-    "strict_glb_check": "20k-45k triangles; normals and UV0 required",
+    "strict_glb_check": "PASS; 22,480 triangles; 4/4 primitives with normals and UV0",
     "node_tests": "22/22 passed",
     "phase0_webgl2": "passed",
     "phase0_interactions": "passed",
@@ -62,9 +70,9 @@
     "phase1_existing_storehouse_smoke": "passed; workshop candidate itself was not runtime-admitted/rendered"
   },
   "limitations": [
-    "Timber/thatch use base-color textures only; no normal or roughness maps",
+    "Timber/thatch use lossy base-color runtime derivatives only; no normal or roughness maps",
     "Timber UVs still require a production unwrap/physical repeat pass",
-    "Original source PNGs are embedded unchanged; transfer size remains unoptimized",
+    "The generated workshop GLB passed structural CI but has not yet been rendered through an isolated workshop preview route",
     "No LOD",
     "Visual and historical acceptance of the generated workshop GLB remains pending"
   ]
