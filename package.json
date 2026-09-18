@@ -3,11 +3,13 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22.12.0" },
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test scripts/check-core.mjs scripts/check-assets.mjs scripts/check-landscape.mjs scripts/check-storehouse.mjs scripts/check-workshop.mjs scripts/check-tree.mjs",
+    "test": "node --experimental-strip-types --test scripts/check-core.mjs scripts/check-assets.mjs scripts/check-landscape.mjs scripts/check-storehouse.mjs scripts/check-workshop.mjs scripts/check-tree.mjs scripts/check-dwelling-lods.mjs",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
     "smoke:webgl2": "node scripts/browser-smoke.mjs",
@@ -15,8 +17,17 @@
     "smoke:lifecycle": "node scripts/browser-lifecycle.mjs",
     "smoke:webgpu": "node scripts/browser-webgpu-smoke.mjs",
     "smoke:phase1": "node scripts/browser-phase1-smoke.mjs",
-    "validate": "npm run typecheck && npm test && npm run build"
+    "validate": "npm run typecheck && npm test && npm run build",
+    "generate:dwelling-lods": "node scripts/generate-dwelling-lods.mjs public/assets/buildings/boii_dwelling_rectangular.glb public/assets/buildings",
+    "pretest": "npm run generate:dwelling-lods",
+    "prebuild": "npm run generate:dwelling-lods",
+    "predev": "npm run generate:dwelling-lods"
   },
-  "dependencies": { "playcanvas": "2.22.1" },
-  "devDependencies": { "typescript": "5.9.3", "vite": "8.3.0" }
+  "dependencies": {
+    "playcanvas": "2.22.1"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "vite": "8.3.0"
+  }
 }
