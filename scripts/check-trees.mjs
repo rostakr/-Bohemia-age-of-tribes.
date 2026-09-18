@@ -1,6 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildCentralEuropeanTreeStudy } from '../src/render/trees.ts';
+import { after } from 'node:test';
+import { readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+const sourceUrl = new URL('../src/render/trees.ts', import.meta.url);
+const testModuleUrl = new URL('../src/render/trees.node-test.ts', import.meta.url);
+const source = readFileSync(sourceUrl, 'utf8').replace("from './landscape';", "from './landscape.ts';");
+writeFileSync(testModuleUrl, source, 'utf8');
+after(() => rmSync(fileURLToPath(testModuleUrl), { force: true }));
+const { buildCentralEuropeanTreeStudy } = await import(testModuleUrl.href);
 
 function assertMesh(name, data) {
   assert.ok(data.positions.length > 0, `${name}: needs vertices`);
