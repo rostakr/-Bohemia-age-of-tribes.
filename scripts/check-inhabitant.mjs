@@ -1,6 +1,14 @@
-import test from 'node:test';
+import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
-import { createBoiiInhabitantGeometry, inhabitantStats } from '../src/render/inhabitant.ts';
+import { readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+const sourceUrl = new URL('../src/render/inhabitant.ts', import.meta.url);
+const testModuleUrl = new URL('../src/render/inhabitant.node-test.ts', import.meta.url);
+const source = readFileSync(sourceUrl, 'utf8').replace("from './landscape';", "from './landscape.ts';");
+writeFileSync(testModuleUrl, source, 'utf8');
+after(() => rmSync(fileURLToPath(testModuleUrl), { force: true }));
+const { createBoiiInhabitantGeometry, inhabitantStats } = await import(testModuleUrl.href);
 
 test('procedural Boii inhabitant is finite, indexed and readable at RTS scale', () => {
   const data = createBoiiInhabitantGeometry();
