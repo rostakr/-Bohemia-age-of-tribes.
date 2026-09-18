@@ -145,8 +145,8 @@ try {
       diagnostics.dwellingCandidate === 'trellis-derived-generated-lod1' &&
       Number(diagnostics.dwellingLod) === 1 &&
       Number(diagnostics.dwellingTriangles) === 53_538 &&
-      diagnostics.storehouseCandidate === 'absent' &&
-      Number(diagnostics.storehouseTriangles) === 0 &&
+      diagnostics.storehouseCandidate === 'project-owned-glb' &&
+      Number(diagnostics.storehouseTriangles) === 15_550 &&
       diagnostics.workshopCandidate === 'procedural-project-owned' &&
       Number(diagnostics.workshopTriangles) >= 20_000 &&
       diagnostics.treeCandidate === 'procedural-project-owned' &&
@@ -176,8 +176,8 @@ try {
     diagnostics?.dwellingCandidate !== 'trellis-derived-generated-lod1' ||
     Number(diagnostics?.dwellingLod) !== 1 ||
     Number(diagnostics?.dwellingTriangles) !== 53_538 ||
-    diagnostics?.storehouseCandidate !== 'absent' ||
-    Number(diagnostics?.storehouseTriangles) !== 0 ||
+    diagnostics?.storehouseCandidate !== 'project-owned-glb' ||
+    Number(diagnostics?.storehouseTriangles) !== 15_550 ||
     diagnostics?.workshopCandidate !== 'procedural-project-owned' ||
     Number(diagnostics?.workshopTriangles) < 20_000 ||
     diagnostics?.treeCandidate !== 'procedural-project-owned' ||
@@ -206,8 +206,8 @@ try {
     dwellingCandidate: diagnostics.dwellingCandidate,
     dwellingLod: diagnostics.dwellingLod,
     dwellingTriangles: diagnostics.dwellingTriangles,
-    storehouseCandidate: 'supplied-preview-route-loaded',
-    storehouseTriangles: 15_550,
+    storehouseCandidate: diagnostics.storehouseCandidate,
+    storehouseTriangles: diagnostics.storehouseTriangles,
     workshopCandidate: diagnostics.workshopCandidate,
     workshopTriangles: diagnostics.workshopTriangles,
     treeCandidate: diagnostics.treeCandidate,

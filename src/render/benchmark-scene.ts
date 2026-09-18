@@ -44,6 +44,8 @@ export interface BenchmarkModels {
   tree: string | null;
 }
 
+export const SUPPLIED_STOREHOUSE_PATH = 'buildings/boii_storehouse_small.glb';
+
 // Never silently replace missing production models with primitives.
 export const ADMITTED_MODELS: BenchmarkModels = {
   dwelling: 'buildings/boii_dwelling_rectangular_lod1.glb',
@@ -60,6 +62,7 @@ export const USE_PROCEDURAL_WORKSHOP_CANDIDATE = true;
 export const USE_PROCEDURAL_TREE_CANDIDATE = true;
 export const USE_PROCEDURAL_INHABITANT_CANDIDATE = true;
 export const DWELLING_LOD1_TRIANGLES = 53_538;
+export const STOREHOUSE_GLB_TRIANGLES = 15_550;
 
 export class BenchmarkScene implements RuntimeScene {
   private root: Entity | undefined;
@@ -287,6 +290,9 @@ export class BenchmarkScene implements RuntimeScene {
       if (index === 0 && path === ADMITTED_MODELS.dwelling) {
         this.dwellingTriangles = DWELLING_LOD1_TRIANGLES;
       }
+      if (index === 1 && path === SUPPLIED_STOREHOUSE_PATH) {
+        this.storehouseTriangles = STOREHOUSE_GLB_TRIANGLES;
+      }
       this.buildings++;
     }
 
@@ -427,7 +433,9 @@ export class BenchmarkScene implements RuntimeScene {
       dwellingCandidate: this.dwellingTriangles > 0 ? 'trellis-derived-generated-lod1' : 'custom-or-absent',
       dwellingLod: this.dwellingTriangles > 0 ? 1 : 0,
       dwellingTriangles: this.dwellingTriangles,
-      storehouseCandidate: this.storehouseTriangles > 0 ? 'procedural-project-owned' : 'absent',
+      storehouseCandidate: this.storehouseTriangles > 0
+        ? (this.models.storehouse ? 'project-owned-glb' : 'procedural-project-owned')
+        : 'absent',
       storehouseTriangles: this.storehouseTriangles,
       workshopCandidate: this.workshopTriangles > 0 ? 'procedural-project-owned' : 'absent',
       workshopTriangles: this.workshopTriangles,
