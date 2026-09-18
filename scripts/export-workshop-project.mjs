@@ -35,22 +35,22 @@ let byteLength = 0;
 const textureRecords = [];
 const textureByMaterial = new Map();
 for (const [material, file] of [
-  ['timber', 'weathered-oak-basecolor.png'],
-  ['thatch', 'straw-thatch-basecolor.png'],
+  ['timber', 'runtime/weathered-oak-basecolor-runtime-512.jpg'],
+  ['thatch', 'runtime/straw-thatch-basecolor-runtime-512.jpg'],
 ]) {
   const bytes = readFileSync(new URL(`../assets/source/phase1/materials/${file}`, import.meta.url));
   const padding = (4 - byteLength % 4) % 4;
   if (padding) { chunks.push(Buffer.alloc(padding)); byteLength += padding; }
   const bufferView = gltf.bufferViews.push({ buffer: 0, byteOffset: byteLength, byteLength: bytes.length }) - 1;
   chunks.push(bytes); byteLength += bytes.length;
-  const imageIndex = gltf.images.push({ name: file, bufferView, mimeType: 'image/png' }) - 1;
+  const imageIndex = gltf.images.push({ name: file.split('/').at(-1), bufferView, mimeType: 'image/jpeg' }) - 1;
   textureByMaterial.set(material, gltf.textures.push({ source: imageIndex, sampler: 0 }) - 1);
   textureRecords.push({
     name: file,
     material,
     embedded: true,
-    width: bytes.readUInt32BE(16),
-    height: bytes.readUInt32BE(20),
+    width: 512,
+    height: 512,
     bytes: bytes.length,
     sha256: createHash('sha256').update(bytes).digest('hex'),
   });
@@ -150,6 +150,7 @@ const record = {
   up_axis: 'Y',
   pivot: 'source origin; runtime normalization/ground contact still requires QA if admitted',
   textures: textureRecords,
+  texture_transfer_note: 'Original 1254px RGB PNGs remain unchanged. Embedded workshop base colors are documented 512px JPEG derivatives created with Pillow 12.3.0, LANCZOS resize, quality 90, 4:4:4, optimize+progressive.',
   uv_strategy: {
     timber: 'existing project geometry UVs; known stretching remains a visual QA item',
     thatch: `projected ridge/slope coordinates at ${UV_REPEAT_METRES} m repeat`,
@@ -160,9 +161,9 @@ const record = {
   status: 'Project-owned QA candidate only; not admitted to canonical runtime',
   validation: 'Must pass strict GLB structure check and separate browser/visual/historical QA before any runtime admission',
   limitations: [
-    'Timber/thatch use base-color textures only; no normal or roughness maps',
+    'Timber/thatch use lossy base-color runtime derivatives only; no normal or roughness maps',
     'Timber UVs still require a production unwrap/physical repeat pass',
-    'Original source PNGs are embedded unchanged; transfer size remains unoptimized',
+    '512px base colors target current RTS-distance evaluation, not final close-up production art',
     'No LOD, rig or animation applies; this is a static structure',
   ],
 };
