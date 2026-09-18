@@ -36,6 +36,22 @@
 | Production verification | Maintain a separate `Verify published foundation` workflow that tests the public Pages URL, linked JS/CSS and initialized WebGL2 runtime | Deployment correctness is independently reproducible rather than inferred from a successful upload/deploy action |
 | Gate order | Phase 1 may proceed only after Phase 0.5 static, runtime, fallback, lifecycle and public deployment checks pass | Phase 1 content is integrated onto a verified infrastructure baseline rather than masking integration defects |
 
+## Phase 1 art-gate decisions
+
+| Area | Decision | Consequence |
+| --- | --- | --- |
+| Evidence levels | Separate direct Bohemian/Moravian archaeological support, broader Central-European analogy, and project reconstruction/inference | Plausible art direction is not silently promoted to archaeological fact |
+| Functional evidence | Evidence for a residential, storage or craft function does not by itself validate one exact superstructure, roof, wall system, workshop layout or prop arrangement | Storehouse/workshop candidates remain WIP until closer structural parallels are documented or the uncertainty is explicitly accepted |
+| Candidate admission | Procedural WIP content may satisfy benchmark scale/readability without filling a production `ADMITTED_MODELS` slot | Technical completeness of the benchmark cannot be confused with final production-art acceptance |
+| Characters | The current 1,404-triangle inhabitant is a five-instance readability prototype only; the production adult-worker target remains 25k–50k triangles with one 2K atlas | `ADMITTED_MODELS.inhabitant` stays null until a production candidate is reviewed; no polygon-count inflation is required merely to hit the range |
+| Vegetation | A single repeated oak-like candidate may establish forest-edge composition but cannot satisfy the final mixed-deciduous art direction by itself | Production vegetation needs species/age/silhouette variation and botanical review; exact proportions depend on the selected locality/micro-site |
+| Historical review | Wider Central-European textile or settlement analogues may inform reconstruction but must be identified as analogues when local evidence does not establish the same detail | Clothing cut, tree mix and exact building superstructures retain documented uncertainty instead of invented certainty |
+| LOD/performance | Select useful production LOD thresholds after actual-hardware measurement of the content-complete benchmark, not from SwiftShader CI FPS | Software CI remains a correctness/regression gate; it is not the production performance baseline |
+| Art gate | Keep `artGatePassed=false` while production character, historical/visual/botanical review, actual-hardware performance, LOD strategy and environment polish remain open | All benchmark content classes may be present without authorizing the next large gameplay-production milestone |
+| Phase sequencing | Do not begin large economy/combat/AI production systems solely because all benchmark content classes exist | Complete or explicitly waive the Phase 1 art/acceptance gate first |
+
+The detailed source-backed review and its uncertainty rules are recorded in `docs/PHASE_1_HISTORICAL_ART_REVIEW.md`.
+
 ## Product constraints carried forward
 
 - The chronological campaign distinguishes Boii (Late La Tène), Marcomanni (early Roman Imperial), and Slavs (6th–7th centuries).
