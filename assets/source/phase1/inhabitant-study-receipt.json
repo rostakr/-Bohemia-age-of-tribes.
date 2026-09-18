@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "asset": "Generic Boii adult inhabitant procedural candidate",
+  "project": "BOHEMIA: AGE OF TRIBES",
+  "created": "2026-09-18",
+  "source": {
+    "type": "original_project_code_with_visual_reference",
+    "path": "src/render/inhabitant.ts",
+    "third_party_mesh_or_texture": false,
+    "external_generator": null,
+    "cost": 0,
+    "visual_reference": {
+      "file": "B71554C4-303D-4BF0-8AF2-A0BE67B9D8C4.jpeg",
+      "sha256": "747d2a50312959fbbcbf39802be21a445f482276a3101c0ff9fb74e6e822777b",
+      "allowed_use_in_this_candidate": "broad adult proportions and earth-tone tunic/trouser silhouette only",
+      "identity_reproduction": false,
+      "source_pixels_or_texture_reused": false
+    }
+  },
+  "design_basis": {
+    "culture": "Boii / Late La Tene readability study",
+    "role": "generic adult worker / settlement inhabitant",
+    "target_population": 5,
+    "clothing": [
+      "knee-length earth-tone tunic",
+      "simple leather belt",
+      "dark trousers",
+      "simple soft leather footwear"
+    ],
+    "excluded_shorthand": [
+      "armour",
+      "helmet",
+      "fantasy ornament",
+      "Roman military equipment",
+      "status jewellery"
+    ],
+    "historical_acceptance": "pending"
+  },
+  "runtime": {
+    "method": "one shared procedural PlayCanvas mesh and one shared vertex-colour material cloned across five entities",
+    "production_glb_slot": null,
+    "rigged": false,
+    "animation": false,
+    "prototype_triangle_target": "1200-3000",
+    "target_height_metres": "1.65-1.80"
+  },
+  "validation": {
+    "pull_request": null,
+    "workflow_run": null,
+    "result": "pending",
+    "node_tests": "pending",
+    "phase0_regressions": "pending",
+    "phase1_webgl2_smoke": "pending",
+    "observed_inhabitants": null,
+    "observed_prototype_triangles": null,
+    "observed_draw_calls": null,
+    "screenshot_artifact_id": null
+  },
+  "admission": {
+    "candidate_integrated_on_branch": true,
+    "admitted_models_inhabitant": null,
+    "art_gate_passed": false,
+    "visual_acceptance": "pending",
+    "historical_acceptance": "pending",
+    "actual_hardware_performance": "pending",
+    "production_asset_status": "candidate_not_final"
+  }
+}
