@@ -13,6 +13,13 @@
       "triangles": 89778,
       "vertices": 65301,
       "output": "public/assets/buildings/boii_carpentry_shed_open_qa_preview.glb",
+      "output_bytes": 4707200,
+      "output_sha256": "86008b2cab9f5df653c18967e46734fc48fd34c03188ca6034e0bce8c0cb20e2",
+      "primitives": 1,
+      "normal_primitives": 1,
+      "uv0_primitives": 1,
+      "materials": 1,
+      "embedded_images": 1,
       "status": "technical QA preview only; above the current 20k-45k workshop target and not canonical-admitted"
     },
     {
@@ -23,6 +30,13 @@
       "triangles": 14106,
       "vertices": 9805,
       "output": "public/assets/characters/boii_adult_worker_qa_preview.glb",
+      "output_bytes": 1757468,
+      "output_sha256": "c0faf805add95da38efeb3439d8c40cabc3295e9eb351fb364397554e165b953",
+      "primitives": 1,
+      "normal_primitives": 1,
+      "uv0_primitives": 1,
+      "materials": 1,
+      "embedded_images": 1,
       "status": "technical QA preview only; below the current production character triangle brief and not canonical-admitted"
     }
   ],
@@ -35,6 +49,19 @@
     "triangle counts remain within narrow source-derived structural guards",
     "separate visual/historical QA before any runtime admission"
   ],
-  "validation": "pending CI on this branch",
+  "validation": {
+    "pull_request": 50,
+    "workflow_run": 35407528961,
+    "result": "PASS",
+    "node_tests": "22/22 passed",
+    "strict_preview_checks": "passed for workshop and worker",
+    "webgl2": "passed",
+    "interactions": "passed",
+    "lifecycle_remount_3x": "passed",
+    "software_webgpu": "passed",
+    "phase1_benchmark_smoke": "passed; default benchmark remained on canonical/project-owned slots and did not render these preview candidates",
+    "static_build_artifact": 10573041949,
+    "artifact_hashes_verified_after_download": true
+  },
   "art_gate": false
 }
