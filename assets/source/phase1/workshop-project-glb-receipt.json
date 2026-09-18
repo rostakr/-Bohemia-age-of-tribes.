@@ -1,0 +1,71 @@
+{
+  "asset": "boii_carpentry_shed_project",
+  "source": "src/render/workshop.ts",
+  "source_git_blob_sha": "e36b810de8f5c564bac6c9e3b059c7aea29f01ff",
+  "source_rights": "Existing original project procedural geometry; no third-party model imported",
+  "exporter": "scripts/export-workshop-project.mjs",
+  "output": "public/assets/buildings/boii_carpentry_shed_project.glb",
+  "output_tracking": "Generated during npm prevalidate/build; included in CI static-build artifact rather than committed as a duplicate binary",
+  "sha256": "d6bb59e25f1a9ed6a2fe38024e1b7c3812bdde8dfdddf887ed048adf69463cb0",
+  "bytes": 6991176,
+  "stats": {
+    "triangles": 22480,
+    "vertices": 22876,
+    "width": 5.24,
+    "height": 3.6067583786255244,
+    "depth": 3.6746754628474325
+  },
+  "primitives": 4,
+  "normal_primitives": 4,
+  "uv0_primitives": 4,
+  "material_groups": ["timber", "thatch", "earth", "iron"],
+  "units": "metres",
+  "up_axis": "Y",
+  "pivot": "source origin; runtime normalization/ground contact still requires QA if admitted",
+  "textures": [
+    {
+      "name": "weathered-oak-basecolor.png",
+      "material": "timber",
+      "embedded": true,
+      "width": 1254,
+      "height": 1254,
+      "bytes": 3051445,
+      "sha256": "8b29d0d931e26337d53b252aef982be52f4679494c830fa4ae309a68e8f2323c"
+    },
+    {
+      "name": "straw-thatch-basecolor.png",
+      "material": "thatch",
+      "embedded": true,
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2933548,
+      "sha256": "b82b91f359267218525d5a3ec39de23dad601ef7a47997128eeda2dcdf0cd77c"
+    }
+  ],
+  "uv_strategy": {
+    "timber": "existing project geometry UVs; known stretching remains a visual QA item",
+    "thatch": "projected ridge/slope coordinates at 0.65 m repeat",
+    "earth": "solid factor; UV0 retained for structural compatibility",
+    "iron": "solid metallic/roughness factors; UV0 retained for structural compatibility"
+  },
+  "lod": "none",
+  "status": "Project-owned QA candidate only; not admitted to canonical runtime",
+  "validation": {
+    "workflow_run": 35406095255,
+    "result": "PASS",
+    "strict_glb_check": "20k-45k triangles; normals and UV0 required",
+    "node_tests": "22/22 passed",
+    "phase0_webgl2": "passed",
+    "phase0_interactions": "passed",
+    "lifecycle_remount_3x": "passed",
+    "software_webgpu": "passed",
+    "phase1_existing_storehouse_smoke": "passed; workshop candidate itself was not runtime-admitted/rendered"
+  },
+  "limitations": [
+    "Timber/thatch use base-color textures only; no normal or roughness maps",
+    "Timber UVs still require a production unwrap/physical repeat pass",
+    "Original source PNGs are embedded unchanged; transfer size remains unoptimized",
+    "No LOD",
+    "Visual and historical acceptance of the generated workshop GLB remains pending"
+  ]
+}
