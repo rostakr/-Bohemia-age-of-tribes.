@@ -1,0 +1,7 @@
+{
+  "provider": "OpenAI image generation",
+  "prompt": "Create a single photorealistic 3D asset reference render for a grounded historical RTS, isolated on plain neutral light gray background, entire object visible with generous margins, square image, three-quarter front view from slightly elevated angle. Subject: small Late Iron Age La Tene Bohemian Boii storage building, compact rectangular 3m by 3m footprint, 3.2m roof ridge height. Heavy simple timber post frame raised slightly above ground on stout short wooden posts, walls of weathered rough split oak boards with modest earth-daub infill, one closed plain plank front door with wooden latch, two short rough timber steps. Steep dense hand-laid straw thatched gable roof with uneven realistic straw eaves, dark age-worn timber, muted natural brown and straw palette, historically plausible practical construction. Readable compact granary silhouette DISTINCT from a large dwelling. Physically realistic detailed wood grain, rough straw fibers, dirt and subtle wear, soft neutral shadow, even diffuse studio lighting without baked dramatic shadows. This is an individual freestanding game asset, no terrain base, no landscape, no trees, no people, no text, no labels, no scale chart, no glass, no chimney, no medieval half-timbering, no stone castle motifs, no Celtic knot decoration, no fantasy.",
+  "source": "boii-storehouse-small-concept.png",
+  "date": "2026-09-17",
+  "historical_qa": "pending"
+}

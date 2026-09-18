@@ -1,0 +1,7 @@
+{
+  "provider": "OpenAI image generation",
+  "prompt": "Single photorealistic historical game asset reference image, isolated complete object on plain light gray studio background, three-quarter view mildly elevated, 1536 square if possible, generous margins. A small open-sided Late Iron Age La Tene Bohemian Boii carpentry work shelter, 5m wide x3m deep x3.5m ridge height. Four sturdy weathered unpainted oak posts, simple mortise joinery and diagonal braces, steep dense rough straw thatched gable roof. Front and both sides OPEN with clear visible air beneath roof; back has a low rough plank windbreak only halfway high. Under the roof one simple thick oak woodworking bench resting on trestles, two rough split wooden beams, a small plain iron-headed adze laid on bench. Spacious interior, convincing structural support, readable open canopy silhouette distinct from a closed house. Neutral diffuse soft light, physically accurate rough wood grain and dense layered straw, controlled weathered brown/earth/straw palette, authentic practical Late Iron Age appearance, highly detailed commercially credible PBR render aesthetic. Only freestanding shelter and bench; NO ground slab, no terrain, no foliage, no characters, no labels, no text, no modern tools, no machinery, no medieval ornament, no stone, no chimney, no glass, no metal roof. Preserve true open negative spaces between posts, do not enclose the sides.",
+  "source": "boii-carpentry-shed-open-concept.png",
+  "date": "2026-09-17",
+  "historical_qa": "pending"
+}

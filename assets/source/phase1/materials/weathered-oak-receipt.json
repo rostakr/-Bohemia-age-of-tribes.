@@ -1,0 +1,12 @@
+{
+  "asset": "weathered-oak-basecolor",
+  "provider": "OpenAI image generation",
+  "prompt": "Create a square seamless tileable photorealistic BASE COLOR material texture of weathered hand-hewn oak timber for a grounded ancient Central European settlement game. Flat orthographic straight-on texture scan filling whole image edge to edge. Fine long wood grain runs vertically top to bottom, restrained warm grey-brown desaturated natural oak, shallow irregular longitudinal splits, subtle age variation, few small knots, hand-tool marks. ONE continuous wood surface, NOT planks, no joints, no nails, no metal, no frame, no bark, no moss, no words. Uniform diffuse color only: NO directional illumination, NO cast shadow, NO specular highlights, NO ambient occlusion baked into surface, no perspective, no vignette. All four edges intended to tile smoothly. Professional PBR albedo source, subtle high-frequency detail with low overall contrast, natural untreated rough wood, not polished furniture, not dramatic cracked desert material.",
+  "role": "baseColor candidate for storehouse timber",
+  "validation": "Not performed; external QA",
+  "limitations": [
+    "Tileability not verified",
+    "No normal/roughness maps",
+    "Generated image may contain shading; review before production"
+  ]
+}
