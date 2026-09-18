@@ -27,7 +27,9 @@
   "phase_1_tree_merge_sha": "89c482e99452a125757b26a37dde4622efddb0ee",
   "phase_1_inhabitant_pr": 33,
   "phase_1_inhabitant_merge_sha": "58e67913ef906cb2c077d90c1afbf900c3172b7f",
-  "phase_1_status": "BENCHMARK_CONTENT_CLASSES_PRESENT_ART_GATE_OPEN",
+  "phase_1_dwelling_lod_pr": 35,
+  "phase_1_dwelling_lod_merge_sha": "6be481b5619d8558632c94ab0ef74bd6664a28e5",
+  "phase_1_status": "BENCHMARK_CONTENT_CLASSES_PRESENT_DWELLING_LOD1_ART_GATE_OPEN",
   "hosting_strategy": "Vite/GitHub Pages reference build; no Floot migration performed",
   "deployment": {
     "provider": "github_pages",
@@ -103,6 +105,28 @@
     "benchmark_draw_calls_ci": 307,
     "art_gate_passed": false
   },
+  "phase_1_dwelling_lod_validation": {
+    "pr_workflow_run": 35338032622,
+    "result": "passed",
+    "node": "24.20.0",
+    "npm_ci": "passed; 0 vulnerabilities",
+    "typescript": "passed",
+    "node_tests": "21/21 passed",
+    "production_build": "passed",
+    "phase_0_webgl2_regression": "passed",
+    "phase_0_interaction_regression": "passed",
+    "phase_1_lifecycle_remount": "3/3 cycles passed",
+    "phase_0_webgpu_regression": "passed",
+    "phase_1_webgl2_render_smoke": "passed",
+    "dwelling_lod0_source_triangles": 99298,
+    "dwelling_lod1_benchmark_triangles": 53538,
+    "dwelling_lod2_candidate_triangles": 31286,
+    "dwelling_lod1_sha256": "e0b247ef3fd8d3a943999053c5414734e4e940392650209471f4f0e970cdf006",
+    "dwelling_lod2_sha256": "ae8ea6e88fa3c2a9eb0b3d53cb01363b4bf61a41e8f553aeb2dcebe35bd311f7",
+    "embedded_source_webp_preserved": true,
+    "lod1_rts_visual_parity_review": "passed",
+    "art_gate_passed": false
+  },
   "production_deployment_validation": {
     "workflow": "Verify published foundation",
     "workflow_run": 35250992614,
@@ -128,37 +152,41 @@
 - Async scene teardown is guarded so unmount during texture/GLB loading cannot resurrect a destroyed scene.
 - A fresh scene instance is created for every mount/remount.
 - Runtime-authoritative diagnostics cannot be overwritten by scene diagnostics.
-- The benchmark now contains every required Phase 1 content class: the 220 m Stream Valley terrain, stream, path, procedural meadow, inspection camera, rectangular Boii dwelling candidate, project-owned storehouse/workshop WIP candidates, 32 project-owned deciduous-tree instances and five project-owned low-poly inhabitant readability prototypes.
-- Storehouse PR #21, workshop PR #25, tree PR #29 and reconciled inhabitant PR #33 are merged.
-- Latest post-merge `main` validation run `35336308622` passed 19/19 Node tests, production build, all Phase 0 browser/lifecycle regressions, software WebGPU and the rendered Phase 1 WebGL2 smoke.
-- Alternative forest PR #28 and its stacked inhabitant PR #30 were closed without merge after their useful inhabitant-specific work was reconciled in PR #33.
+- The benchmark contains every required Phase 1 content class: the 220 m Stream Valley terrain, stream, path, procedural meadow, inspection camera, rectangular Boii dwelling, project-owned storehouse/workshop WIP candidates, 32 project-owned deciduous-tree instances and five project-owned low-poly inhabitant readability prototypes.
+- Storehouse PR #21, workshop PR #25, tree PR #29, reconciled inhabitant PR #33 and dwelling LOD PR #35 are merged.
+- The original 99,298-triangle TRELLIS-derived dwelling is preserved as source/LOD0. Deterministic generated LOD1 (53,538 tris) and LOD2 (31,286 tris) are reproducible build outputs; the benchmark now uses LOD1.
+- LOD1 preserves the source dwelling's two embedded WebP material images byte-for-byte and passed RTS-camera visual-parity review against the previous LOD0 benchmark.
+- Alternative forest PR #28, its stacked inhabitant PR #30 and stale dwelling-LOD PR #32 were closed without merge after their useful work was reconciled onto the current baseline.
+- `docs/PHASE_1_HISTORICAL_ART_REVIEW.md` records the source-backed historical/visual review and keeps exact reconstruction claims separated from plausible project interpretation.
 
 ## CURRENT REPOSITORY STATE
 
-- `main` contains the verified Phase 0.5 runtime foundation and the complete set of Phase 1 benchmark content classes.
+- `main` at dwelling-LOD merge SHA `6be481b5619d8558632c94ab0ef74bd6664a28e5` contains the verified Phase 0.5 runtime foundation and the complete Phase 1 benchmark content-class checkpoint.
 - The Phase 1 benchmark is technically integrated but is not a completed art milestone: runtime diagnostics explicitly report `artGatePassed=false`.
 - Current benchmark content: three visible structures, five static inhabitant readability prototypes, 32 shared-mesh deciduous-tree instances and procedural meadow ground cover around the stream/path environment.
+- The dwelling benchmark slot now uses deterministic generated LOD1 at 53,538 triangles; source/LOD0 remains preserved at 99,298 triangles and generated LOD2 is 31,286 triangles.
 - Production GLB slots for storehouse, workshop, inhabitant and tree remain intentionally unfilled. The procedural candidates are explicit WIP content and are not represented as admitted final production assets.
 - The current public GitHub Pages deployment is still the previously verified Phase 0.5 foundation. Phase 1 has not been published through the manual release workflow.
 - Floot/React remains unnecessary. If introduced later it must remain a thin host around the PlayCanvas runtime and must not own the game loop.
 
 ## PHASE 1 CURRENT CONTENT EVIDENCE
 
-- Latest post-merge `main` validation: PASS in workflow run `35336308622` on merge SHA `58e67913ef906cb2c077d90c1afbf900c3172b7f`.
+- Dwelling LOD PR #35 validation: PASS in workflow run `35338032622` on PR head `1526c5e7c3f7dee349f581cb34d60cb9207d0f55` before merge as `6be481b5619d8558632c94ab0ef74bd6664a28e5`.
 - `npm ci`: PASS; dependency audit reported 0 vulnerabilities.
 - Strict TypeScript: PASS.
-- Node tests: PASS, 19/19.
+- Node tests: PASS, 21/21 including deterministic dwelling-LOD output/hash checks.
 - Production build: PASS with Vite 8.3.0.
 - Phase 0 WebGL2 startup/fallback/failure UI regression: PASS.
 - Phase 0 interactions (pause/resume, hidden-tab recovery, resize, context loss/restoration, reload): PASS.
-- Phase 1 lifecycle remount: PASS for three full unmount/mount cycles with the complete current benchmark content.
+- Phase 1 lifecycle remount: PASS for three full unmount/mount cycles with the complete current benchmark content and dwelling LOD1.
 - Phase 0 software WebGPU regression: PASS under Vulkan/SwiftShader.
-- Phase 1 rendered WebGL2 smoke: PASS; observed three structures, five inhabitants, 32 trees, 4,678 grass clumps and 307 draw calls in the CI evidence capture.
+- Phase 1 rendered WebGL2 smoke: PASS; observed three structures, five inhabitants, 32 trees, 4,678 grass clumps, dwelling LOD1 at 53,538 triangles and 307 draw calls in the CI evidence capture.
 - Storehouse candidate: 15,550 triangles.
 - Workshop candidate: 22,480 triangles.
 - Deciduous-tree candidate: 15,980 triangles per shared candidate mesh, 32 runtime instances.
 - Inhabitant readability prototype: 1,404 triangles / 910 vertices, approximately 1.717 m high, shared across five static entities.
 - The inhabitant prototype is deliberately below the production `boii_adult_worker.glb` request of 25k–50k triangles with one 2K atlas. It proves scale/readability only and must not be treated as satisfying the production character brief.
+- Dwelling source/LOD0: 99,298 triangles. Deterministic LOD1: 53,538 triangles (~46.1% reduction). Deterministic LOD2: 31,286 triangles (~68.5% reduction). Generated outputs preserve source embedded WebP images byte-for-byte.
 
 These graphics checks establish integration/runtime correctness in software-backed CI. They are not actual-hardware GPU performance certification and the CI FPS/frame-time values are not production performance targets.
 
@@ -166,7 +194,7 @@ These graphics checks establish integration/runtime correctness in software-back
 
 - `artGatePassed=false`: all benchmark content classes exist, but production art acceptance is not complete.
 - The current inhabitant is only a low-poly static readability prototype. A production adult worker candidate matching the 25k–50k triangle / 2K atlas brief remains required before character art acceptance; rig/animation is optional for this milestone but remains desirable for later gameplay.
-- The dwelling candidate still requires final visual/historical and actual-hardware performance acceptance.
+- The dwelling now has a deterministic LOD0/LOD1/LOD2 pipeline and the benchmark uses visually reviewed LOD1, but final reconstruction-specific historical/visual acceptance and actual-hardware LOD switching thresholds remain open.
 - Storehouse and workshop are project-owned procedural WIP candidates; their production-model/LOD strategy and final historical/visual acceptance remain open.
 - The deciduous tree is a project-owned composition candidate; botanical acceptance, lower-detail LOD implementation and actual-hardware performance thresholds remain open.
 - Terrain, stream banks, path edges, vegetation distribution, lighting/material balance and settlement composition still need production art polish.
@@ -175,13 +203,13 @@ These graphics checks establish integration/runtime correctness in software-back
 
 ## NEXT TASK
 
-Move from content-class completion to the Phase 1 art/acceptance gate. Priorities:
+Continue the Phase 1 art/acceptance gate. Priorities:
 
 1. Replace or upgrade the inhabitant readability prototype with a production adult-worker candidate matching the documented 25k–50k triangle / 2K atlas brief while preserving five-instance settlement readability.
-2. Perform historical/visual review of dwelling, storehouse, workshop and inhabitant content, plus botanical review of the deciduous-tree candidate.
-3. Perform an actual desktop-GPU 1080p benchmark of the complete scene before selecting useful LOD thresholds.
-4. Implement and validate the required tree/building LOD strategy based on measured hardware evidence rather than software-CI FPS.
-5. Polish stream banks, path edges, vegetation distribution, lighting/material balance and settlement composition.
+2. Apply the source-backed historical/art review to final object acceptance: dwelling architecture remains plausible/not-proven, storehouse/workshop remain explicit WIP structural interpretations, and production inhabitant clothing still needs a documented reconstruction reference set.
+3. Perform an actual desktop-GPU 1080p benchmark of the complete scene before selecting runtime LOD switching distances or treating CI FPS as performance evidence.
+4. Implement/validate remaining tree/storehouse/workshop LOD strategy only after hardware evidence establishes useful thresholds; dwelling deterministic LOD assets already exist but runtime switch thresholds are still open.
+5. Polish stream banks, path edges, vegetation distribution/species-age variation, lighting/material balance and settlement composition.
 6. Set `artGatePassed=true` only after those gates are explicitly satisfied.
 
 Do not begin large economy/combat/AI production systems merely because all visual content classes are now present; complete or explicitly waive the Phase 1 art/acceptance gate first.
@@ -192,4 +220,4 @@ Do not begin large economy/combat/AI production systems merely because all visua
 
 **PHASE 0.5: PASS / COMPLETE_VERIFIED / DEPLOYED.**
 
-**PHASE 1: AUTHORIZED / ALL BENCHMARK CONTENT CLASSES PRESENT / ART GATE OPEN.**
+**PHASE 1: AUTHORIZED / ALL BENCHMARK CONTENT CLASSES PRESENT / DWELLING LOD1 ACTIVE / ART GATE OPEN.**
