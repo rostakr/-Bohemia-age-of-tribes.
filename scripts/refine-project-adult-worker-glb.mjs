@@ -47,7 +47,7 @@ for (let i = 0; i < vertexCount; i++) {
 }
 for (let i = 0; i < indexCount; i++) indices[i] = view.getUint32(indexInfo.byteOffset + i * 4, true);
 
-// The generator emits each anatomical/clothing element as disconnected indexed geometry.
+// The generator emits most anatomical/clothing elements as disconnected indexed geometry.
 // Union-find lets the refinement operate on complete elements, never a partial surface.
 const parent = Array.from({ length: vertexCount }, (_, i) => i);
 const rank = new Uint8Array(vertexCount);
@@ -112,7 +112,7 @@ function transform(component, scale, shift = [0, 0, 0]) {
   }
 }
 
-const matched = { shoes: 0, shoulders: 0, hands: 0, beard: 0, ears: 0, nose: 0, brows: 0 };
+const matched = { shoes: 0, shoulders: 0, hands: 0, beard: 0, ears: 0, nose: 0 };
 for (const component of components) {
   const [x, y, z] = component.center;
   const count = component.count;
@@ -128,8 +128,8 @@ for (const component of components) {
     transform(component, [0.72, 0.80, 0.68]);
     matched.hands++;
   } else if (count === 1178 && near(x, 0, 0.02) && near(y, 1.525, 0.03) && z > 0.08) {
-    // The beard is optional for this milestone. Keep topology but hide the generated
-    // sphere inside the lower face instead of shipping a dark circular protrusion.
+    // Beard is optional for this milestone. Keep topology but hide the generated sphere
+    // inside the lower face instead of shipping a dark circular protrusion.
     transform(component, [0.28, 0.32, 0.16], [0, -0.010, -0.075]);
     matched.beard++;
   } else if (count === 302 && near(y, 1.590, 0.025) && near(ax, 0.113, 0.02)) {
@@ -138,16 +138,30 @@ for (const component of components) {
   } else if (count === 530 && near(x, 0, 0.02) && near(y, 1.585, 0.025) && z > 0.10) {
     transform(component, [0.72, 0.78, 0.50], [0, 0, -0.020]);
     matched.nose++;
-  } else if (count === 24 && near(y, 1.615, 0.02) && near(ax, 0.040, 0.02) && z > 0.09) {
-    transform(component, [0.50, 0.45, 0.35], [0, 0, -0.055]);
-    matched.brows++;
   }
 }
 
-const expected = { shoes: 2, shoulders: 2, hands: 2, beard: 1, ears: 2, nose: 1, brows: 2 };
+const expected = { shoes: 2, shoulders: 2, hands: 2, beard: 1, ears: 2, nose: 1 };
 for (const [key, value] of Object.entries(expected)) {
   if (matched[key] !== value) throw new Error(`Refinement component mismatch for ${key}: expected ${value}, got ${matched[key]}`);
 }
+
+// addBox duplicates vertices per face, so each brow is six independent quads rather
+// than one connected 24-vertex component. Its tiny, unique front-of-head region is safe
+// to refine by position, with an exact vertex-count assertion to prevent accidental edits.
+let browVertices = 0;
+for (let i = 0; i < vertexCount; i++) {
+  const p = i * 3;
+  const x = positions[p], y = positions[p + 1], z = positions[p + 2];
+  if (y >= 1.607 && y <= 1.623 && Math.abs(x) <= 0.076 && z >= 0.103 && z <= 0.119) {
+    const centerX = x < 0 ? -0.040 : 0.040;
+    positions[p] = centerX + (x - centerX) * 0.50;
+    positions[p + 1] = 1.615 + (y - 1.615) * 0.45;
+    positions[p + 2] = 0.056 + (z - 0.111) * 0.35;
+    browVertices++;
+  }
+}
+if (browVertices !== 48) throw new Error(`Refinement brow vertex mismatch: expected 48, got ${browVertices}`);
 
 for (let i = 0; i < vertexCount; i++) {
   const offset = positionInfo.byteOffset + i * 12;
@@ -194,11 +208,12 @@ receipt.bytes = output.length;
 receipt.stats = stats;
 receipt.art_refinement = {
   script: 'scripts/refine-project-adult-worker-glb.mjs',
-  method: 'whole disconnected indexed components identified by deterministic topology and bounds',
+  method: 'whole disconnected indexed components plus exact 48-vertex brow box refinement',
   topology_changed: false,
   normals_regenerated: true,
   bounds_regenerated: true,
   matched_components: matched,
+  brow_vertices: browVertices,
   purpose: 'Remove close-up toy-like protrusions without partial-component spikes, while preserving the RTS silhouette and 26,140-triangle budget',
 };
 writeFileSync(receiptFile, JSON.stringify(receipt, null, 2) + '\n');
@@ -210,4 +225,5 @@ console.log(JSON.stringify({
   stats,
   componentCount: components.length,
   matched,
+  browVertices,
 }, null, 2));
