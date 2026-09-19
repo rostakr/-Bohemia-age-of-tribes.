@@ -146,22 +146,22 @@ for (const [key, value] of Object.entries(expected)) {
   if (matched[key] !== value) throw new Error(`Refinement component mismatch for ${key}: expected ${value}, got ${matched[key]}`);
 }
 
-// addBox duplicates vertices per face, so each brow is six independent quads rather
-// than one connected 24-vertex component. Its tiny, unique front-of-head region is safe
-// to refine by position, with an exact vertex-count assertion to prevent accidental edits.
-let browVertices = 0;
-for (let i = 0; i < vertexCount; i++) {
+// The two brow addBox calls are the final geometry emitted by worker-geometry.ts.
+// Each box contributes 24 duplicated face vertices, so the final 48 vertices are an
+// exact deterministic range. Verify their raw bounds before moving them.
+const browStart = vertexCount - 48;
+for (let i = browStart; i < vertexCount; i++) {
   const p = i * 3;
   const x = positions[p], y = positions[p + 1], z = positions[p + 2];
-  if (y >= 1.607 && y <= 1.623 && Math.abs(x) <= 0.076 && z >= 0.103 && z <= 0.119) {
-    const centerX = x < 0 ? -0.040 : 0.040;
-    positions[p] = centerX + (x - centerX) * 0.50;
-    positions[p + 1] = 1.615 + (y - 1.615) * 0.45;
-    positions[p + 2] = 0.056 + (z - 0.111) * 0.35;
-    browVertices++;
+  if (!(y >= 1.606 && y <= 1.624 && Math.abs(x) <= 0.080 && z >= 0.102 && z <= 0.120)) {
+    throw new Error(`Unexpected brow vertex ${i}: ${x}, ${y}, ${z}`);
   }
+  const centerX = x < 0 ? -0.040 : 0.040;
+  positions[p] = centerX + (x - centerX) * 0.50;
+  positions[p + 1] = 1.615 + (y - 1.615) * 0.45;
+  positions[p + 2] = 0.056 + (z - 0.111) * 0.35;
 }
-if (browVertices !== 48) throw new Error(`Refinement brow vertex mismatch: expected 48, got ${browVertices}`);
+const browVertices = 48;
 
 for (let i = 0; i < vertexCount; i++) {
   const offset = positionInfo.byteOffset + i * 12;
@@ -208,7 +208,7 @@ receipt.bytes = output.length;
 receipt.stats = stats;
 receipt.art_refinement = {
   script: 'scripts/refine-project-adult-worker-glb.mjs',
-  method: 'whole disconnected indexed components plus exact 48-vertex brow box refinement',
+  method: 'whole disconnected indexed components plus deterministic final 48 brow vertices',
   topology_changed: false,
   normals_regenerated: true,
   bounds_regenerated: true,
