@@ -6,11 +6,16 @@ on:
       - '.github/workflows/rebuild-storehouse-runtime-jpegs.yml'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   rebuild-storehouse-runtime-jpegs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
@@ -25,7 +30,7 @@ jobs:
           import hashlib, json
 
           root = Path('assets/source/phase1/materials')
-          out = root / 'runtime-rebuilt'
+          out = root / 'runtime'
           out.mkdir(parents=True, exist_ok=True)
           names = [
               'weathered-oak-basecolor',
@@ -51,19 +56,40 @@ jobs:
                   'bytes': len(payload),
                   'sha256': hashlib.sha256(payload).hexdigest(),
               })
-          receipt = {'pillow': Image.__version__, 'settings': {'size': [512, 512], 'resampling': 'LANCZOS', 'quality': 90, 'subsampling': 0, 'optimize': True, 'progressive': True}, 'files': records}
-          (out / 'rebuild-receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          receipt = {
+              'purpose': 'Phase 1 runtime derivatives for the project-owned storehouse base colors',
+              'pillow': Image.__version__,
+              'settings': {
+                  'size': [512, 512],
+                  'resampling': 'LANCZOS',
+                  'quality': 90,
+                  'subsampling': 0,
+                  'optimize': True,
+                  'progressive': True,
+              },
+              'files': records,
+          }
+          (root / 'runtime-basecolor-receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
           print(json.dumps(receipt, indent=2))
           PY
-      - name: Require historical documented hashes
+      - name: Require historical documented hashes and sizes
         shell: bash
         run: |
-          test "$(sha256sum assets/source/phase1/materials/runtime-rebuilt/weathered-oak-basecolor-runtime-512.jpg | cut -d' ' -f1)" = "c6abab6dd1959b80929657ffeda3a2425d6f3d965ae4d7f46ea45d774d1e8684"
-          test "$(sha256sum assets/source/phase1/materials/runtime-rebuilt/straw-thatch-basecolor-runtime-512.jpg | cut -d' ' -f1)" = "0564f253d920fcdb6bc2e300687abe067912991b53e0e9fa72abdd1c7e5a8f0a"
-          test "$(sha256sum assets/source/phase1/materials/runtime-rebuilt/clay-daub-basecolor-runtime-512.jpg | cut -d' ' -f1)" = "dc10ae700c143796fda36947149a4a47299b6e36a8f4cb1b2b3dd4b9c3f67ede"
-      - uses: actions/upload-artifact@v4
-        with:
-          name: rebuilt-storehouse-runtime-jpegs
-          path: assets/source/phase1/materials/runtime-rebuilt/
-          if-no-files-found: error
-          retention-days: 1
+          test "$(wc -c < assets/source/phase1/materials/runtime/weathered-oak-basecolor-runtime-512.jpg)" = "98279"
+          test "$(wc -c < assets/source/phase1/materials/runtime/straw-thatch-basecolor-runtime-512.jpg)" = "138633"
+          test "$(wc -c < assets/source/phase1/materials/runtime/clay-daub-basecolor-runtime-512.jpg)" = "87217"
+          test "$(sha256sum assets/source/phase1/materials/runtime/weathered-oak-basecolor-runtime-512.jpg | cut -d' ' -f1)" = "c6abab6dd1959b80929657ffeda3a2425d6f3d965ae4d7f46ea45d774d1e8684"
+          test "$(sha256sum assets/source/phase1/materials/runtime/straw-thatch-basecolor-runtime-512.jpg | cut -d' ' -f1)" = "0564f253d920fcdb6bc2e300687abe067912991b53e0e9fa72abdd1c7e5a8f0a"
+          test "$(sha256sum assets/source/phase1/materials/runtime/clay-daub-basecolor-runtime-512.jpg | cut -d' ' -f1)" = "dc10ae700c143796fda36947149a4a47299b6e36a8f4cb1b2b3dd4b9c3f67ede"
+      - name: Commit verified binary derivatives to PR head
+        shell: bash
+        run: |
+          if git diff --quiet -- assets/source/phase1/materials/runtime assets/source/phase1/materials/runtime-basecolor-receipt.json; then
+            echo 'Runtime derivatives already match documented output.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/source/phase1/materials/runtime assets/source/phase1/materials/runtime-basecolor-receipt.json
+          git commit -m 'Assets: restore valid 512px storehouse runtime JPEGs'
+          git push origin HEAD:${{ github.head_ref || github.ref_name }}
