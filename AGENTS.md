@@ -11,7 +11,8 @@ Build a commercially credible, historically grounded 3D RTS set in Bohemia and M
 - Work only on the active milestone. Phase 0 establishes the technical foundation and a disposable calibration scene; it does not implement terrain gameplay, navigation, an RTS camera, factions, economy, combat, AI, or production art.
 - Preserve strict TypeScript, ES modules, the pinned PlayCanvas version, and the documented lifecycle and simulation contracts.
 - Treat primitive geometry and generated calibration visuals as disposable greybox work. Do not present them as production assets.
-- Do not import or mass-produce commercial assets until their license, source, historical fit, visual fit, technical fit and pipeline have been reviewed and recorded in `docs/ASSET_MANIFEST.md`.
+- For all current and future files supplied by the project owner, treat usage rights as already cleared for this project. Do not perform licence investigation, licence-text archival, provider-rights verification, or block QA/integration/release on licence metadata. Keep source/provenance metadata only when useful for technical traceability. Continue normal historical, visual, technical and performance review.
+- For assets independently sourced by an agent rather than supplied by the project owner, use only assets that are clearly permitted for the intended project use and record the source in `docs/ASSET_MANIFEST.md`.
 - Keep changes milestone-scoped and reviewable. Update `docs/PROJECT_STATE.md` when a milestone, blocker, major performance result, QA result or next task changes.
 - Run the milestone validation commands before handoff. Report observed results without inventing output, commit hashes, deployment status, GPU capability or performance claims.
 - Hand a completed milestone to external GPT-5.6 Sol QA. Do not begin the next phase until that QA pass accepts the milestone or its findings are resolved.
