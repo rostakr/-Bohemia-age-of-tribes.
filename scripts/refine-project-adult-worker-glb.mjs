@@ -114,43 +114,62 @@ for (const component of components) {
   const ax = Math.abs(x);
 
   if (component.count === 972 && y < 0.15) {
-    transform(component, [0.95, 0.96, 0.82], [0, 0, -0.006]);
+    // Short, soft leather shoes: keep the foot readable, remove the curled/slipper toe.
+    transform(component, [0.94, 0.88, 0.68], [0, -0.002, -0.012]);
+    for (const vertex of component.vertices) {
+      const p = vertex * 3;
+      const z = positions[p + 2];
+      if (z > 0.115) {
+        const t = Math.min(1, (z - 0.115) / 0.085);
+        positions[p + 1] -= 0.025 * t;
+        positions[p + 2] -= 0.020 * t;
+      }
+    }
     matched.shoes++;
   } else if (component.count === 584 && y > 0.9 && y < 1.2) {
-    transform(component, [0.92, 1.0, 0.96]);
-    matched.tunic++;
-  } else if (component.count === 390 && ax > 0.2 && y > 1.0) {
-    transform(component, [0.95, 1.0, 0.95], [x < 0 ? 0.012 : -0.012, 0, 0]);
-    matched.sleeves++;
-  } else if (component.count === 456 && ax > 0.25 && y < 0.9) {
-    transform(component, [0.90, 0.98, 0.88], [x < 0 ? 0.010 : -0.010, 0.005, -0.002]);
-    matched.hands++;
-  } else if (component.count === 2323 && y > 1.6) {
-    // Tighten the scalp shell and lift the low front edge to remove sharp temple flaps.
-    transform(component, [0.96, 1.0, 0.95], [0, 0.003, -0.002]);
+    // Round the tunic shoulder line instead of retaining a horizontal barrel top.
+    transform(component, [0.90, 1.0, 0.94]);
     for (const vertex of component.vertices) {
       const p = vertex * 3;
       const py = positions[p + 1];
-      const pz = positions[p + 2];
-      if (py < 1.655 && pz > 0.015) {
-        const lift = (1.655 - py) * 0.70;
-        positions[p + 1] += lift;
-        positions[p] *= 0.94;
-        positions[p + 2] = 0.006 + (pz - 0.006) * 0.88;
+      if (py > 1.30) {
+        const t = Math.min(1, (py - 1.30) / 0.16);
+        const outward = Math.max(0, Math.abs(positions[p]) - 0.06);
+        positions[p + 1] -= outward * 0.22 * t;
+        positions[p] *= 1 - 0.025 * t;
       }
     }
+    matched.tunic++;
+  } else if (component.count === 390 && ax > 0.2 && y > 1.0) {
+    transform(component, [0.90, 0.98, 0.91], [x < 0 ? 0.022 : -0.022, -0.004, 0]);
+    for (const vertex of component.vertices) {
+      const p = vertex * 3;
+      if (positions[p + 1] > 1.28) {
+        positions[p] *= 0.975;
+        positions[p + 1] -= 0.010;
+      }
+    }
+    matched.sleeves++;
+  } else if (component.count === 456 && ax > 0.25 && y < 0.9) {
+    // Hands remain continuous with the cuff but read less like long mittens.
+    transform(component, [0.82, 0.86, 0.82], [x < 0 ? 0.014 : -0.014, 0.016, -0.004]);
+    matched.hands++;
+  } else if (component.count === 2323 && y > 1.6) {
+    // The generated hair shell was helmet-like in close-up. Collapse it fully inside
+    // the cranium for a close-cropped / effectively shaved worker instead of shipping
+    // a visible artificial helmet rim. Hair can be re-authored later as a real groom.
+    transform(component, [0.64, 0.60, 0.62], [0, -0.020, -0.030]);
     matched.hair++;
   } else if (component.count === 332 && y > 1.55) {
-    transform(component, [0.68, 0.82, 0.65], [x < 0 ? 0.004 : -0.004, 0, -0.002]);
+    transform(component, [0.48, 0.72, 0.46], [x < 0 ? 0.006 : -0.006, 0, -0.006]);
     matched.ears++;
   } else if (component.count === 328 && y > 1.48 && y < 1.59) {
-    // Beard is optional. Hide the QA-rejected protruding overlay inside the lower face;
-    // the repaired candidate reads as a clean-shaven generic worker instead.
-    transform(component, [0.80, 0.78, 0.08], [0, -0.004, -0.052]);
+    // The beard overlay was visibly plate-like. Collapse it deep inside the face so
+    // the repaired checkpoint is clean-shaven rather than retaining a fake beard disc.
+    transform(component, [0.55, 0.55, 0.03], [0, -0.006, -0.125]);
     matched.beard++;
   } else if (component.count === 4 && y > 1.60) {
-    // Geometric brow cards read as sticks in close-up; hide them inside the forehead.
-    transform(component, [0.85, 0.85, 0.25], [0, 0, -0.035]);
+    transform(component, [0.65, 0.70, 0.12], [0, 0, -0.075]);
     matched.brows++;
   }
 }
@@ -212,9 +231,11 @@ receipt.art_repair = {
   matched_components: matched,
   notes: [
     'continuous swept legs, sleeves and tapered hands are authored in worker-geometry.ts',
-    'tunic shoulder width and limb spacing tightened without changing runtime architecture',
-    'optional protruding beard and brow overlays hidden inside the face after close-up review',
-    'hair shell tightened and front edge lifted to remove temple flaps',
+    'tunic shoulders slope down from the neck instead of reading as a horizontal barrel',
+    'sleeves and hands are narrowed and moved inward while preserving cuff continuity',
+    'shoe toes are shortened and flattened to remove the curled-slipper silhouette',
+    'helmet-like hair shell is collapsed inside the cranium for this clean-shaven/close-cropped checkpoint',
+    'protruding beard and brow overlays are fully hidden inside the face',
   ],
 };
 writeFileSync(receiptFile, JSON.stringify(receipt, null, 2) + '\n');
