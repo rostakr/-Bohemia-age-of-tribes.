@@ -11,6 +11,7 @@ interface PreviewSpec {
   triangles: number;
   camera: [number, number, number];
   target: [number, number, number];
+  initialYaw: number;
 }
 
 const PREVIEWS: Record<SuppliedPreviewKind, PreviewSpec> = {
@@ -21,6 +22,7 @@ const PREVIEWS: Record<SuppliedPreviewKind, PreviewSpec> = {
     triangles: 89_778,
     camera: [6.4, 4.4, 7.8],
     target: [0, 1.65, 0],
+    initialYaw: 28,
   },
   worker: {
     path: 'characters/boii_adult_worker_qa_preview.glb',
@@ -29,6 +31,7 @@ const PREVIEWS: Record<SuppliedPreviewKind, PreviewSpec> = {
     triangles: 14_106,
     camera: [3.0, 2.15, 4.2],
     target: [0, 0.9, 0],
+    initialYaw: 18,
   },
 };
 
@@ -37,6 +40,8 @@ export class SuppliedPreviewScene implements RuntimeScene {
   private assets: SceneAssets | undefined;
   private groundMaterial: StandardMaterial | undefined;
   private app: Application | undefined;
+  private model: Entity | undefined;
+  private elapsed = 0;
   private drawCalls = 0;
   private modelLoaded = false;
   private destroyed = false;
@@ -102,14 +107,18 @@ export class SuppliedPreviewScene implements RuntimeScene {
     if (this.destroyed || !this.root) return;
     const model = instantiateAtHeight(resource, spec.label, spec.targetHeight);
     model.setPosition(0, 0, 0);
-    model.setEulerAngles(0, this.kind === 'workshop' ? 28 : 18, 0);
+    model.setEulerAngles(0, spec.initialYaw, 0);
     this.root.addChild(model);
+    this.model = model;
     this.modelLoaded = true;
   }
 
   fixedUpdate(_dtSeconds: number, _tick: number): void {}
 
-  update(_dtSeconds: number, _interpolationAlpha: number): void {
+  update(dtSeconds: number, _interpolationAlpha: number): void {
+    this.elapsed += dtSeconds;
+    const spec = PREVIEWS[this.kind];
+    this.model?.setEulerAngles(0, spec.initialYaw + this.elapsed * 20, 0);
     this.drawCalls = this.app?.stats.drawCalls.total ?? 0;
   }
 
@@ -121,6 +130,7 @@ export class SuppliedPreviewScene implements RuntimeScene {
       previewAsset: this.kind,
       previewSource: spec.path,
       previewTriangles: spec.triangles,
+      previewYawDegrees: (spec.initialYaw + this.elapsed * 20) % 360,
       modelLoaded: this.modelLoaded,
       drawCalls: this.drawCalls,
     };
@@ -131,11 +141,13 @@ export class SuppliedPreviewScene implements RuntimeScene {
     this.destroyed = true;
     this.root?.destroy();
     this.root = undefined;
+    this.model = undefined;
     this.assets?.destroy();
     this.assets = undefined;
     this.groundMaterial?.destroy();
     this.groundMaterial = undefined;
     this.app = undefined;
+    this.elapsed = 0;
     this.modelLoaded = false;
     this.drawCalls = 0;
   }
