@@ -1,0 +1,32 @@
+{
+  "purpose": "Phase 1 runtime derivatives for the project-owned storehouse base colors",
+  "pillow": "12.3.0",
+  "settings": {
+    "size": [
+      512,
+      512
+    ],
+    "resampling": "LANCZOS",
+    "quality": 90,
+    "subsampling": 0,
+    "optimize": true,
+    "progressive": true
+  },
+  "files": [
+    {
+      "file": "weathered-oak-basecolor-runtime-512.jpg",
+      "bytes": 98279,
+      "sha256": "c6abab6dd1959b80929657ffeda3a2425d6f3d965ae4d7f46ea45d774d1e8684"
+    },
+    {
+      "file": "straw-thatch-basecolor-runtime-512.jpg",
+      "bytes": 138633,
+      "sha256": "0564f253d920fcdb6bc2e300687abe067912991b53e0e9fa72abdd1c7e5a8f0a"
+    },
+    {
+      "file": "clay-daub-basecolor-runtime-512.jpg",
+      "bytes": 87217,
+      "sha256": "dc10ae700c143796fda36947149a4a47299b6e36a8f4cb1b2b3dd4b9c3f67ede"
+    }
+  ]
+}
