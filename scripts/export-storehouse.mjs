@@ -30,19 +30,16 @@ try {
   gltf.textures = [];
   gltf.samplers = [{ magFilter: 9729, minFilter: 9987, wrapS: 10497, wrapT: 10497 }];
   for (const [material, file] of [
-    ['timber', 'runtime/weathered-oak-basecolor-runtime-512.jpg'],
-    ['thatch', 'runtime/straw-thatch-basecolor-runtime-512.jpg'],
-    ['daub', 'runtime/clay-daub-basecolor-runtime-512.jpg'],
+    ['timber', 'weathered-oak-basecolor-runtime-512.jpg'],
+    ['thatch', 'straw-thatch-basecolor-runtime-512.jpg'],
+    ['daub', 'clay-daub-basecolor-runtime-512.jpg'],
   ]) {
-    const bytes = readFileSync(new URL(`../assets/source/phase1/materials/${file}`, import.meta.url));
-    const padding = (4 - byteLength % 4) % 4;
-    if (padding) { chunks.push(Buffer.alloc(padding)); byteLength += padding; }
-    const bufferView = gltf.bufferViews.push({ buffer: 0, byteOffset: byteLength, byteLength: bytes.length }) - 1;
-    chunks.push(bytes); byteLength += bytes.length;
-    const imageIndex = gltf.images.push({ name: file.split('/').at(-1), bufferView, mimeType: 'image/jpeg' }) - 1;
+    const bytes = readFileSync(new URL(`../assets/source/phase1/materials/runtime/${file}`, import.meta.url));
+    const imageIndex = gltf.images.push({ name: file, uri: `../materials/${file}` }) - 1;
     textureByMaterial.set(material, gltf.textures.push({ source: imageIndex, sampler: 0 }) - 1);
-    textureRecords.push({ name: file, material, embedded: true, width: 512, height: 512,
-      bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') });
+    textureRecords.push({ name: `runtime/${file}`, public_path: `public/assets/materials/${file}`, uri: `../materials/${file}`,
+      material, embedded: false, width: 512, height: 512, bytes: bytes.length,
+      sha256: createHash('sha256').update(bytes).digest('hex') });
   }
   function accessor(values, width, type, componentType, target, bounds = false) {
     const padding = (4 - byteLength % 4) % 4;
@@ -87,11 +84,13 @@ try {
   const glb = Buffer.concat([header, chunkHeader(jsonChunk.length, 0x4e4f534a), jsonChunk,
     chunkHeader(binary.length, 0x004e4942), binary]);
   writeFileSync(output, glb);
+  const textureBytes = textureRecords.reduce((sum, texture) => sum + texture.bytes, 0);
   const record = { asset: 'boii_storehouse_small', source: 'src/render/storehouse.ts',
     source_sha256: createHash('sha256').update(readFileSync(source)).digest('hex'),
     source_rights: 'Existing original project geometry; no third-party model imported',
     exporter: 'scripts/export-storehouse.mjs', output: 'public/assets/buildings/boii_storehouse_small.glb',
     sha256: createHash('sha256').update(glb).digest('hex'), bytes: glb.length,
+    total_runtime_transfer_bytes: glb.length + textureBytes,
     stats: storehouseStats(geometry), material_groups: materials.map(x => x[0]),
     units: 'metres', up_axis: 'Y', pivot: 'ground-centred source origin',
     uv_strategy: {
@@ -101,7 +100,7 @@ try {
       roof: 'local Z/ridge versus local X/slope UV orientation from source geometry',
     },
     textures: textureRecords,
-    texture_transfer_note: 'Original 1254px RGB PNGs remain unchanged. Embedded runtime base colors are documented 512px JPEG derivatives created with Pillow 12.3.0, LANCZOS resize, quality 90, 4:4:4, optimize+progressive; see materials/runtime-basecolor-receipt.json.',
+    texture_transfer_note: 'Original 1254px RGB PNGs remain unchanged. Runtime base colors are documented 512px JPEG derivatives created with Pillow 12.3.0, LANCZOS resize, quality 90, 4:4:4, optimize+progressive. They are served as external public assets rather than embedded GLB images because PlayCanvas/Chrome 152 headless could not decode the same progressive JPEG bytes from embedded image bufferViews.',
     lod: 'none', status: 'Exported WIP candidate; QA-only supplied-storehouse preview route',
     validation: 'Exporter output requires strict GLB check plus browser/visual QA after regeneration',
     limitations: ['Timber, thatch and daub have lossy base-color runtime derivatives; wattle and earth use solid factors',
@@ -109,5 +108,5 @@ try {
       '512px runtime base colors are appropriate for the current RTS benchmark, not close-up final production acceptance',
       'Roughness uses scalar factors only; visual parity requires external review'] };
   writeFileSync(receipt, JSON.stringify(record, null, 2) + '\n');
-  console.log(JSON.stringify({ output: record.output, bytes: record.bytes, stats: record.stats, uv: record.uv_strategy }));
+  console.log(JSON.stringify({ output: record.output, bytes: record.bytes, totalRuntimeTransferBytes: record.total_runtime_transfer_bytes, stats: record.stats, uv: record.uv_strategy }));
 } finally { rmSync(temporary, { force: true }); }
