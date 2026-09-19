@@ -1,0 +1,58 @@
+name: Validate compact storehouse current baseline
+
+on:
+  pull_request:
+    paths:
+      - 'src/render/storehouse.ts'
+      - 'scripts/check-storehouse.mjs'
+      - 'scripts/export-storehouse.mjs'
+      - 'assets/source/phase1/materials/runtime/**'
+      - 'package.json'
+      - '.github/workflows/validate-storehouse-512.yml'
+  workflow_dispatch:
+
+jobs:
+  validate-storehouse-512:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Full project validation with regenerated storehouse
+        run: npm run validate
+      - name: Verify compact storehouse output
+        shell: bash
+        run: |
+          node -e "const {statSync}=require('node:fs'); const p='public/assets/buildings/boii_storehouse_small.glb'; const n=statSync(p).size; console.log('storehouse-bytes', n); if(n>900000) throw new Error('Storehouse GLB exceeds 900 kB compact-runtime ceiling: '+n)"
+          npm run check:storehouse-glb
+          sha256sum public/assets/buildings/boii_storehouse_small.glb
+          sha256sum assets/source/phase1/materials/runtime/*.jpg
+      - name: Phase 0 WebGL2 browser smoke
+        run: npm run smoke:webgl2
+      - name: Phase 0 interaction smoke
+        run: npm run smoke:interactions
+      - name: Lifecycle remount smoke
+        run: npm run smoke:lifecycle
+      - name: Phase 0 software WebGPU smoke
+        run: npm run smoke:webgpu
+      - name: Phase 1 benchmark browser smoke
+        run: npm run smoke:phase1
+      - name: Storehouse admission smoke
+        run: npm run smoke:supplied-storehouse
+      - name: Storehouse close-up smoke
+        run: npm run smoke:supplied-storehouse-closeup
+      - name: Upload compact storehouse QA evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: compact-storehouse-current-baseline
+          path: |
+            public/assets/buildings/boii_storehouse_small.glb
+            assets/source/phase1/storehouse-glb-receipt.json
+            artifacts/phase1/phase1-webgl2-1920x1080.png
+            artifacts/phase1/supplied-storehouse-webgl2-1920x1080.png
+            artifacts/phase1/supplied-storehouse-closeup-1920x1080.png
+          if-no-files-found: error
+          retention-days: 7
