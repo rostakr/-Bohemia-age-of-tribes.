@@ -72,25 +72,23 @@ function makeAtlasPng() {
       } else if (tile.name === 'hair' && (localX + Math.floor(localY / 3)) % 16 === 0) {
         r -= 10; g -= 10; b -= 10;
       } else if (tile.name === 'face') {
-        // Head UVs are remapped here by the polish script. U≈0.25 is the front centre;
-        // V runs from chin/neck toward crown. Features are texture-only to avoid the
-        // primitive-like facial protrusions rejected by QA.
+        // Head UVs are remapped here by the polish script. For this mesh the camera-facing
+        // facial meridian is U≈0.75 (not U≈0.25); V runs from chin/neck toward crown.
         const hairLine = 0.74 + 0.018 * Math.sin(localU * Math.PI * 10);
         if (localV >= hairLine) {
           [r, g, b] = [58, 39, 27];
           if ((localX + Math.floor(localY / 4)) % 19 === 0) { r -= 7; g -= 7; b -= 7; }
         }
-        const leftEye = ellipse(localU, localV, 0.193, 0.585, 0.015, 0.013);
-        const rightEye = ellipse(localU, localV, 0.307, 0.585, 0.015, 0.013);
+        const leftEye = ellipse(localU, localV, 0.693, 0.585, 0.018, 0.014);
+        const rightEye = ellipse(localU, localV, 0.807, 0.585, 0.018, 0.014);
         if (leftEye || rightEye) [r, g, b] = [54, 39, 30];
-        const leftBrow = Math.abs(localV - 0.627) < 0.006 && localU > 0.166 && localU < 0.220;
-        const rightBrow = Math.abs(localV - 0.627) < 0.006 && localU > 0.280 && localU < 0.334;
+        const leftBrow = Math.abs(localV - 0.627) < 0.007 && localU > 0.666 && localU < 0.720;
+        const rightBrow = Math.abs(localV - 0.627) < 0.007 && localU > 0.780 && localU < 0.834;
         if (leftBrow || rightBrow) [r, g, b] = [66, 43, 29];
-        const mouth = Math.abs(localV - 0.305) < 0.006 && localU > 0.217 && localU < 0.283;
+        const mouth = Math.abs(localV - 0.305) < 0.007 && localU > 0.717 && localU < 0.783;
         if (mouth) [r, g, b] = [104, 64, 50];
-        // Very restrained nose/cheek tonal cues, kept close to base skin colour.
-        if (ellipse(localU, localV, 0.250, 0.455, 0.012, 0.050)) { r -= 8; g -= 6; b -= 4; }
-        if (ellipse(localU, localV, 0.165, 0.445, 0.045, 0.060) || ellipse(localU, localV, 0.335, 0.445, 0.045, 0.060)) {
+        if (ellipse(localU, localV, 0.750, 0.455, 0.014, 0.052)) { r -= 8; g -= 6; b -= 4; }
+        if (ellipse(localU, localV, 0.665, 0.445, 0.045, 0.060) || ellipse(localU, localV, 0.835, 0.445, 0.045, 0.060)) {
           r += 4; g += 2;
         }
       }
