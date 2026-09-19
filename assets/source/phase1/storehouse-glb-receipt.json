@@ -51,12 +51,41 @@
     }
   ],
   "lod": "none",
-  "status": "Exported WIP candidate; used by benchmark storehouse slot",
-  "validation": "No tests or renderer QA run; delegated to external QA",
+  "status": "Admitted WIP runtime candidate in the benchmark storehouse slot; Phase 1 art gate remains open",
+  "validation": "Strict GLB intake and full current-main software/browser QA passed on 2026-09-19",
+  "qa": {
+    "verified_main_sha": "47728da23ae73a01b298b935d59a431bc6088548",
+    "workflow_run": 35410230067,
+    "result": "passed",
+    "node_tests": "22/22 passed",
+    "strict_glb_intake": "passed",
+    "normal_primitives": "5/5",
+    "uv0_primitives": "5/5",
+    "embedded_images": 3,
+    "external_dependencies": 0,
+    "phase1_runtime_storehouse_triangles": 15550,
+    "lifecycle_remount": "3/3 passed",
+    "webgl2": "passed",
+    "webgpu_software_regression": "passed",
+    "phase1_smoke": "passed",
+    "storehouse_admission_smoke": "passed",
+    "storehouse_closeup_smoke": "passed",
+    "artifact_id": 10574496297,
+    "artifact_zip_sha256": "3c7b252e33f2e3b1b53feea9f2e2e1476b9da258f944ac962158a7d55868706b",
+    "screenshots": [
+      "supplied-storehouse-webgl2-1920x1080.png",
+      "supplied-storehouse-closeup-1920x1080.png"
+    ],
+    "visual_qa": "PASS for WIP runtime admission: one correctly scaled/grounded storehouse, correct roof orientation, embedded textures render, no obvious missing texture, duplicate placement, catastrophic UV projection, baked-lighting artifact or metallic material error in the captured views"
+  },
   "limitations": [
     "Timber, thatch and daub have base-color textures; wattle and earth use solid factors",
-    "No normal or roughness maps; generated albedo tileability and shading require review",
-    "Existing cylinder seam and box UVs need a production unwrap to avoid grain stretching",
-    "Roughness mapped from source gloss; visual parity requires external review"
+    "No normal map",
+    "No roughness map texture",
+    "No texture/mesh compression",
+    "No production LOD",
+    "Existing cylinder seam and box UVs still need a production unwrap to reduce grain stretching risk",
+    "Actual-hardware GPU/VRAM/frame-time acceptance remains pending",
+    "Final historical/art acceptance remains pending"
   ]
 }
