@@ -9,13 +9,13 @@ This file is the single authoritative work queue between Phase 1 DEV and QA.
 - DEV owns asset creation and implementation on a feature branch.
 - QA owns admission, regression testing, `docs/PROJECT_STATE.md`, integration into `qa/phase1-integration`, and the eventual merge to `main`.
 - DEV must not merge feature branches directly to `main`.
-- QA must not release a new DEV task while one DEV handoff is `QA_ACTIVE`. The active handoff must first become `ACCEPTED_IN_INTEGRATION`, be returned as `BLOCKED` with an explicit repair request, or be explicitly deferred.
+- QA must not release a new DEV task while one DEV handoff is in an unresolved QA/repair loop. The handoff must first become `ACCEPTED_IN_INTEGRATION`, be returned as `BLOCKED` with an explicit repair request and then repaired/re-reviewed, or be explicitly deferred.
 - `artGatePassed=false` remains authoritative until the complete Phase 1 art gate is accepted.
 
 ## Status vocabulary
 
-- `READY_FOR_QA` — DEV handoff exists and is queued behind the active QA item.
-- `QA_ACTIVE` — the single handoff currently owned by QA; no next DEV task may be released.
+- `READY_FOR_QA` — DEV handoff exists and is queued behind the priority repair/QA item.
+- `QA_ACTIVE` — the single handoff currently being evaluated by QA.
 - `ACCEPTED_IN_INTEGRATION` — QA accepted the handoff and integrated it into `qa/phase1-integration`; it is not automatically accepted to `main`.
 - `BLOCKED` — cannot advance until the recorded dependency or repair is resolved.
 - `SUPERSEDED` — replaced by newer work/evidence or made obsolete by content already accepted elsewhere; should not be merged.
@@ -32,14 +32,29 @@ This file is the single authoritative work queue between Phase 1 DEV and QA.
 
 | Order | PR | Branch | Status | QA decision / dependency |
 | ---: | ---: | --- | --- | --- |
-| 1 | #58 | `phase1/project-adult-worker-candidate` | **QA_ACTIVE** | Current DEV HANDOFF. Technical/runtime evidence is present, but canonical admission is not granted. QA must independently review the final candidate and either accept it into `qa/phase1-integration`, return a concrete art/technical repair, or defer it. No new DEV task is released while this row is active. |
-| 2 | #43 | `phase1/project-workshop-glb` | **READY_FOR_QA** | Project-owned workshop GLB candidate, 22,480 tris. Needs isolated runtime/visual/historical QA on top of the integration branch before admission. |
-| 3 | #55 | `phase1/tree-lod-candidates` | **READY_FOR_QA** | Deterministic tree LOD1/LOD2 candidates. Geometry can be QA-reviewed; runtime switch thresholds remain dependent on actual-hardware evidence. |
+| 1 | #58 | `phase1/project-adult-worker-candidate` | **BLOCKED** | Current DEV HANDOFF was independently QA-reviewed and returned for art repair. Head `2ee931a0…` is technically healthy: candidate workflow `35412134308` PASS and foundation workflow `35412134254` PASS; 26,140 tris is inside the 25k–50k target. Production visual admission fails: close-up remains procedural/placeholder with detached oval hands, spherical shoulder caps, simplified limbs, toy-like face/head construction and weak body/clothing transitions. DEV must repair this same handoff and re-submit it before QA releases a new DEV task. |
+| 2 | #43 | `phase1/project-workshop-glb` | **READY_FOR_QA** | Project-owned workshop GLB candidate, 22,480 tris. Retargeted to `qa/phase1-integration`; needs isolated runtime/visual/historical QA before admission. Do not activate while #58 repair loop remains unresolved. |
+| 3 | #55 | `phase1/tree-lod-candidates` | **READY_FOR_QA** | Deterministic tree LOD1/LOD2 candidates. Retargeted to `qa/phase1-integration`; geometry can be QA-reviewed later, while runtime switch thresholds remain dependent on actual-hardware evidence. Do not activate while #58 repair loop remains unresolved. |
 | 4 | #48 | `phase1/workshop-lod1-r2` | **BLOCKED** | Depends on #43 workshop LOD0 being accepted first. Do not QA/merge the LOD branch ahead of its source candidate. |
-| — | #59 | `qa/supplied-preview-render` | **SUPERSEDED** | QA-only evidence task completed. Dedicated multi-angle render run `35412011470` PASS and standard foundation run `35412011476` PASS. Supplied workshop/worker previews render, but neither is production-admitted. Evidence is retained; PR must not merge. |
-| — | #53 | `phase1/supplied-normals-preview-r3` | **SUPERSEDED** | Structural normals-only preview work was superseded by #59, which performed the actual PlayCanvas multi-angle render validation. |
-| — | #41 | `phase1/storehouse-uv-material-pass` | **SUPERSEDED** | Storehouse work has already been reconciled/admitted on `main` through the later storehouse admission/cleanup path (#51/#57). Do not replay this older overlapping branch. |
-| — | #45 | `phase1/license-provenance-clarification` | **SUPERSEDED** | Old provenance-only branch is no longer a QA blocker. Project-owner-supplied assets are treated as cleared for this project; technical/visual/historical admission remains independent. |
+| — | #59 | `qa/supplied-preview-render` | **SUPERSEDED** | QA-only evidence task completed and closed. Dedicated multi-angle render run `35412011470` PASS and standard foundation run `35412011476` PASS. Supplied workshop/worker previews render, but neither is production-admitted. |
+| — | #53 | `phase1/supplied-normals-preview-r3` | **SUPERSEDED** | Closed. Structural normals-only preview work was superseded by #59, which performed the actual PlayCanvas multi-angle render validation. |
+| — | #41 | `phase1/storehouse-uv-material-pass` | **SUPERSEDED** | Closed. Storehouse work has already been reconciled/admitted on `main` through the later storehouse admission/cleanup path (#51/#57). Do not replay this older overlapping branch. |
+| — | #45 | `phase1/license-provenance-clarification` | **SUPERSEDED** | Closed. Old provenance-only branch is no longer a QA blocker. Project-owner-supplied assets are treated as cleared for this project; technical/visual/historical admission remains independent. |
+
+## Active repair contract — PR #58 adult worker
+
+The current candidate is **not** admitted. DEV repair must:
+
+1. preserve the existing runtime architecture and target scale of about 1.72 m;
+2. keep worker geometry inside the documented 25k–50k triangle target;
+3. replace placeholder anatomy with a coherent human silhouette — integrated hands/wrists, natural shoulder-to-upper-arm transition, cleaner elbows/knees/feet and plausible head/neck proportions;
+4. materially improve face/hair/beard readability without primitive-like protrusions;
+5. preserve historically restrained Late La Tène worker clothing and avoid fantasy, Roman or medieval cues;
+6. provide a new isolated neutral close-up plus the normal RTS benchmark render through PlayCanvas WebGL2;
+7. rerun strict GLB checks and the full foundation regression suite on the repaired head;
+8. leave `ADMITTED_MODELS` and `artGatePassed=false` unchanged until QA accepts the repair.
+
+No new DEV task is released from QA until this repair loop is resolved or explicitly deferred.
 
 ## Completed QA evidence from supplied Astra/content handoff
 
