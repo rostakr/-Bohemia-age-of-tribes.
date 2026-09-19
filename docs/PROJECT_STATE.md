@@ -14,12 +14,13 @@
   "runtime_baseline": {
     "phase_0_5_merge_sha": "1b1b28bbfea91689d22455b117d12f412f5a24c2",
     "phase_1_reconciliation_merge_sha": "e542bcf48ebe6f79bf08fd2b0a0a9e4441432c62",
-    "dwelling_lod_merge_sha": "6be481b5619d8558632c94ab0ef74bd6664a28e5"
+    "dwelling_lod_merge_sha": "6be481b5619d8558632c94ab0ef74bd6664a28e5",
+    "verified_current_main_sha": "47728da23ae73a01b298b935d59a431bc6088548"
   },
   "current_benchmark": {
     "structures": 3,
     "dwelling": {"candidate":"trellis-derived-generated-lod1","lod":1,"triangles":53538,"lod0_source_triangles":99298,"lod2_candidate_triangles":31286},
-    "storehouse": {"candidate":"project-owned-glb","path":"public/assets/buildings/boii_storehouse_small.glb","bytes":9933356,"vertices":15910,"triangles":15550,"materials":5,"embedded_images":3,"embedded_textures":3,"lod":null,"full_pbr":false},
+    "storehouse": {"candidate":"project-owned-glb","path":"public/assets/buildings/boii_storehouse_small.glb","sha256":"2e1e054a8a5d66c0a349015d2662a2831894c675378ac11a8e5db90ae15b2b95","bytes":9933356,"vertices":15910,"triangles":15550,"materials":5,"embedded_images":3,"embedded_textures":3,"texture_dimensions":"1254x1254","lod":null,"full_pbr":false},
     "workshop": {"candidate":"procedural-project-owned","triangles":22480},
     "inhabitants": {"candidate":"procedural-project-owned-readability-prototype","instances":5,"triangles_per_shared_mesh":1404},
     "trees": {"candidate":"procedural-project-owned","instances":32,"triangles_per_shared_mesh":15980},
@@ -28,8 +29,8 @@
   },
   "supplied_storehouse_qa": {
     "pr": 51,
-    "qa_head": "bb9b1783aed4836fb24b4961ec3fb29b33b4bf0b",
-    "workflow_run": 35408681042,
+    "merged_main_sha": "47728da23ae73a01b298b935d59a431bc6088548",
+    "workflow_run": 35410230067,
     "result": "passed",
     "node_tests": "22/22 passed",
     "strict_glb_intake": "passed",
@@ -41,13 +42,16 @@
     "phase_1_webgl2_render_smoke": "passed",
     "storehouse_admission_smoke": "passed",
     "storehouse_closeup_smoke": "passed",
-    "evidence_artifact_id": 10573840636,
-    "evidence_artifact_sha256": "eaee51e6987cf4e9d87c66c4d2865d846bf3a3e8753fba06881e6ff7dafb58e2",
+    "evidence_artifact_id": 10574496297,
+    "evidence_artifact_sha256": "3c7b252e33f2e3b1b53feea9f2e2e1476b9da258f944ac962158a7d55868706b",
+    "screenshots": ["supplied-storehouse-webgl2-1920x1080.png","supplied-storehouse-closeup-1920x1080.png"],
+    "visual_qa": "passed_for_wip_runtime_admission",
     "art_gate_passed": false
   },
   "rejected_supplied_runtime_assets": {
     "workshop": "not admitted; 89,778 triangles exceeds target and strict intake reports missing required NORMAL",
     "adult_worker": "not admitted; strict intake reports missing required NORMAL and prior textured preview was rejected for patchwork/mis-projected texture",
+    "canonical_runtime_files_absent": true,
     "provenance_originals_retained": true
   }
 }
@@ -61,18 +65,19 @@ PlayCanvas remains the sole game/render engine. The Phase 0.5 lifecycle, fixed-s
 
 ## Storehouse QA result
 
-`public/assets/buildings/boii_storehouse_small.glb` passed strict GLB intake and full software-backed runtime QA. The file is self-contained, has 15,550 triangles / 15,910 vertices, five material primitives, normals and UV0 on all five primitives, and three embedded images/textures. No external buffer or image dependency is required.
+`public/assets/buildings/boii_storehouse_small.glb` passed strict GLB intake and full software-backed runtime QA on current `main` SHA `47728da23ae73a01b298b935d59a431bc6088548`. The file is self-contained, SHA-256 `2e1e054a8a5d66c0a349015d2662a2831894c675378ac11a8e5db90ae15b2b95`, 9,933,356 bytes, 15,550 triangles / 15,910 vertices, five material primitives, normals and UV0 on all five primitives, and three embedded 1254×1254 base-color images/textures. No external buffer or image dependency is required.
 
-Workflow run `35408681042` passed 22/22 Node tests, production build, Phase 0 WebGL2 and interaction regressions, three full Phase 1 remount cycles, software WebGPU, the normal Phase 1 render smoke, a dedicated storehouse admission smoke and a dedicated close-up smoke. Evidence artifact: `10573840636`, SHA-256 `eaee51e6987cf4e9d87c66c4d2865d846bf3a3e8753fba06881e6ff7dafb58e2`.
+Workflow run `35410230067` passed 22/22 Node tests, production build, strict Phase 1 asset intake, Phase 0 WebGL2 and interaction regressions, three full Phase 1 remount cycles, software WebGPU, the normal Phase 1 render smoke, a dedicated storehouse admission smoke and a dedicated close-up smoke. Storehouse screenshot evidence artifact: `10574496297`, ZIP SHA-256 `3c7b252e33f2e3b1b53feea9f2e2e1476b9da258f944ac962158a7d55868706b`.
 
-Visual review passed for **WIP admission**: the storehouse is correctly scaled against inhabitants/buildings, remains raised on its supports, has stable ground contact/shadow, correct roof orientation and no obvious broken UV projection or gross texture seam in the captured views.
+Visual review passed for **WIP admission**: the captured settlement contains exactly one storehouse; it is correctly scaled against inhabitants/buildings, remains raised on its supports, has stable ground contact/shadow and correct roof orientation, and the embedded textures render. No obvious missing texture, catastrophic UV projection, gross seam, baked-lighting artifact or accidental metallic material response is visible in the benchmark and close-up evidence.
 
-This does **not** close the art gate. The 9.93 MB storehouse still lacks normal/roughness maps, texture compression and a production LOD strategy. Actual desktop-GPU performance, final material balance and final historical/art acceptance remain open.
+This does **not** close the art gate. The 9.93 MB storehouse still lacks normal-map and roughness-map textures, texture/mesh compression and a production LOD strategy. Existing UVs still carry close-up grain-stretching risk. Actual desktop-GPU/VRAM/frame-time performance, final material balance and final historical/art acceptance remain open.
 
 ## Supplied assets not admitted
 
 - Supplied carpentry workshop: retained only under source/provenance. It is 89,778 triangles, exceeds the current workshop target and fails strict admission because required normals are missing.
 - Supplied adult worker: retained only under source/provenance. Its triangle count is workable for an RTS asset, but required normals are missing and the previously reviewed texture projection showed severe patchwork/mis-projection artifacts.
+- Neither canonical runtime file exists on current `main`; both original supplied GLBs remain under `assets/source/phase1/user-supplied/`.
 - Neither asset should be restored to `public/assets/...` or wired into `ADMITTED_MODELS` without a new clean candidate and full QA.
 
 ## Current limits / next gate
