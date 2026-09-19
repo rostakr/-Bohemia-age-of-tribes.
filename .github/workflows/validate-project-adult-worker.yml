@@ -1,0 +1,41 @@
+name: Validate project adult worker candidate
+
+on:
+  pull_request:
+    paths:
+      - 'assets/source/phase1/worker/**'
+      - 'scripts/check-project-adult-worker.mjs'
+      - 'scripts/export-project-adult-worker.mjs'
+      - '.github/workflows/validate-project-adult-worker.yml'
+  workflow_dispatch:
+
+jobs:
+  validate-project-adult-worker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Validate deterministic worker geometry
+        run: node --experimental-strip-types --test scripts/check-project-adult-worker.mjs
+      - name: Export worker GLB and 2K atlas
+        run: node --experimental-strip-types scripts/export-project-adult-worker.mjs
+      - name: Strict-check project worker GLB
+        run: node scripts/check-glb.mjs public/assets/characters/boii_adult_worker_project.glb --min-tris 25000 --max-tris 50000 --require-normals --require-uv0
+      - name: Record deterministic file evidence
+        run: |
+          wc -c public/assets/characters/boii_adult_worker_project.glb
+          sha256sum public/assets/characters/boii_adult_worker_project.glb
+          wc -c artifacts/phase1/worker-adult-basecolor-2048.png
+          sha256sum artifacts/phase1/worker-adult-basecolor-2048.png
+      - uses: actions/upload-artifact@v4
+        with:
+          name: project-adult-worker-candidate
+          path: |
+            public/assets/characters/boii_adult_worker_project.glb
+            artifacts/phase1/worker-adult-basecolor-2048.png
+            assets/source/phase1/worker-project-glb-receipt.json
+          retention-days: 7
