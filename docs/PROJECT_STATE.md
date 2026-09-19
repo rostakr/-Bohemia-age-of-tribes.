@@ -15,7 +15,7 @@
     "phase_0_5_merge_sha": "1b1b28bbfea91689d22455b117d12f412f5a24c2",
     "phase_1_reconciliation_merge_sha": "e542bcf48ebe6f79bf08fd2b0a0a9e4441432c62",
     "dwelling_lod_merge_sha": "6be481b5619d8558632c94ab0ef74bd6664a28e5",
-    "verified_current_main_sha": "47728da23ae73a01b298b935d59a431bc6088548"
+    "verified_runtime_content_sha": "47728da23ae73a01b298b935d59a431bc6088548"
   },
   "current_benchmark": {
     "structures": 3,
@@ -29,8 +29,11 @@
   },
   "supplied_storehouse_qa": {
     "pr": 51,
-    "merged_main_sha": "47728da23ae73a01b298b935d59a431bc6088548",
-    "workflow_run": 35410230067,
+    "verified_runtime_content_sha": "47728da23ae73a01b298b935d59a431bc6088548",
+    "runtime_baseline_workflow_run": 35410230067,
+    "docs_only_pr_61_head_workflow_run": 35414533581,
+    "docs_only_pr_61_merge_sha": "dad5e3babb40990e5e643b348c35c3c3572acad4",
+    "post_merge_main_workflow_run": 35414735338,
     "result": "passed",
     "node_tests": "22/22 passed",
     "strict_glb_intake": "passed",
@@ -59,15 +62,17 @@
 
 ## Current decision
 
-The Astra/content handoff was reconciled against the verified current baseline rather than replayed wholesale. Only the new **project-owned textured storehouse GLB** is accepted for WIP runtime use. The supplied workshop and adult-worker GLBs remain provenance-only and are not present in canonical runtime paths.
+The Astra/content handoff was reconciled against the verified runtime/content baseline rather than replayed wholesale. Only the new **project-owned textured storehouse GLB** is accepted for WIP runtime use. The supplied workshop and adult-worker GLBs remain provenance-only and are not present in canonical runtime paths.
 
 PlayCanvas remains the sole game/render engine. The Phase 0.5 lifecycle, fixed-step simulation, central asset resolver, current tree composition, five inhabitant readability prototypes and dwelling LOD pipeline remain unchanged.
 
 ## Storehouse QA result
 
-`public/assets/buildings/boii_storehouse_small.glb` passed strict GLB intake and full software-backed runtime QA on current `main` SHA `47728da23ae73a01b298b935d59a431bc6088548`. The file is self-contained, SHA-256 `2e1e054a8a5d66c0a349015d2662a2831894c675378ac11a8e5db90ae15b2b95`, 9,933,356 bytes, 15,550 triangles / 15,910 vertices, five material primitives, normals and UV0 on all five primitives, and three embedded 1254×1254 base-color images/textures. No external buffer or image dependency is required.
+`public/assets/buildings/boii_storehouse_small.glb` passed strict GLB intake and full software-backed runtime QA on runtime/content baseline SHA `47728da23ae73a01b298b935d59a431bc6088548`. The file is self-contained, SHA-256 `2e1e054a8a5d66c0a349015d2662a2831894c675378ac11a8e5db90ae15b2b95`, 9,933,356 bytes, 15,550 triangles / 15,910 vertices, five material primitives, normals and UV0 on all five primitives, and three embedded 1254×1254 base-color images/textures. No external buffer or image dependency is required.
 
-Workflow run `35410230067` passed 22/22 Node tests, production build, strict Phase 1 asset intake, Phase 0 WebGL2 and interaction regressions, three full Phase 1 remount cycles, software WebGPU, the normal Phase 1 render smoke, a dedicated storehouse admission smoke and a dedicated close-up smoke. Storehouse screenshot evidence artifact: `10574496297`, ZIP SHA-256 `3c7b252e33f2e3b1b53feea9f2e2e1476b9da258f944ac962158a7d55868706b`.
+Runtime baseline workflow `35410230067` passed 22/22 Node tests, production build, strict Phase 1 asset intake, Phase 0 WebGL2 and interaction regressions, three full Phase 1 remount cycles, software WebGPU, the normal Phase 1 render smoke, a dedicated storehouse admission smoke and a dedicated close-up smoke. Storehouse screenshot evidence artifact: `10574496297`, ZIP SHA-256 `3c7b252e33f2e3b1b53feea9f2e2e1476b9da258f944ac962158a7d55868706b`.
+
+The later evidence/documentation reconciliation did not alter runtime code or assets: PR #61 head workflow `35414533581` passed the same full validation suite, and post-merge main workflow `35414735338` also passed.
 
 Visual review passed for **WIP admission**: the captured settlement contains exactly one storehouse; it is correctly scaled against inhabitants/buildings, remains raised on its supports, has stable ground contact/shadow and correct roof orientation, and the embedded textures render. No obvious missing texture, catastrophic UV projection, gross seam, baked-lighting artifact or accidental metallic material response is visible in the benchmark and close-up evidence.
 
@@ -77,7 +82,7 @@ This does **not** close the art gate. The 9.93 MB storehouse still lacks normal-
 
 - Supplied carpentry workshop: retained only under source/provenance. It is 89,778 triangles, exceeds the current workshop target and fails strict admission because required normals are missing.
 - Supplied adult worker: retained only under source/provenance. Its triangle count is workable for an RTS asset, but required normals are missing and the previously reviewed texture projection showed severe patchwork/mis-projection artifacts.
-- Neither canonical runtime file exists on current `main`; both original supplied GLBs remain under `assets/source/phase1/user-supplied/`.
+- Neither canonical runtime file is admitted; both original supplied GLBs remain under `assets/source/phase1/user-supplied/`.
 - Neither asset should be restored to `public/assets/...` or wired into `ADMITTED_MODELS` without a new clean candidate and full QA.
 
 ## Current limits / next gate
