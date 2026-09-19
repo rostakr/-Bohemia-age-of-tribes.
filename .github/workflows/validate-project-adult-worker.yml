@@ -8,7 +8,9 @@ on:
       - 'scripts/check-project-adult-worker.mjs'
       - 'scripts/export-project-adult-worker.mjs'
       - 'scripts/browser-project-worker-smoke.mjs'
+      - 'scripts/browser-project-worker-closeup.mjs'
       - 'src/main.ts'
+      - 'src/render/worker-preview-scene.ts'
       - '.github/workflows/validate-project-adult-worker.yml'
   workflow_dispatch:
 
@@ -38,6 +40,8 @@ jobs:
         run: npm run build
       - name: Isolated PlayCanvas project-worker smoke
         run: node scripts/browser-project-worker-smoke.mjs
+      - name: Isolated PlayCanvas project-worker close-up
+        run: node scripts/browser-project-worker-closeup.mjs
       - uses: actions/upload-artifact@v4
         with:
           name: project-adult-worker-candidate
@@ -45,5 +49,6 @@ jobs:
             public/assets/characters/boii_adult_worker_project.glb
             artifacts/phase1/worker-adult-basecolor-2048.png
             artifacts/phase1/project-worker-webgl2-1920x1080.png
+            artifacts/phase1/project-worker-closeup-webgl2-1200x1200.png
             assets/source/phase1/worker-project-glb-receipt.json
           retention-days: 7
