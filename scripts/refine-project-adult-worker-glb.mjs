@@ -1,6 +1,7 @@
 // Deterministic surface polish for the rebuilt project-owned adult-worker GLB.
-// The anatomy is created in worker-geometry.ts. This pass only tightens silhouette,
-// removes QA-rejected overlay shadows, and regenerates normals/bounds.
+// The anatomy is created in worker-geometry.ts. This pass tightens silhouette,
+// removes QA-rejected overlay shadows, remaps the head to a dedicated face atlas tile,
+// and regenerates normals/bounds.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { calculateNormals } from 'playcanvas';
@@ -28,9 +29,10 @@ function accessorInfo(index) {
 
 const positionInfo = accessorInfo(primitive.attributes.POSITION);
 const normalInfo = accessorInfo(primitive.attributes.NORMAL);
+const uvInfo = accessorInfo(primitive.attributes.TEXCOORD_0);
 const indexInfo = accessorInfo(primitive.indices);
-if (positionInfo.accessor.componentType !== 5126 || normalInfo.accessor.componentType !== 5126) {
-  throw new Error('Expected float POSITION/NORMAL streams');
+if (positionInfo.accessor.componentType !== 5126 || normalInfo.accessor.componentType !== 5126 || uvInfo.accessor.componentType !== 5126) {
+  throw new Error('Expected float POSITION/NORMAL/TEXCOORD streams');
 }
 if (indexInfo.accessor.componentType !== 5125) throw new Error('Expected uint32 indices');
 
@@ -46,6 +48,16 @@ for (let i = 0; i < vertexCount; i++) {
   positions[i * 3 + 2] = view.getFloat32(offset + 8, true);
 }
 for (let i = 0; i < indexCount; i++) indices[i] = view.getUint32(indexInfo.byteOffset + i * 4, true);
+
+function readUv(vertex) {
+  const offset = uvInfo.byteOffset + vertex * 8;
+  return [view.getFloat32(offset, true), view.getFloat32(offset + 4, true)];
+}
+function writeUv(vertex, u, v) {
+  const offset = uvInfo.byteOffset + vertex * 8;
+  view.setFloat32(offset, u, true);
+  view.setFloat32(offset + 4, v, true);
+}
 
 const parent = Array.from({ length: vertexCount }, (_, i) => i);
 const rank = new Uint8Array(vertexCount);
@@ -113,13 +125,40 @@ function parkInsideTorso(component, offsetX = 0) {
   transform(component, [0.001, 0.001, 0.001], [offsetX - cx, 1.08 - cy, -cz]);
 }
 
-const matched = { shoes: 0, tunic: 0, sleeves: 0, hands: 0, hair: 0, ears: 0, beard: 0, brows: 0, nose: 0 };
+const INSET = 0.006;
+const SKIN = { u0: INSET, u1: 1 / 3 - INSET, v0: 1 / 2 + INSET, v1: 1 - INSET };
+const LEATHER = { u0: 2 / 3 + INSET, u1: 1 - INSET, v0: INSET, v1: 1 / 2 - INSET };
+const FACE = { u0: 2 / 3 + INSET, u1: 1 - INSET, v0: 1 / 2 + INSET, v1: 1 - INSET };
+
+function remapUvRect(vertex, source, target) {
+  const [u, v] = readUv(vertex);
+  const nu = Math.max(0, Math.min(1, (u - source.u0) / (source.u1 - source.u0)));
+  const nv = Math.max(0, Math.min(1, (v - source.v0) / (source.v1 - source.v0)));
+  writeUv(vertex,
+    target.u0 + (target.u1 - target.u0) * nu,
+    target.v0 + (target.v1 - target.v0) * nv);
+}
+
+// The former accent slot now contains the face texture. Move any pre-existing accent
+// geometry (the tiny buckle) to leather before assigning the head to the face tile.
+let accentVerticesRemapped = 0;
+for (let vertex = 0; vertex < vertexCount; vertex++) {
+  const [u, v] = readUv(vertex);
+  if (u >= FACE.u0 - 1e-5 && u <= FACE.u1 + 1e-5 && v >= FACE.v0 - 1e-5 && v <= FACE.v1 + 1e-5) {
+    remapUvRect(vertex, FACE, LEATHER);
+    accentVerticesRemapped++;
+  }
+}
+if (accentVerticesRemapped !== 24) {
+  throw new Error(`Expected 24 former accent/buckle vertices, remapped ${accentVerticesRemapped}`);
+}
+
+const matched = { shoes: 0, tunic: 0, sleeves: 0, hands: 0, hair: 0, ears: 0, beard: 0, brows: 0, nose: 0, head: 0 };
 for (const component of components) {
   const [x, y] = component.center;
   const ax = Math.abs(x);
 
   if (component.count === 972 && y < 0.15) {
-    // Short, soft leather shoes: keep the foot readable, remove the curled/slipper toe.
     transform(component, [0.92, 0.84, 0.61], [0, -0.002, -0.016]);
     for (const vertex of component.vertices) {
       const p = vertex * 3;
@@ -132,7 +171,6 @@ for (const component of components) {
     }
     matched.shoes++;
   } else if (component.count === 584 && y > 0.9 && y < 1.2) {
-    // Round the tunic shoulder line instead of retaining a horizontal barrel top.
     transform(component, [0.88, 1.0, 0.93]);
     for (const vertex of component.vertices) {
       const p = vertex * 3;
@@ -156,33 +194,30 @@ for (const component of components) {
     }
     matched.sleeves++;
   } else if (component.count === 456 && ax > 0.25 && y < 0.9) {
-    // Hands remain continuous with the cuff but read less like long mittens.
     transform(component, [0.78, 0.80, 0.78], [x < 0 ? 0.016 : -0.016, 0.022, -0.006]);
     matched.hands++;
   } else if (component.count === 2323 && y > 1.6) {
-    // Do not leave hidden hair geometry in the skull: internal geometry can still cast
-    // visible self-shadows. Park the obsolete shell inside the opaque tunic instead.
     parkInsideTorso(component, 0.020);
     matched.hair++;
   } else if (component.count === 332 && y > 1.55) {
     transform(component, [0.42, 0.66, 0.40], [x < 0 ? 0.007 : -0.007, 0, -0.007]);
     matched.ears++;
   } else if (component.count === 328 && y > 1.48 && y < 1.59) {
-    // Same rule for the rejected beard plate: remove both surface and shadow evidence.
     parkInsideTorso(component, -0.020);
     matched.beard++;
   } else if (component.count === 4 && y > 1.60) {
     parkInsideTorso(component, x < 0 ? -0.010 : 0.010);
     matched.brows++;
   } else if (component.count === 6 && y > 1.55 && y < 1.63) {
-    // The original wedge nose generated an oversized dark self-shadow. Keep a subtle
-    // bridge/tip relief only, close to the face plane.
     transform(component, [0.82, 0.86, 0.30], [0, 0, -0.010]);
     matched.nose++;
+  } else if (component.count === 5420 && y > 1.50 && y < 1.68) {
+    for (const vertex of component.vertices) remapUvRect(vertex, SKIN, FACE);
+    matched.head++;
   }
 }
 
-const expected = { shoes: 2, tunic: 1, sleeves: 2, hands: 2, hair: 1, ears: 2, beard: 1, brows: 2, nose: 1 };
+const expected = { shoes: 2, tunic: 1, sleeves: 2, hands: 2, hair: 1, ears: 2, beard: 1, brows: 2, nose: 1, head: 1 };
 for (const [key, value] of Object.entries(expected)) {
   if (matched[key] !== value) throw new Error(`Worker polish component mismatch for ${key}: expected ${value}, got ${matched[key]}`);
 }
@@ -237,6 +272,8 @@ receipt.art_repair = {
   normals_regenerated: true,
   bounds_regenerated: true,
   matched_components: matched,
+  accent_vertices_remapped_to_leather: accentVerticesRemapped,
+  head_uv_remapped_to_face_tile: true,
   notes: [
     'continuous swept legs, sleeves and tapered hands are authored in worker-geometry.ts',
     'tunic shoulders slope down from the neck instead of reading as a horizontal barrel',
@@ -244,6 +281,7 @@ receipt.art_repair = {
     'shoe toes are shortened and flattened to remove the curled-slipper silhouette',
     'obsolete hair/beard/brow overlays are parked as microscopic geometry inside the opaque tunic so they cannot cast facial shadows',
     'nose relief is flattened toward the face plane to avoid an oversized self-shadow',
+    'head UVs use a dedicated 2K atlas face tile with flat hair/eyes/brows/mouth cues and no protruding facial primitives',
   ],
 };
 writeFileSync(receiptFile, JSON.stringify(receipt, null, 2) + '\n');
@@ -255,4 +293,5 @@ console.log(JSON.stringify({
   stats,
   componentCount: components.length,
   matched,
+  accentVerticesRemapped,
 }, null, 2));
