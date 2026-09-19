@@ -7,7 +7,6 @@ on:
       - 'assets/source/phase1/worker-project-glb-receipt.json'
       - 'scripts/check-project-adult-worker.mjs'
       - 'scripts/export-project-adult-worker.mjs'
-      - 'scripts/refine-project-adult-worker-glb.mjs'
       - 'scripts/browser-project-worker-smoke.mjs'
       - 'scripts/browser-project-worker-closeup.mjs'
       - 'src/main.ts'
@@ -27,11 +26,9 @@ jobs:
       - run: npm ci
       - name: Validate deterministic worker geometry
         run: node --experimental-strip-types --test scripts/check-project-adult-worker.mjs
-      - name: Export worker GLB and 2K atlas
+      - name: Export repaired worker GLB and 2K atlas
         run: node --experimental-strip-types scripts/export-project-adult-worker.mjs
-      - name: Refine close-up proportions and regenerate normals
-        run: node scripts/refine-project-adult-worker-glb.mjs
-      - name: Strict-check refined project worker GLB
+      - name: Strict-check project worker GLB
         run: node scripts/check-glb.mjs public/assets/characters/boii_adult_worker_project.glb --min-tris 25000 --max-tris 50000 --require-normals --require-uv0
       - name: Record deterministic file evidence
         run: |
@@ -54,4 +51,5 @@ jobs:
             artifacts/phase1/project-worker-webgl2-1920x1080.png
             artifacts/phase1/project-worker-closeup-webgl2-1200x1200.png
             assets/source/phase1/worker-project-glb-receipt.json
+          if-no-files-found: error
           retention-days: 7
