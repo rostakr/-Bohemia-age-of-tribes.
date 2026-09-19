@@ -1,0 +1,37 @@
+name: Apply storehouse reconciliation
+
+on:
+  push:
+    branches:
+      - qa/supplied-content-reconcile
+    paths:
+      - scripts/apply-storehouse-reconcile.mjs
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Apply patch when staged
+        shell: bash
+        run: |
+          if [ ! -f scripts/apply-storehouse-reconcile.mjs ]; then
+            echo "Reconciliation script already consumed."
+            exit 0
+          fi
+          node scripts/apply-storehouse-reconcile.mjs
+          rm scripts/apply-storehouse-reconcile.mjs
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/render/benchmark-scene.ts scripts/browser-phase1-smoke.mjs scripts/apply-storehouse-reconcile.mjs
+          git diff --cached --check
+          git commit -m "qa: enable supplied storehouse GLB only"
+          git push

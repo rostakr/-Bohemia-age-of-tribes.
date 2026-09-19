@@ -60,8 +60,7 @@ function showError(error: unknown): void {
   console.error('[BOHEMIA runtime]', error);
   status.textContent = 'Renderer unavailable';
   errorPanel.hidden = false;
-  const generic = 'The 3D scene could not continue. Reload, or try the WebGL2 compatibility mode.';
-  errorText.textContent = debug ? `${generic} Debug: ${String(error)}` : generic;
+  errorText.textContent = 'The 3D scene could not continue. Reload, or try the WebGL2 compatibility mode.';
   pauseButton.disabled = true;
 }
 

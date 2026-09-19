@@ -7,6 +7,7 @@ const source = new URL('../src/render/storehouse.ts', import.meta.url);
 const temporary = new URL('../src/render/storehouse.node-export.ts', import.meta.url);
 const output = new URL('../public/assets/buildings/boii_storehouse_small.glb', import.meta.url);
 const receipt = new URL('../assets/source/phase1/storehouse-glb-receipt.json', import.meta.url);
+// Node strip-types requires an explicit extension for this bundler-style import.
 writeFileSync(temporary, readFileSync(source, 'utf8').replace("from './landscape';", "from './landscape.ts';"), { flag: 'wx' });
 try {
   const { createStorehouseGeometry, storehouseStats, STOREHOUSE_UV_REPEAT_METRES } = await import(temporary.href);
@@ -20,22 +21,29 @@ try {
   ];
   const gltf = { asset: { version: '2.0', generator: 'BOHEMIA offline storehouse export' },
     scene: 0, scenes: [{ nodes: [0] }], nodes: [{ name: 'Boii small storehouse — WIP', mesh: 0 }],
-    meshes: [{ primitives: [] }], materials: [], buffers: [], bufferViews: [], accessors: [],
-    images: [], textures: [], samplers: [{ magFilter: 9729, minFilter: 9987, wrapS: 10497, wrapT: 10497 }] };
+    meshes: [{ primitives: [] }], materials: [], buffers: [], bufferViews: [], accessors: [] };
   const chunks = [];
   let byteLength = 0;
   const textureRecords = [];
   const textureByMaterial = new Map();
+  gltf.images = [];
+  gltf.textures = [];
+  gltf.samplers = [{ magFilter: 9729, minFilter: 9987, wrapS: 10497, wrapT: 10497 }];
   for (const [material, file] of [
-    ['timber', 'weathered-oak-basecolor-runtime-512.jpg'],
-    ['thatch', 'straw-thatch-basecolor-runtime-512.jpg'],
-    ['daub', 'clay-daub-basecolor-runtime-512.jpg'],
+    ['timber', 'weathered-oak-basecolor.png'],
+    ['thatch', 'straw-thatch-basecolor.png'],
+    ['daub', 'clay-daub-basecolor.png'],
   ]) {
-    const bytes = readFileSync(new URL(`../assets/source/phase1/materials/runtime/${file}`, import.meta.url));
-    const imageIndex = gltf.images.push({ name: file, uri: `data:image/jpeg;base64,${bytes.toString('base64')}` }) - 1;
+    const bytes = readFileSync(new URL(`../assets/source/phase1/materials/${file}`, import.meta.url));
+    const padding = (4 - byteLength % 4) % 4;
+    if (padding) { chunks.push(Buffer.alloc(padding)); byteLength += padding; }
+    const bufferView = gltf.bufferViews.push({ buffer: 0, byteOffset: byteLength, byteLength: bytes.length }) - 1;
+    chunks.push(bytes); byteLength += bytes.length;
+    const imageIndex = gltf.images.push({ name: file, bufferView, mimeType: 'image/png' }) - 1;
     textureByMaterial.set(material, gltf.textures.push({ source: imageIndex, sampler: 0 }) - 1);
-    textureRecords.push({ name: `runtime/${file}`, material, embedded: true, encoding: 'data-uri', width: 512, height: 512,
-      bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') });
+    textureRecords.push({ name: file, material, embedded: true,
+      width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20), bytes: bytes.length,
+      sha256: createHash('sha256').update(bytes).digest('hex') });
   }
   function accessor(values, width, type, componentType, target, bounds = false) {
     const padding = (4 - byteLength % 4) % 4;
@@ -54,6 +62,7 @@ try {
     }
     return gltf.accessors.push(entry) - 1;
   }
+  // PlayCanvas diffuse colors are sRGB; glTF baseColorFactor is linear.
   const linear = value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
   for (const [name, color, roughness] of materials) {
     const mesh = geometry[name];
@@ -93,12 +102,12 @@ try {
       roof: 'local Z/ridge versus local X/slope UV orientation from source geometry',
     },
     textures: textureRecords,
-    texture_transfer_note: 'Original 1254px RGB PNGs remain unchanged. Runtime base colors are documented 512px JPEG derivatives created with Pillow 12.3.0, LANCZOS resize, quality 90, 4:4:4, optimize+progressive. JPEGs are stored as self-contained data URIs: strict intake forbids external dependencies, while PlayCanvas/Chrome 152 headless could not decode the same JPEG bytes from GLB image bufferViews.',
+    texture_transfer_note: 'Original source PNGs are preserved and embedded unchanged. No established image encoder/compressor is currently part of the repository toolchain, so this export does not introduce an ad-hoc compression implementation.',
     lod: 'none', status: 'Exported WIP candidate; QA-only supplied-storehouse preview route',
     validation: 'Exporter output requires strict GLB check plus browser/visual QA after regeneration',
-    limitations: ['Timber, thatch and daub have lossy base-color runtime derivatives; wattle and earth use solid factors',
+    limitations: ['Timber, thatch and daub have base-color textures; wattle and earth use solid factors',
       'No normal or roughness maps; generated albedo tileability and baked shading require review',
-      '512px runtime base colors are appropriate for the current RTS benchmark, not close-up final production acceptance',
+      'Source PNG transfer size remains high until an established free encoder is adopted and pinned',
       'Roughness uses scalar factors only; visual parity requires external review'] };
   writeFileSync(receipt, JSON.stringify(record, null, 2) + '\n');
   console.log(JSON.stringify({ output: record.output, bytes: record.bytes, stats: record.stats, uv: record.uv_strategy }));
