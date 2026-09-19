@@ -24,8 +24,9 @@
     "flow": "feature DEV branch -> qa/phase1-integration -> QA -> main",
     "qa_owns": ["admission", "regression testing", "PROJECT_STATE", "integration", "merge to main"],
     "dev_owns": ["asset creation", "feature implementation"],
-    "single_active_handoff": true,
-    "active_dev_handoff_pr": 58
+    "priority_repair_pr": 58,
+    "priority_repair_status": "BLOCKED_REPAIR_REQUIRED",
+    "release_next_dev_task": false
   },
   "runtime_baseline": {
     "phase_0_5_merge_sha": "1b1b28bbfea91689d22455b117d12f412f5a24c2",
@@ -41,6 +42,20 @@
     "trees": {"candidate":"procedural-project-owned","instances":32,"triangles_per_shared_mesh":15980},
     "grass_clumps": 4678,
     "art_gate_passed": false
+  },
+  "adult_worker_dev_handoff_qa": {
+    "pr": 58,
+    "head": "2ee931a0f2195487cec7eef96cef6885eddc9d0c",
+    "candidate_workflow_run": 35412134308,
+    "foundation_workflow_run": 35412134254,
+    "technical_result": "passed",
+    "triangles": 26140,
+    "vertices": 13783,
+    "target_triangles": "25000-50000",
+    "visual_production_result": "blocked",
+    "blocker": "procedural placeholder anatomy and face remain below production art quality",
+    "canonical_admission": false,
+    "repair_required": true
   },
   "supplied_storehouse_qa": {
     "pr": 51,
@@ -76,17 +91,30 @@
 
 ## Current decision
 
-Phase 1 now uses a single QA-controlled integration flow:
+Phase 1 uses one QA-controlled integration flow:
 
 `feature DEV branch` → `qa/phase1-integration` → QA → `main`.
 
-`docs/qa/PHASE1_WORK_QUEUE.md` is the single authoritative queue between DEV and QA. QA owns admission, regressions, this `PROJECT_STATE`, integration and merge to `main`. DEV owns asset creation and implementation. Only one DEV handoff may be `QA_ACTIVE`; no next DEV task is released until the active handoff is accepted, returned with an explicit repair request, or explicitly deferred.
+`docs/qa/PHASE1_WORK_QUEUE.md` is the single authoritative queue between DEV and QA. QA owns admission, regressions, this `PROJECT_STATE`, integration and merge to `main`. DEV owns asset creation and implementation.
 
-The current DEV handoff is PR #58 (`phase1/project-adult-worker-candidate`) and is `QA_ACTIVE`.
+The current DEV handoff, PR #58 (`phase1/project-adult-worker-candidate`), has completed independent QA and is **BLOCKED / returned for art repair**. QA is not releasing another DEV task while that repair loop remains unresolved.
+
+## Adult-worker DEV handoff QA
+
+PR #58 current head `2ee931a0f2195487cec7eef96cef6885eddc9d0c` is technically healthy:
+
+- candidate workflow `35412134308`: PASS;
+- standard foundation workflow `35412134254`: PASS;
+- 26,140 triangles / 13,783 vertices, inside the documented 25k–50k worker geometry target;
+- scale and RTS grounding are usable.
+
+Production visual admission is **not** accepted. The current neutral close-up still reads as procedural/placeholder: detached oval hands, spherical shoulder caps, simplified cylindrical limb construction, toy-like facial/head geometry and weak body/clothing transitions. The current candidate must remain out of `ADMITTED_MODELS`.
+
+The exact repair contract is recorded in `docs/qa/PHASE1_WORK_QUEUE.md` and on PR #58. The repair must retain the current architecture/scale and geometry budget, materially improve anatomy/face/hair/clothing transitions, provide new neutral close-up + RTS PlayCanvas WebGL2 evidence, and rerun strict GLB plus full foundation regressions.
 
 ## Current runtime baseline
 
-The Astra/content handoff was reconciled against the verified baseline rather than replayed wholesale. Only the **project-owned textured storehouse GLB** from that handoff is accepted for WIP runtime use. The default workshop remains the project-owned procedural candidate; the default inhabitants remain the shared 1,404-triangle readability prototype.
+Only the **project-owned textured storehouse GLB** from the Astra/content handoff is accepted for WIP runtime use. The default workshop remains the project-owned procedural candidate; the default inhabitants remain the shared 1,404-triangle readability prototype.
 
 PlayCanvas remains the sole game/render engine. The Phase 0.5 lifecycle, fixed-step simulation, central asset resolver, current tree composition, five inhabitant readability prototypes and dwelling LOD pipeline remain unchanged.
 
@@ -102,28 +130,24 @@ Visual review passed for **WIP admission**. This does **not** close the art gate
 
 The archived supplied originals remain source/provenance material and are not canonical runtime assets. QA PR #59 generated normals-fixed copies only for isolated inspection and rendered them through the real PlayCanvas WebGL2 path from multiple checked angles.
 
-- Supplied workshop preview: render/scale/material response are coherent in the captured QA views, but the asset is **89,778 triangles**, above the current 20k–45k production target. It is not admitted.
-- Supplied adult-worker preview: render/scale/material response are coherent in the captured QA views; the earlier severe texture-projection concern was **not reproduced** in this normals-fixed multi-angle check. It is still not admitted because it is **14,106 triangles** against the current 25k–50k production brief and has no rig, animations or LOD.
+- Supplied workshop preview: coherent render/scale/material response in captured views, but **89,778 triangles** exceeds the 20k–45k production target; not admitted.
+- Supplied adult-worker preview: coherent render/scale/material response in checked views; the earlier severe texture-projection concern was **not reproduced**. It remains non-admitted at **14,106 triangles** against the 25k–50k brief and has no rig/animations/LOD.
 - Preview workflow `35412011470`: PASS.
 - Standard foundation workflow on the same QA head `35412011476`: PASS.
 
-These results replace the earlier assumption that the supplied worker must be rejected specifically for a reproduced catastrophic texture projection defect. Its current blockers are production specification/completeness, not a texture failure proven by #59.
-
 ## Phase 1 queue state
 
-See `docs/qa/PHASE1_WORK_QUEUE.md` for the authoritative ordering. At consolidation time:
+See `docs/qa/PHASE1_WORK_QUEUE.md` for the authoritative ordering. Current state:
 
-1. PR #58 project-owned adult worker — `QA_ACTIVE`.
-2. PR #43 project-owned workshop GLB — `READY_FOR_QA`.
-3. PR #55 tree LOD candidates — `READY_FOR_QA`.
+1. PR #58 project-owned adult worker — `BLOCKED`, repair required; priority repair loop, no new DEV task released.
+2. PR #43 project-owned workshop GLB — `READY_FOR_QA`, queued.
+3. PR #55 tree LOD candidates — `READY_FOR_QA`, queued.
 4. PR #48 workshop LOD1 — `BLOCKED` on #43 acceptance.
-5. PRs #41, #45, #53 and #59 — `SUPERSEDED`; not merge candidates.
+5. PRs #41, #45, #53 and #59 — closed as `SUPERSEDED`; not merge candidates.
 
 ## Current limits / next gate
 
-`artGatePassed=false` remains authoritative. The immediate gate is QA disposition of PR #58. Until that disposition is recorded, QA must not release another DEV task.
-
-After the active handoff is resolved, the queue — not ad-hoc parallel PR creation — determines the next QA/DEV action.
+`artGatePassed=false` remains authoritative. The immediate gate is a repaired PR #58 DEV handoff or an explicit decision to defer it. Until then, QA does not release another DEV task.
 
 ## Archive
 
@@ -135,4 +159,4 @@ The exact pre-storehouse-admission state and manifest are preserved byte-for-byt
 
 **PHASE 0: PASS / ACCEPTED.**  
 **PHASE 0.5: PASS / COMPLETE_VERIFIED / DEPLOYED.**  
-**PHASE 1: AUTHORIZED / QA INTEGRATION ACTIVE / ART GATE OPEN / `artGatePassed=false`.**
+**PHASE 1: AUTHORIZED / QA INTEGRATION ACTIVE / ADULT WORKER REPAIR BLOCKER / ART GATE OPEN / `artGatePassed=false`.**
