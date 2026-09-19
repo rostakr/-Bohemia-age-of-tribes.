@@ -1,5 +1,6 @@
 // Deterministic art refinement for the project-owned adult-worker GLB.
-// Keeps topology/UVs/triangle budget unchanged while improving close-up proportions.
+// Transforms whole disconnected generated components so close-up cleanup cannot create
+// partial-component spikes. Topology, UVs and the 26,140-triangle budget stay unchanged.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { calculateNormals } from 'playcanvas';
@@ -10,133 +11,154 @@ const input = readFileSync(file);
 if (input.readUInt32LE(0) !== 0x46546c67 || input.readUInt32LE(4) !== 2) throw new Error('Expected glTF 2.0 GLB');
 
 const jsonLength = input.readUInt32LE(12);
-const jsonType = input.readUInt32LE(16);
-if (jsonType !== 0x4e4f534a) throw new Error('Missing JSON chunk');
+if (input.readUInt32LE(16) !== 0x4e4f534a) throw new Error('Missing JSON chunk');
 const json = JSON.parse(input.subarray(20, 20 + jsonLength).toString('utf8').trimEnd());
 const binHeader = 20 + jsonLength;
 const binLength = input.readUInt32LE(binHeader);
-const binType = input.readUInt32LE(binHeader + 4);
-if (binType !== 0x004e4942) throw new Error('Missing BIN chunk');
+if (input.readUInt32LE(binHeader + 4) !== 0x004e4942) throw new Error('Missing BIN chunk');
 const binary = Buffer.from(input.subarray(binHeader + 8, binHeader + 8 + binLength));
-
 const primitive = json.meshes?.[0]?.primitives?.[0];
 if (!primitive) throw new Error('Missing worker primitive');
 
 function accessorInfo(index) {
   const accessor = json.accessors[index];
-  const view = json.bufferViews[accessor.bufferView];
-  return { accessor, view, byteOffset: (view.byteOffset ?? 0) + (accessor.byteOffset ?? 0) };
+  const bufferView = json.bufferViews[accessor.bufferView];
+  return { accessor, bufferView, byteOffset: (bufferView.byteOffset ?? 0) + (accessor.byteOffset ?? 0) };
 }
 
-const pos = accessorInfo(primitive.attributes.POSITION);
-const uv = accessorInfo(primitive.attributes.TEXCOORD_0);
-const normal = accessorInfo(primitive.attributes.NORMAL);
-const idx = accessorInfo(primitive.indices);
-if (pos.accessor.componentType !== 5126 || uv.accessor.componentType !== 5126 || normal.accessor.componentType !== 5126) {
-  throw new Error('Expected float POSITION/TEXCOORD_0/NORMAL streams');
+const positionInfo = accessorInfo(primitive.attributes.POSITION);
+const normalInfo = accessorInfo(primitive.attributes.NORMAL);
+const indexInfo = accessorInfo(primitive.indices);
+if (positionInfo.accessor.componentType !== 5126 || normalInfo.accessor.componentType !== 5126) {
+  throw new Error('Expected float POSITION/NORMAL streams');
 }
-if (idx.accessor.componentType !== 5125) throw new Error('Expected uint32 worker indices');
+if (indexInfo.accessor.componentType !== 5125) throw new Error('Expected uint32 indices');
 
-const vertexCount = pos.accessor.count;
-const positions = new Array(vertexCount * 3);
-const uvs = new Array(vertexCount * 2);
+const vertexCount = positionInfo.accessor.count;
+const indexCount = indexInfo.accessor.count;
 const view = new DataView(binary.buffer, binary.byteOffset, binary.byteLength);
-for (let i = 0; i < vertexCount; i++) {
-  const po = pos.byteOffset + i * 12;
-  const uo = uv.byteOffset + i * 8;
-  positions[i * 3] = view.getFloat32(po, true);
-  positions[i * 3 + 1] = view.getFloat32(po + 4, true);
-  positions[i * 3 + 2] = view.getFloat32(po + 8, true);
-  uvs[i * 2] = view.getFloat32(uo, true);
-  uvs[i * 2 + 1] = view.getFloat32(uo + 4, true);
-}
-
-const inRect = (u, v, u0, v0, u1, v1) => u >= u0 && u <= u1 && v >= v0 && v <= v1;
-const thirds = { left: [0.0, 1 / 3], middle: [1 / 3, 2 / 3], right: [2 / 3, 1.0] };
-const isTunic = (u, v) => inRect(u, v, thirds.left[0], 0, thirds.left[1], 0.5);
-const isLeather = (u, v) => inRect(u, v, thirds.right[0], 0, thirds.right[1], 0.5);
-const isSkin = (u, v) => inRect(u, v, thirds.left[0], 0.5, thirds.left[1], 1.0);
-const isHair = (u, v) => inRect(u, v, thirds.middle[0], 0.5, thirds.middle[1], 1.0);
-
-let shoes = 0, shoulders = 0, hands = 0, beard = 0, ears = 0, face = 0, brows = 0;
-for (let i = 0; i < vertexCount; i++) {
-  const p = i * 3, t = i * 2;
-  let x = positions[p], y = positions[p + 1], z = positions[p + 2];
-  const u = uvs[t], v = uvs[t + 1];
-
-  // Shorter/narrower soft shoes; retain a ground-contact minimum near y=0.
-  if (isLeather(u, v) && y < 0.16) {
-    const cx = x < 0 ? -0.115 : 0.115;
-    x = cx + (x - cx) * 0.86;
-    y = 0.060 + (y - 0.075) * 0.83;
-    z = 0.055 + (z - 0.060) * 0.78;
-    shoes++;
-  }
-
-  // Merge spherical shoulder caps into the tunic silhouette instead of armour-like bulges.
-  if (isTunic(u, v) && y > 1.22 && y < 1.48 && Math.abs(x) > 0.20) {
-    const sign = Math.sign(x) || 1;
-    x = sign * (0.20 + (Math.abs(x) - 0.20) * 0.14);
-    y = 1.34 + (y - 1.34) * 0.68;
-    z *= 0.38;
-    shoulders++;
-  }
-
-  // Smaller hands, still readable at RTS distance.
-  if (isSkin(u, v) && y > 0.68 && y < 0.94 && Math.abs(x) > 0.26) {
-    const cx = x < 0 ? -0.360 : 0.360;
-    x = cx + (x - cx) * 0.62;
-    y = 0.815 + (y - 0.815) * 0.72;
-    z = 0.068 + (z - 0.068) * 0.62;
-    hands++;
-  }
-
-  // Hide the separate beard sphere inside the head; beard is not required for this milestone.
-  if (isHair(u, v) && y > 1.43 && y < 1.60 && z > 0.075) {
-    x *= 0.25;
-    y = 1.515 + (y - 1.525) * 0.25;
-    z = 0.030 + (z - 0.116) * 0.05;
-    beard++;
-  }
-
-  // Embed ears into the head silhouette rather than separate ovals.
-  if (isSkin(u, v) && y > 1.54 && y < 1.64 && Math.abs(x) > 0.108 && z < 0.055) {
-    const sign = Math.sign(x) || 1;
-    x = sign * (0.105 + (Math.abs(x) - 0.108) * 0.08);
-    y = 1.590 + (y - 1.590) * 0.42;
-    z = 0.016 + (z - 0.018) * 0.25;
-    ears++;
-  }
-
-  // Restrain the procedural nose/front-of-face protrusion.
-  if (isSkin(u, v) && y > 1.54 && y < 1.63 && Math.abs(x) < 0.045 && z > 0.105) {
-    x *= 0.62;
-    y = 1.585 + (y - 1.585) * 0.62;
-    z = 0.098 + (z - 0.111) * 0.36;
-    face++;
-  }
-
-  // Hide rectangular brow geometry inside the hair/head mass; texture can carry the cue later.
-  if (isHair(u, v) && y > 1.60 && y < 1.635 && z > 0.095) {
-    x *= 0.28;
-    y = 1.615 + (y - 1.615) * 0.30;
-    z = 0.040 + (z - 0.111) * 0.08;
-    brows++;
-  }
-
-  positions[p] = x; positions[p + 1] = y; positions[p + 2] = z;
-  const po = pos.byteOffset + i * 12;
-  view.setFloat32(po, x, true);
-  view.setFloat32(po + 4, y, true);
-  view.setFloat32(po + 8, z, true);
-}
-
-const indexCount = idx.accessor.count;
+const positions = new Array(vertexCount * 3);
 const indices = new Array(indexCount);
-for (let i = 0; i < indexCount; i++) indices[i] = view.getUint32(idx.byteOffset + i * 4, true);
+for (let i = 0; i < vertexCount; i++) {
+  const offset = positionInfo.byteOffset + i * 12;
+  positions[i * 3] = view.getFloat32(offset, true);
+  positions[i * 3 + 1] = view.getFloat32(offset + 4, true);
+  positions[i * 3 + 2] = view.getFloat32(offset + 8, true);
+}
+for (let i = 0; i < indexCount; i++) indices[i] = view.getUint32(indexInfo.byteOffset + i * 4, true);
+
+// The generator emits each anatomical/clothing element as disconnected indexed geometry.
+// Union-find lets the refinement operate on complete elements, never a partial surface.
+const parent = Array.from({ length: vertexCount }, (_, i) => i);
+const rank = new Uint8Array(vertexCount);
+function find(value) {
+  let root = value;
+  while (parent[root] !== root) root = parent[root];
+  while (parent[value] !== value) {
+    const next = parent[value];
+    parent[value] = root;
+    value = next;
+  }
+  return root;
+}
+function union(a, b) {
+  let ra = find(a), rb = find(b);
+  if (ra === rb) return;
+  if (rank[ra] < rank[rb]) [ra, rb] = [rb, ra];
+  parent[rb] = ra;
+  if (rank[ra] === rank[rb]) rank[ra]++;
+}
+for (let i = 0; i < indexCount; i += 3) {
+  union(indices[i], indices[i + 1]);
+  union(indices[i], indices[i + 2]);
+}
+
+const groups = new Map();
+for (let i = 0; i < vertexCount; i++) {
+  const root = find(i);
+  if (!groups.has(root)) groups.set(root, []);
+  groups.get(root).push(i);
+}
+
+function componentInfo(vertices) {
+  const min = [Infinity, Infinity, Infinity];
+  const max = [-Infinity, -Infinity, -Infinity];
+  for (const vertex of vertices) {
+    const p = vertex * 3;
+    for (let axis = 0; axis < 3; axis++) {
+      min[axis] = Math.min(min[axis], positions[p + axis]);
+      max[axis] = Math.max(max[axis], positions[p + axis]);
+    }
+  }
+  return {
+    vertices,
+    count: vertices.length,
+    min,
+    max,
+    center: min.map((value, axis) => (value + max[axis]) / 2),
+    size: min.map((value, axis) => max[axis] - value),
+  };
+}
+const components = [...groups.values()].map(componentInfo);
+
+function near(value, target, tolerance) { return Math.abs(value - target) <= tolerance; }
+function transform(component, scale, shift = [0, 0, 0]) {
+  const center = component.center;
+  for (const vertex of component.vertices) {
+    const p = vertex * 3;
+    for (let axis = 0; axis < 3; axis++) {
+      positions[p + axis] = center[axis] + (positions[p + axis] - center[axis]) * scale[axis] + shift[axis];
+    }
+  }
+}
+
+const matched = { shoes: 0, shoulders: 0, hands: 0, beard: 0, ears: 0, nose: 0, brows: 0 };
+for (const component of components) {
+  const [x, y, z] = component.center;
+  const count = component.count;
+  const ax = Math.abs(x);
+
+  if (count === 658 && near(y, 0.075, 0.02) && near(ax, 0.115, 0.03)) {
+    transform(component, [0.86, 0.84, 0.78], [0, -0.008, -0.005]);
+    matched.shoes++;
+  } else if (count === 302 && near(y, 1.355, 0.025) && near(ax, 0.265, 0.035)) {
+    transform(component, [0.70, 0.72, 0.55]);
+    matched.shoulders++;
+  } else if (count === 822 && near(y, 0.815, 0.025) && near(ax, 0.360, 0.035)) {
+    transform(component, [0.72, 0.80, 0.68]);
+    matched.hands++;
+  } else if (count === 1178 && near(x, 0, 0.02) && near(y, 1.525, 0.03) && z > 0.08) {
+    // The beard is optional for this milestone. Keep topology but hide the generated
+    // sphere inside the lower face instead of shipping a dark circular protrusion.
+    transform(component, [0.28, 0.32, 0.16], [0, -0.010, -0.075]);
+    matched.beard++;
+  } else if (count === 302 && near(y, 1.590, 0.025) && near(ax, 0.113, 0.02)) {
+    transform(component, [0.42, 0.58, 0.42], [x < 0 ? 0.007 : -0.007, 0, -0.004]);
+    matched.ears++;
+  } else if (count === 530 && near(x, 0, 0.02) && near(y, 1.585, 0.025) && z > 0.10) {
+    transform(component, [0.72, 0.78, 0.50], [0, 0, -0.020]);
+    matched.nose++;
+  } else if (count === 24 && near(y, 1.615, 0.02) && near(ax, 0.040, 0.02) && z > 0.09) {
+    transform(component, [0.50, 0.45, 0.35], [0, 0, -0.055]);
+    matched.brows++;
+  }
+}
+
+const expected = { shoes: 2, shoulders: 2, hands: 2, beard: 1, ears: 2, nose: 1, brows: 2 };
+for (const [key, value] of Object.entries(expected)) {
+  if (matched[key] !== value) throw new Error(`Refinement component mismatch for ${key}: expected ${value}, got ${matched[key]}`);
+}
+
+for (let i = 0; i < vertexCount; i++) {
+  const offset = positionInfo.byteOffset + i * 12;
+  view.setFloat32(offset, positions[i * 3], true);
+  view.setFloat32(offset + 4, positions[i * 3 + 1], true);
+  view.setFloat32(offset + 8, positions[i * 3 + 2], true);
+}
+
 const normals = calculateNormals(positions, indices);
 if (normals.length !== vertexCount * 3) throw new Error('Normal regeneration length mismatch');
-for (let i = 0; i < normals.length; i++) view.setFloat32(normal.byteOffset + i * 4, normals[i], true);
+for (let i = 0; i < normals.length; i++) view.setFloat32(normalInfo.byteOffset + i * 4, normals[i], true);
 
 const min = [Infinity, Infinity, Infinity];
 const max = [-Infinity, -Infinity, -Infinity];
@@ -146,8 +168,8 @@ for (let i = 0; i < positions.length; i += 3) {
     max[axis] = Math.max(max[axis], positions[i + axis]);
   }
 }
-pos.accessor.min = min;
-pos.accessor.max = max;
+positionInfo.accessor.min = min;
+positionInfo.accessor.max = max;
 
 const jsonBytes = Buffer.from(JSON.stringify(json));
 const jsonChunk = Buffer.concat([jsonBytes, Buffer.alloc((4 - jsonBytes.length % 4) % 4, 0x20)]);
@@ -172,11 +194,12 @@ receipt.bytes = output.length;
 receipt.stats = stats;
 receipt.art_refinement = {
   script: 'scripts/refine-project-adult-worker-glb.mjs',
+  method: 'whole disconnected indexed components identified by deterministic topology and bounds',
   topology_changed: false,
   normals_regenerated: true,
   bounds_regenerated: true,
-  transformed_vertices: { shoes, shoulders, hands, beard, ears, face, brows },
-  purpose: 'Remove close-up toy-like protrusions while preserving the RTS silhouette and 26,140-triangle budget',
+  matched_components: matched,
+  purpose: 'Remove close-up toy-like protrusions without partial-component spikes, while preserving the RTS silhouette and 26,140-triangle budget',
 };
 writeFileSync(receiptFile, JSON.stringify(receipt, null, 2) + '\n');
 
@@ -185,5 +208,6 @@ console.log(JSON.stringify({
   bytes: output.length,
   sha256: receipt.sha256,
   stats,
-  transformed: receipt.art_refinement.transformed_vertices,
+  componentCount: components.length,
+  matched,
 }, null, 2));
