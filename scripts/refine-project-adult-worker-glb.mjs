@@ -73,53 +73,54 @@ for (let i = 0; i < vertexCount; i++) {
     shoes++;
   }
 
-  // Pull the spherical shoulder caps into the tunic silhouette instead of armour-like bulges.
+  // Pull spherical shoulder caps firmly into the tunic silhouette instead of armour-like bulges.
   if (isTunic(u, v) && y > 1.22 && y < 1.48 && Math.abs(x) > 0.20) {
     const sign = Math.sign(x) || 1;
-    x = sign * (0.20 + (Math.abs(x) - 0.20) * 0.55);
-    z *= 0.90;
+    x = sign * (0.20 + (Math.abs(x) - 0.20) * 0.30);
+    y = 1.34 + (y - 1.34) * 0.78;
+    z *= 0.58;
     shoulders++;
   }
 
   // Smaller hands, still readable at RTS distance.
   if (isSkin(u, v) && y > 0.68 && y < 0.94 && Math.abs(x) > 0.26) {
     const cx = x < 0 ? -0.360 : 0.360;
-    x = cx + (x - cx) * 0.72;
-    y = 0.815 + (y - 0.815) * 0.82;
-    z = 0.068 + (z - 0.068) * 0.72;
+    x = cx + (x - cx) * 0.68;
+    y = 0.815 + (y - 0.815) * 0.78;
+    z = 0.068 + (z - 0.068) * 0.68;
     hands++;
   }
 
-  // Flatten the separate beard volume into a restrained chin patch.
+  // Collapse the separate beard sphere into a small flat chin patch.
   if (isHair(u, v) && y > 1.43 && y < 1.60 && z > 0.075) {
-    x *= 0.86;
-    y = 1.525 + (y - 1.525) * 0.72;
-    z = 0.103 + (z - 0.116) * 0.38;
+    x *= 0.50;
+    y = 1.520 + (y - 1.525) * 0.38;
+    z = 0.096 + (z - 0.116) * 0.15;
     beard++;
   }
 
-  // Reduce ear/head-side protrusion; this intentionally preserves the generic head silhouette.
+  // Keep ears close to the head silhouette rather than separate large ovals.
   if (isSkin(u, v) && y > 1.54 && y < 1.64 && Math.abs(x) > 0.108 && z < 0.055) {
     const sign = Math.sign(x) || 1;
-    x = sign * (0.108 + (Math.abs(x) - 0.108) * 0.62);
-    y = 1.590 + (y - 1.590) * 0.84;
-    z = 0.018 + (z - 0.018) * 0.74;
+    x = sign * (0.108 + (Math.abs(x) - 0.108) * 0.25);
+    y = 1.590 + (y - 1.590) * 0.65;
+    z = 0.018 + (z - 0.018) * 0.42;
     ears++;
   }
 
   // Restrain the procedural nose/front-of-face protrusion.
   if (isSkin(u, v) && y > 1.54 && y < 1.63 && Math.abs(x) < 0.045 && z > 0.105) {
-    x *= 0.78;
-    y = 1.585 + (y - 1.585) * 0.82;
-    z = 0.105 + (z - 0.111) * 0.68;
+    x *= 0.70;
+    y = 1.585 + (y - 1.585) * 0.72;
+    z = 0.104 + (z - 0.111) * 0.50;
     face++;
   }
 
-  // Keep brows as subtle hair blocks rather than a visor-like bar.
+  // Keep brows as small embedded hair accents rather than a visor-like bar.
   if (isHair(u, v) && y > 1.60 && y < 1.635 && z > 0.095) {
-    x *= 0.84;
-    y = 1.615 + (y - 1.615) * 0.70;
-    z = 0.102 + (z - 0.111) * 0.42;
+    x *= 0.46;
+    y = 1.615 + (y - 1.615) * 0.50;
+    z = 0.101 + (z - 0.111) * 0.20;
     brows++;
   }
 
