@@ -1,6 +1,6 @@
 // Deterministic surface polish for the rebuilt project-owned adult-worker GLB.
 // The anatomy is created in worker-geometry.ts. This pass only tightens silhouette,
-// hides optional protruding facial overlays, and regenerates normals/bounds.
+// removes QA-rejected overlay shadows, and regenerates normals/bounds.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { calculateNormals } from 'playcanvas';
@@ -108,73 +108,81 @@ function transform(component, scale, shift = [0, 0, 0]) {
   }
 }
 
-const matched = { shoes: 0, tunic: 0, sleeves: 0, hands: 0, hair: 0, ears: 0, beard: 0, brows: 0 };
+function parkInsideTorso(component, offsetX = 0) {
+  const [cx, cy, cz] = component.center;
+  transform(component, [0.001, 0.001, 0.001], [offsetX - cx, 1.08 - cy, -cz]);
+}
+
+const matched = { shoes: 0, tunic: 0, sleeves: 0, hands: 0, hair: 0, ears: 0, beard: 0, brows: 0, nose: 0 };
 for (const component of components) {
   const [x, y] = component.center;
   const ax = Math.abs(x);
 
   if (component.count === 972 && y < 0.15) {
     // Short, soft leather shoes: keep the foot readable, remove the curled/slipper toe.
-    transform(component, [0.94, 0.88, 0.68], [0, -0.002, -0.012]);
+    transform(component, [0.92, 0.84, 0.61], [0, -0.002, -0.016]);
     for (const vertex of component.vertices) {
       const p = vertex * 3;
       const z = positions[p + 2];
-      if (z > 0.115) {
-        const t = Math.min(1, (z - 0.115) / 0.085);
-        positions[p + 1] -= 0.025 * t;
-        positions[p + 2] -= 0.020 * t;
+      if (z > 0.095) {
+        const t = Math.min(1, (z - 0.095) / 0.070);
+        positions[p + 1] -= 0.030 * t;
+        positions[p + 2] -= 0.018 * t;
       }
     }
     matched.shoes++;
   } else if (component.count === 584 && y > 0.9 && y < 1.2) {
     // Round the tunic shoulder line instead of retaining a horizontal barrel top.
-    transform(component, [0.90, 1.0, 0.94]);
+    transform(component, [0.88, 1.0, 0.93]);
     for (const vertex of component.vertices) {
       const p = vertex * 3;
       const py = positions[p + 1];
-      if (py > 1.30) {
-        const t = Math.min(1, (py - 1.30) / 0.16);
-        const outward = Math.max(0, Math.abs(positions[p]) - 0.06);
-        positions[p + 1] -= outward * 0.22 * t;
-        positions[p] *= 1 - 0.025 * t;
+      if (py > 1.28) {
+        const t = Math.min(1, (py - 1.28) / 0.18);
+        const outward = Math.max(0, Math.abs(positions[p]) - 0.045);
+        positions[p + 1] -= outward * 0.30 * t;
+        positions[p] *= 1 - 0.030 * t;
       }
     }
     matched.tunic++;
   } else if (component.count === 390 && ax > 0.2 && y > 1.0) {
-    transform(component, [0.90, 0.98, 0.91], [x < 0 ? 0.022 : -0.022, -0.004, 0]);
+    transform(component, [0.86, 0.97, 0.89], [x < 0 ? 0.028 : -0.028, -0.008, 0]);
     for (const vertex of component.vertices) {
       const p = vertex * 3;
-      if (positions[p + 1] > 1.28) {
-        positions[p] *= 0.975;
-        positions[p + 1] -= 0.010;
+      if (positions[p + 1] > 1.26) {
+        positions[p] *= 0.965;
+        positions[p + 1] -= 0.014;
       }
     }
     matched.sleeves++;
   } else if (component.count === 456 && ax > 0.25 && y < 0.9) {
     // Hands remain continuous with the cuff but read less like long mittens.
-    transform(component, [0.82, 0.86, 0.82], [x < 0 ? 0.014 : -0.014, 0.016, -0.004]);
+    transform(component, [0.78, 0.80, 0.78], [x < 0 ? 0.016 : -0.016, 0.022, -0.006]);
     matched.hands++;
   } else if (component.count === 2323 && y > 1.6) {
-    // The generated hair shell was helmet-like in close-up. Collapse it fully inside
-    // the cranium for a close-cropped / effectively shaved worker instead of shipping
-    // a visible artificial helmet rim. Hair can be re-authored later as a real groom.
-    transform(component, [0.64, 0.60, 0.62], [0, -0.020, -0.030]);
+    // Do not leave hidden hair geometry in the skull: internal geometry can still cast
+    // visible self-shadows. Park the obsolete shell inside the opaque tunic instead.
+    parkInsideTorso(component, 0.020);
     matched.hair++;
   } else if (component.count === 332 && y > 1.55) {
-    transform(component, [0.48, 0.72, 0.46], [x < 0 ? 0.006 : -0.006, 0, -0.006]);
+    transform(component, [0.42, 0.66, 0.40], [x < 0 ? 0.007 : -0.007, 0, -0.007]);
     matched.ears++;
   } else if (component.count === 328 && y > 1.48 && y < 1.59) {
-    // The beard overlay was visibly plate-like. Collapse it deep inside the face so
-    // the repaired checkpoint is clean-shaven rather than retaining a fake beard disc.
-    transform(component, [0.55, 0.55, 0.03], [0, -0.006, -0.125]);
+    // Same rule for the rejected beard plate: remove both surface and shadow evidence.
+    parkInsideTorso(component, -0.020);
     matched.beard++;
   } else if (component.count === 4 && y > 1.60) {
-    transform(component, [0.65, 0.70, 0.12], [0, 0, -0.075]);
+    parkInsideTorso(component, x < 0 ? -0.010 : 0.010);
     matched.brows++;
+  } else if (component.count === 6 && y > 1.55 && y < 1.63) {
+    // The original wedge nose generated an oversized dark self-shadow. Keep a subtle
+    // bridge/tip relief only, close to the face plane.
+    transform(component, [0.82, 0.86, 0.30], [0, 0, -0.010]);
+    matched.nose++;
   }
 }
 
-const expected = { shoes: 2, tunic: 1, sleeves: 2, hands: 2, hair: 1, ears: 2, beard: 1, brows: 2 };
+const expected = { shoes: 2, tunic: 1, sleeves: 2, hands: 2, hair: 1, ears: 2, beard: 1, brows: 2, nose: 1 };
 for (const [key, value] of Object.entries(expected)) {
   if (matched[key] !== value) throw new Error(`Worker polish component mismatch for ${key}: expected ${value}, got ${matched[key]}`);
 }
@@ -234,8 +242,8 @@ receipt.art_repair = {
     'tunic shoulders slope down from the neck instead of reading as a horizontal barrel',
     'sleeves and hands are narrowed and moved inward while preserving cuff continuity',
     'shoe toes are shortened and flattened to remove the curled-slipper silhouette',
-    'helmet-like hair shell is collapsed inside the cranium for this clean-shaven/close-cropped checkpoint',
-    'protruding beard and brow overlays are fully hidden inside the face',
+    'obsolete hair/beard/brow overlays are parked as microscopic geometry inside the opaque tunic so they cannot cast facial shadows',
+    'nose relief is flattened toward the face plane to avoid an oversized self-shadow',
   ],
 };
 writeFileSync(receiptFile, JSON.stringify(receipt, null, 2) + '\n');
