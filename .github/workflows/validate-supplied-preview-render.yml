@@ -1,0 +1,56 @@
+name: Validate supplied preview render
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/validate-supplied-preview-render.yml'
+      - 'src/main.ts'
+      - 'src/render/supplied-preview-scene.ts'
+      - 'scripts/browser-supplied-preview-render.mjs'
+      - 'assets/source/phase1/user-supplied/**'
+      - 'scripts/add-glb-normals.mjs'
+      - 'scripts/check-glb.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-preview-render:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Generate normals-only QA preview copies
+        run: |
+          node scripts/add-glb-normals.mjs \
+            assets/source/phase1/user-supplied/boii_carpentry_shed_open.original.glb \
+            public/assets/buildings/boii_carpentry_shed_open_qa_preview.glb
+          node scripts/add-glb-normals.mjs \
+            assets/source/phase1/user-supplied/boii_adult_worker.original.glb \
+            public/assets/characters/boii_adult_worker_qa_preview.glb
+      - name: Strict-check preview GLBs
+        run: |
+          node scripts/check-glb.mjs \
+            public/assets/buildings/boii_carpentry_shed_open_qa_preview.glb \
+            --min-tris 89000 --max-tris 91000 --require-normals --require-uv0
+          node scripts/check-glb.mjs \
+            public/assets/characters/boii_adult_worker_qa_preview.glb \
+            --min-tris 14000 --max-tris 14500 --require-normals --require-uv0
+      - name: Typecheck preview route
+        run: npm run typecheck
+      - name: Build preview route
+        run: npm run build
+      - name: Render supplied previews
+        run: node scripts/browser-supplied-preview-render.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: supplied-preview-render-evidence
+          path: artifacts/supplied-preview/*.png
+          if-no-files-found: error
+          retention-days: 7
