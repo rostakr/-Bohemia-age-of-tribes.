@@ -1,7 +1,7 @@
 import './style.css';
 import { CONFIG } from './config';
 import { CalibrationScene } from './render/calibration-scene';
-import { BenchmarkScene } from './render/benchmark-scene';
+import { ADMITTED_MODELS, BenchmarkScene } from './render/benchmark-scene';
 import type { ViewName } from './render/inspection-camera';
 import { createGameRuntime, type GameRuntime, type RuntimeSnapshot } from './render/runtime';
 import type { RuntimeScene } from './render/scene';
@@ -38,7 +38,9 @@ const parameters = new URLSearchParams(window.location.search);
 const debug = parameters.get('debug') === '1';
 const forceWebGL2 = parameters.get('renderer') === 'webgl2';
 const calibration = parameters.get('scene') === 'calibration';
+const projectWorkerPreview = parameters.get('worker') === 'project';
 const runningLabel = calibration ? 'Foundation running' : 'Scene running';
+const PROJECT_WORKER_PATH = 'characters/boii_adult_worker_project.glb';
 
 let runtime: GameRuntime | undefined;
 let activeBenchmarkScene: BenchmarkScene | undefined;
@@ -48,7 +50,9 @@ let mountGeneration = 0;
 
 function createScene(): RuntimeScene {
   if (calibration) return new CalibrationScene();
-  const benchmark = new BenchmarkScene();
+  const benchmark = new BenchmarkScene(projectWorkerPreview
+    ? { ...ADMITTED_MODELS, inhabitant: PROJECT_WORKER_PATH }
+    : ADMITTED_MODELS);
   activeBenchmarkScene = benchmark;
   return benchmark;
 }
