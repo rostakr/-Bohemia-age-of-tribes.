@@ -35,11 +35,23 @@ try {
     ['daub', 'clay-daub-basecolor-runtime-512.jpg'],
   ]) {
     const bytes = readFileSync(new URL(`../assets/source/phase1/materials/runtime/${file}`, import.meta.url));
-    const imageIndex = gltf.images.push({ name: file, uri: `../materials/${file}` }) - 1;
+    // Keep the GLB self-contained for strict admission while routing JPEG decoding through
+    // a URI rather than an image bufferView. Chrome/PlayCanvas can decode the same
+    // progressive JPEG bytes when presented as a URI, while the earlier bufferView path
+    // failed in headless rendering. A data URI preserves that path without an external file.
+    const uri = `data:image/jpeg;base64,${bytes.toString('base64')}`;
+    const imageIndex = gltf.images.push({ name: file, uri }) - 1;
     textureByMaterial.set(material, gltf.textures.push({ source: imageIndex, sampler: 0 }) - 1);
-    textureRecords.push({ name: `runtime/${file}`, public_path: `public/assets/materials/${file}`, uri: `../materials/${file}`,
-      material, embedded: false, width: 512, height: 512, bytes: bytes.length,
-      sha256: createHash('sha256').update(bytes).digest('hex') });
+    textureRecords.push({
+      name: `runtime/${file}`,
+      material,
+      embedded: true,
+      embedding: 'data-uri',
+      width: 512,
+      height: 512,
+      bytes: bytes.length,
+      sha256: createHash('sha256').update(bytes).digest('hex'),
+    });
   }
   function accessor(values, width, type, componentType, target, bounds = false) {
     const padding = (4 - byteLength % 4) % 4;
@@ -84,13 +96,12 @@ try {
   const glb = Buffer.concat([header, chunkHeader(jsonChunk.length, 0x4e4f534a), jsonChunk,
     chunkHeader(binary.length, 0x004e4942), binary]);
   writeFileSync(output, glb);
-  const textureBytes = textureRecords.reduce((sum, texture) => sum + texture.bytes, 0);
   const record = { asset: 'boii_storehouse_small', source: 'src/render/storehouse.ts',
     source_sha256: createHash('sha256').update(readFileSync(source)).digest('hex'),
     source_rights: 'Existing original project geometry; no third-party model imported',
     exporter: 'scripts/export-storehouse.mjs', output: 'public/assets/buildings/boii_storehouse_small.glb',
     sha256: createHash('sha256').update(glb).digest('hex'), bytes: glb.length,
-    total_runtime_transfer_bytes: glb.length + textureBytes,
+    total_runtime_transfer_bytes: glb.length,
     stats: storehouseStats(geometry), material_groups: materials.map(x => x[0]),
     units: 'metres', up_axis: 'Y', pivot: 'ground-centred source origin',
     uv_strategy: {
@@ -100,11 +111,12 @@ try {
       roof: 'local Z/ridge versus local X/slope UV orientation from source geometry',
     },
     textures: textureRecords,
-    texture_transfer_note: 'Original 1254px RGB PNGs remain unchanged. Runtime base colors are documented 512px JPEG derivatives created with Pillow 12.3.0, LANCZOS resize, quality 90, 4:4:4, optimize+progressive. They are served as external public assets rather than embedded GLB images because PlayCanvas/Chrome 152 headless could not decode the same progressive JPEG bytes from embedded image bufferViews.',
+    texture_transfer_note: 'Original 1254px RGB PNGs remain unchanged. Runtime base colors are documented 512px JPEG derivatives created with Pillow 12.3.0, LANCZOS resize, quality 90, 4:4:4, optimize+progressive. JPEG bytes are self-contained data URIs in the GLB so strict intake has no external dependency while PlayCanvas decodes them through its URI image path rather than the bufferView path that failed in Chrome 152 headless.',
     lod: 'none', status: 'Exported WIP candidate; QA-only supplied-storehouse preview route',
     validation: 'Exporter output requires strict GLB check plus browser/visual QA after regeneration',
     limitations: ['Timber, thatch and daub have lossy base-color runtime derivatives; wattle and earth use solid factors',
       'No normal or roughness maps; generated albedo tileability and baked shading require review',
+      'Data-URI base64 adds container overhead versus external JPEG files but keeps one self-contained admitted asset',
       '512px runtime base colors are appropriate for the current RTS benchmark, not close-up final production acceptance',
       'Roughness uses scalar factors only; visual parity requires external review'] };
   writeFileSync(receipt, JSON.stringify(record, null, 2) + '\n');
