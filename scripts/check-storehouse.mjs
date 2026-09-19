@@ -11,7 +11,7 @@ const testModuleUrl = new URL('../src/render/storehouse.node-test.ts', import.me
 const source = readFileSync(sourceUrl, 'utf8').replace("from './landscape';", "from './landscape.ts';");
 writeFileSync(testModuleUrl, source, 'utf8');
 after(() => rmSync(fileURLToPath(testModuleUrl), { force: true }));
-const { createStorehouseGeometry, storehouseStats } = await import(testModuleUrl.href);
+const { createStorehouseGeometry, storehouseStats, STOREHOUSE_UV_REPEAT_METRES } = await import(testModuleUrl.href);
 
 test('procedural Boii storehouse geometry stays finite, indexed and within the Phase 1 candidate budget', () => {
   const geometry = createStorehouseGeometry();
@@ -52,4 +52,30 @@ test('procedural storehouse triangles are non-degenerate', () => {
       assert.ok(area2 > 1e-10, `${name}: degenerate triangle ${i / 3}`);
     }
   }
+});
+
+test('storehouse UVs preserve physical repeat scale and explicit cylinder seams', () => {
+  const geometry = createStorehouseGeometry();
+  assert.equal(STOREHOUSE_UV_REPEAT_METRES, 0.65);
+
+  const timberV = geometry.timber.uvs.filter((_, index) => index % 2 === 1);
+  const thatchU = geometry.thatch.uvs.filter((_, index) => index % 2 === 0);
+  assert.ok(Math.max(...timberV) > 5, 'long timber members must repeat instead of stretching one texture tile');
+  assert.ok(Math.max(...thatchU) > 5, 'roof ridge direction must repeat instead of stretching one texture tile');
+
+  // A cylinder seam is represented by coincident vertices carrying U=0 and U=1.
+  // Without the duplicated seam vertex the last strip interpolates from U<1 back to U=0.
+  const uvByPosition = new Map();
+  for (let vertex = 0; vertex < geometry.timber.positions.length / 3; vertex++) {
+    const p = geometry.timber.positions.slice(vertex * 3, vertex * 3 + 3).map(value => value.toFixed(7)).join(',');
+    const u = geometry.timber.uvs[vertex * 2];
+    const v = geometry.timber.uvs[vertex * 2 + 1];
+    const entries = uvByPosition.get(p) ?? [];
+    entries.push([u, v]);
+    uvByPosition.set(p, entries);
+  }
+  const hasExplicitSeam = [...uvByPosition.values()].some(entries =>
+    entries.some(([u0, v0]) => Math.abs(u0) < 1e-9 &&
+      entries.some(([u1, v1]) => Math.abs(u1 - 1) < 1e-9 && Math.abs(v1 - v0) < 1e-9)));
+  assert.ok(hasExplicitSeam, 'timber cylinders must duplicate U=0/U=1 seam vertices');
 });
