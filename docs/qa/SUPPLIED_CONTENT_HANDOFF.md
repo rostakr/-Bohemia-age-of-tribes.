@@ -13,7 +13,9 @@ Current main/branch already contains trees, inhabitant prototypes and dwelling L
 - Original supplied GLBs, concepts, exact prompts, hashes and source receipts under assets/source/phase1/.
 - scripts/export-storehouse.mjs and scripts/generate-free-trellis.py are offline production helpers, not runtime dependencies.
 
-The project owner confirms that both user-supplied GLBs are licensed for this noncommercial personal-use project. The exact licence identifier/text and provider metadata remain pending archival in the repository; that missing archival detail is not evidence that the assets are unlicensed. Technical, visual and historical QA remain independent of licence status.
+## Rights policy
+The project owner confirms that all currently supplied and future project-owner-supplied files are cleared for use in this project. Do not perform further licence investigation, provider-rights verification, licence-text archival or licence-based release blocking for those files. Preserve source/provenance metadata only for technical traceability where useful. Technical, visual, historical and performance QA remain independent and must still be completed normally.
+
 Storehouse uses generated wood/thatch/daub base colors, not calibrated full PBR sets. No asset LODs here. Texture tiling, UV seams, alpha/normal quality and historical fit require review.
 
 ## Integration handoff
