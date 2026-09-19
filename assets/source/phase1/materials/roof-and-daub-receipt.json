@@ -1,0 +1,19 @@
+{
+  "provider": "OpenAI built-in image generation",
+  "assets": [
+    {
+      "file": "straw-thatch-basecolor.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: tileable game material BASE COLOR texture, square opaque image. Primary request: dry weathered straw thatch surface, fine densely aligned straw stems running vertically top to bottom, subtle irregularities and overlapping short fibres, restrained grey golden straw beige, not bright yellow. Flat orthographic material scan, frame filled edge to edge with the same continuous surface. No roof outline, no bundles tied with rope, no borders, no objects, no text, no perspective. Uniform neutral diffuse albedo, no cast shadows, no directional lighting, no specular highlights, no dark baked AO or vignette. Intended seamless repeat along both axes, non-obvious pattern. Material for a small ancient Central European storehouse; fine low-contrast grain readable without striped high-contrast bands. Original realistic surface texture, not illustration."
+    },
+    {
+      "file": "clay-daub-basecolor.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: square tileable game BASE COLOR texture. Original realistic hand-applied clay daub plaster surface for an ancient Central European timber storehouse. Muted pale warm grey beige earth, fine sandy mineral grains, sparse tiny straw inclusions, restrained uneven hand-smoothed texture and a few very fine hairline drying cracks. Whole square is one continuous wall surface, orthographic flat closeup, no wall edge, no bricks, no timbers, no holes, no decoration, no text. Neutral even diffuse albedo only, no directional lighting or cast shadows or shiny highlights, no dramatic contrast, no vignette or baked ambient occlusion. Intended seamless repeat in both axes. Subtle material variation rather than a giant obvious repeated stain. Not modern concrete, not white limewash, not yellow sand."
+    }
+  ],
+  "role": "Generated base-color candidates, not calibrated PBR scans",
+  "qa": "External QA pending; no tests run",
+  "limitations": [
+    "Tileability and residual baked shading unverified",
+    "No normal or roughness maps"
+  ]
+}

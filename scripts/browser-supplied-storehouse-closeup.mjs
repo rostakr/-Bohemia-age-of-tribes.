@@ -5,8 +5,8 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 const host = '127.0.0.1';
-const previewPort = 4176;
-const debugPort = 9226;
+const previewPort = 4178;
+const debugPort = 9228;
 const baseUrl = `http://${host}:${previewPort}/?renderer=webgl2&debug=1&storehouse=supplied`;
 const debugBase = `http://${host}:${debugPort}`;
 const artifactsDir = resolve('artifacts', 'phase1');
@@ -91,7 +91,6 @@ const stateExpression = `(() => {
   return {
     status: document.querySelector('#status')?.textContent || '',
     errorHidden: document.querySelector('#error')?.hidden ?? null,
-    errorText: document.querySelector('#error-text')?.textContent || '',
     canvasCount: document.querySelectorAll('canvas').length,
     diagnostics,
   };
@@ -100,14 +99,13 @@ const stateExpression = `(() => {
 const preview = spawn(process.execPath, [resolve('node_modules/vite/bin/vite.js'), 'preview', '--host', host, '--port', String(previewPort), '--strictPort'], {
   stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, CI: '1' },
 });
-const profileDir = mkdtempSync(join(tmpdir(), 'bohemia-phase1-chrome-'));
+const profileDir = mkdtempSync(join(tmpdir(), 'bohemia-storehouse-closeup-'));
 let chrome;
 let cdp;
 
 try {
   await waitForHttp(`http://${host}:${previewPort}/`);
-  const chromePath = findChrome();
-  chrome = spawn(chromePath, [
+  chrome = spawn(findChrome(), [
     '--headless=new', '--no-sandbox', '--disable-dev-shm-usage',
     '--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader',
     `--remote-debugging-address=${host}`, `--remote-debugging-port=${debugPort}`,
@@ -125,96 +123,55 @@ try {
 
   const deadline = Date.now() + 30_000;
   let state;
-  let healthyState;
   while (Date.now() < deadline) {
     state = await evaluate(cdp, stateExpression);
+    const d = state?.diagnostics;
     if (state?.errorHidden === false || state?.status === 'Renderer unavailable') {
-      throw new Error(`Phase 1 runtime error: ${JSON.stringify(state)}`);
+      throw new Error(`Supplied storehouse runtime error: ${JSON.stringify(state)}`);
     }
-    const diagnostics = state?.diagnostics;
     if (
-      state?.status === 'WEBGL2 · Scene running' &&
-      state.canvasCount === 1 &&
-      diagnostics?.milestone === 'phase-1' &&
-      diagnostics.renderer === 'webgl2' &&
-      diagnostics.failed === false &&
-      diagnostics.deviceLost === false &&
-      Number(diagnostics.tick) >= 1 &&
-      Number(diagnostics.drawCalls) >= 1 &&
-      Number(diagnostics.structures) >= 3 &&
-      diagnostics.dwellingCandidate === 'trellis-derived-generated-lod1' &&
-      Number(diagnostics.dwellingLod) === 1 &&
-      Number(diagnostics.dwellingTriangles) === 53_538 &&
-      diagnostics.storehouseCandidate === 'project-owned-glb' &&
-      Number(diagnostics.storehouseTriangles) === 15_550 &&
-      diagnostics.workshopCandidate === 'procedural-project-owned' &&
-      Number(diagnostics.workshopTriangles) >= 20_000 &&
-      diagnostics.treeCandidate === 'procedural-project-owned' &&
-      Number(diagnostics.treeCandidateTriangles) >= 15_000 &&
-      Number(diagnostics.trees) >= 24 &&
-      diagnostics.inhabitantCandidate === 'procedural-project-owned-readability-prototype' &&
-      Number(diagnostics.inhabitants) >= 5 &&
-      Number(diagnostics.inhabitantTriangles) >= 1_200 && Number(diagnostics.inhabitantTriangles) <= 3_000 &&
-      Number(diagnostics.grassClumps) >= 1
-    ) {
-      healthyState = state;
-      break;
-    }
+      state?.status === 'WEBGL2 · Scene running' && state.canvasCount === 1 &&
+      d?.failed === false && d?.deviceLost === false && Number(d.tick) >= 1 &&
+      d.storehouseCandidate === 'project-owned-glb' && Number(d.storehouseTriangles) === 15_550
+    ) break;
     await sleep(250);
   }
-  if (!healthyState) throw new Error(`Timed out waiting for supplied-storehouse Phase 1 scene: ${JSON.stringify(state)}`);
-
-  await sleep(500);
-  const finalState = await evaluate(cdp, stateExpression);
-  const diagnostics = finalState?.diagnostics;
   if (
-    finalState?.status !== 'WEBGL2 · Scene running' ||
-    finalState.canvasCount !== 1 ||
-    diagnostics?.failed !== false || diagnostics?.deviceLost !== false ||
-    Number(diagnostics?.tick) < 1 || Number(diagnostics?.drawCalls) < 1 ||
-    Number(diagnostics?.structures) < 3 ||
-    diagnostics?.dwellingCandidate !== 'trellis-derived-generated-lod1' ||
-    Number(diagnostics?.dwellingLod) !== 1 ||
-    Number(diagnostics?.dwellingTriangles) !== 53_538 ||
-    diagnostics?.storehouseCandidate !== 'project-owned-glb' ||
-    Number(diagnostics?.storehouseTriangles) !== 15_550 ||
-    diagnostics?.workshopCandidate !== 'procedural-project-owned' ||
-    Number(diagnostics?.workshopTriangles) < 20_000 ||
-    diagnostics?.treeCandidate !== 'procedural-project-owned' ||
-    Number(diagnostics?.treeCandidateTriangles) < 15_000 ||
-    Number(diagnostics?.trees) < 24 ||
-    diagnostics?.inhabitantCandidate !== 'procedural-project-owned-readability-prototype' ||
-    Number(diagnostics?.inhabitants) < 5 ||
-    Number(diagnostics?.inhabitantTriangles) < 1_200 || Number(diagnostics?.inhabitantTriangles) > 3_000
-  ) {
-    throw new Error(`Supplied-storehouse Phase 1 scene became unhealthy before evidence capture: ${JSON.stringify(finalState)}`);
+    state?.status !== 'WEBGL2 · Scene running' ||
+    state?.diagnostics?.storehouseCandidate !== 'project-owned-glb' ||
+    Number(state?.diagnostics?.storehouseTriangles) !== 15_550
+  ) throw new Error(`Timed out waiting for supplied storehouse scene: ${JSON.stringify(state)}`);
+
+  // Move the existing settlement inspection target from (-1, 2) to the storehouse pad (8, -12).
+  // At the initial 67 m / 34° view this deterministic Shift-drag corresponds to approximately (+9, -14) m.
+  await cdp.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: 960, y: 540, button: 'left', buttons: 1, modifiers: 8, clickCount: 1 });
+  await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 808, y: 605, button: 'left', buttons: 1, modifiers: 8 });
+  await cdp.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: 808, y: 605, button: 'left', buttons: 0, modifiers: 8, clickCount: 1 });
+
+  // Four bounded wheel steps converge the camera to the controller's 18 m minimum distance.
+  for (let i = 0; i < 4; i++) {
+    await cdp.send('Input.dispatchMouseEvent', { type: 'mouseWheel', x: 960, y: 540, deltaX: 0, deltaY: -350 });
+    await sleep(100);
   }
+  await sleep(1800);
+
+  const finalState = await evaluate(cdp, stateExpression);
+  const d = finalState?.diagnostics;
+  if (
+    finalState?.status !== 'WEBGL2 · Scene running' || finalState.canvasCount !== 1 ||
+    d?.failed !== false || d?.deviceLost !== false || Number(d?.tick) < 1 ||
+    d?.storehouseCandidate !== 'project-owned-glb' || Number(d?.storehouseTriangles) !== 15_550
+  ) throw new Error(`Storehouse close-up state became unhealthy: ${JSON.stringify(finalState)}`);
 
   const capture = await cdp.send('Page.captureScreenshot', { format: 'png', fromSurface: true, captureBeyondViewport: false });
-  const screenshotPath = resolve(artifactsDir, 'phase1-webgl2-1920x1080.png');
+  const screenshotPath = resolve(artifactsDir, 'supplied-storehouse-closeup-1920x1080.png');
   writeFileSync(screenshotPath, Buffer.from(capture.data, 'base64'));
-
-  console.log('Supplied-storehouse Phase 1 browser smoke passed.');
+  console.log('Supplied storehouse close-up evidence captured.');
   console.log(JSON.stringify({
-    tick: diagnostics.tick,
-    structures: diagnostics.structures,
-    inhabitants: diagnostics.inhabitants,
-    inhabitantCandidate: diagnostics.inhabitantCandidate,
-    inhabitantTriangles: diagnostics.inhabitantTriangles,
-    trees: diagnostics.trees,
-    grassClumps: diagnostics.grassClumps,
-    dwellingCandidate: diagnostics.dwellingCandidate,
-    dwellingLod: diagnostics.dwellingLod,
-    dwellingTriangles: diagnostics.dwellingTriangles,
-    storehouseCandidate: diagnostics.storehouseCandidate,
-    storehouseTriangles: diagnostics.storehouseTriangles,
-    workshopCandidate: diagnostics.workshopCandidate,
-    workshopTriangles: diagnostics.workshopTriangles,
-    treeCandidate: diagnostics.treeCandidate,
-    treeCandidateTriangles: diagnostics.treeCandidateTriangles,
-    drawCalls: diagnostics.drawCalls,
-    fps: diagnostics.fps,
-    frameMs: diagnostics.frameMs,
+    tick: d.tick,
+    storehouseCandidate: d.storehouseCandidate,
+    storehouseTriangles: d.storehouseTriangles,
+    drawCalls: d.drawCalls,
     screenshot: screenshotPath,
   }, null, 2));
 } finally {

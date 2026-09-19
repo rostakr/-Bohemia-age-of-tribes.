@@ -1,0 +1,7 @@
+{
+  "provider": "OpenAI image generation",
+  "prompt": "Single full-body photorealistic 3D character asset reference for grounded historical RTS in Late Iron Age La Tene Bohemia. One adult male Boii civilian craftsman age about35, average lean working build, height1.72m, believable human proportions and face, brown medium-length practical hair and short neat beard. Wearing simple knee-length muted ochre-brown wool tunic with long sleeves, plain leather belt, charcoal-brown wool trousers, simple worn dark leather shoes. Tunic has no embroidery, practical period-plausible clothing with visible coarse woven cloth and soft natural folds. No armor, no jewelry or torc, no helmet, no weapons, no modern fasteners, no tartan, no fantasy elements. Neutral relaxed stance with both feet fully visible, legs slightly apart, arms lowered slightly separated from torso with open relaxed hands and visible distinct fingers; shoulders level, no tool, clear full silhouette for image-to-3D conversion. Single front three-quarter view with only slight turn, entire person visible head to soles with generous margins on plain neutral light gray background. Even diffuse neutral studio illumination, no harsh cast shadows, authentic natural muted material colors, detailed physically based fabric leather skin. No landscape, no ground base, no text, no diagrams, no additional views.",
+  "source": "boii-adult-worker-concept.png",
+  "date": "2026-09-17",
+  "historical_qa": "pending"
+}

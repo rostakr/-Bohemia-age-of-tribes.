@@ -1,0 +1,18 @@
+{
+  "asset": "tree_oak_01",
+  "stage": "single-object image-to-3D source candidate",
+  "provider": "OpenAI image generation",
+  "date": "2026-09-18",
+  "prompt": "A single isolated mature pedunculate oak tree (Quercus robur), entire tree visible with generous margin all around, no crop, square image. Original realistic high-end 3D asset reference for a historical RTS in Central Bohemia. 14 metre tree, trunk branching from roughly one quarter height, broad irregular spreading crown, convincing asymmetrical crooked primary limbs clearly visible through natural gaps, fissured grey-brown rough oak bark, clustered distinctly lobed small oak leaves, restrained varied late-spring green. Crown airy enough to see branch junctions but naturally lush, not a spherical blob, not fantasy, not stylized, not low poly. Tree appears alone floating in a uniform pure white studio void, trunk ends naturally at ground level with just small basal root flares, NO sprawling exposed roots, NO terrain, NO ground disk, NO grass, NO rocks, NO scenery. Neutral diffuse even illumination, minimal shadow, no directional sunlight or ambient fog, photorealistic PBR material appearance, sharp detailed bark and branch forms. Three-quarter view from roughly human chest height with very slight elevation so the full crown silhouette is clear. One tree only, one view only, no labels, no typography, no border, no extra panels. The intended use is image-to-3D reference: clean separated silhouette, trunk and lower limb connections unobscured.",
+  "image": "tree_oak_01-concept.png",
+  "intended_runtime": "public/assets/environment/tree_oak_01.glb",
+  "model_created": false,
+  "tests_run": false,
+  "qa_owner": "Kontrola repozitáře projektu",
+  "notes": [
+    "Generated source is not a runtime render or production texture.",
+    "Check silhouette margins, foliage edge color contamination and botanical fit before conversion.",
+    "Image-to-3D foliage may reconstruct as solid clumps; final foliage needs masked cards and LODs.",
+    "No external conversion service invoked or model licence asserted."
+  ]
+}

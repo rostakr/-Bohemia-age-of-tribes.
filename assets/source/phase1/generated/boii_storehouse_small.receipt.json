@@ -1,0 +1,17 @@
+{
+  "source": "/workspace/scratch/7ab7c6b3f73b/bohemia-integration-repair/assets/source/phase1/boii-storehouse-small-concept.png",
+  "source_sha256": "4baa0fc604cec8b0e01222c48b049a9485eb23ca750d222cea00fc992f5a26bb",
+  "provider": "Microsoft TRELLIS.2 official public Hugging Face demo",
+  "endpoint": "https://microsoft-trellis-2.hf.space",
+  "license_reference": "https://github.com/microsoft/TRELLIS.2/blob/main/LICENSE",
+  "use": "noncommercial project; free demo only",
+  "seed": 17092027,
+  "resolution": "1024",
+  "decimation_target": 100000,
+  "texture_size": 2048,
+  "started_utc": "2026-09-17T18:57:58.041236+00:00",
+  "status": "failed_no_automatic_retry",
+  "visual_qa": "pending",
+  "historical_qa": "pending",
+  "error": "You have exceeded your ZeroGPU quota (120s requested vs. 177s left). Try again in 23:59:23. Authenticate with a Hugging Face token for more quota - https://huggingface.co/settings/tokens"
+}

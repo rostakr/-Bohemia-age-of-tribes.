@@ -1,0 +1,366 @@
+diff --git a/docs/ASSET_MANIFEST.md b/docs/ASSET_MANIFEST.md
+index 94aeb8c..4723ac9 100644
+--- a/docs/ASSET_MANIFEST.md
++++ b/docs/ASSET_MANIFEST.md
+@@ -1,5 +1,16 @@
+ # Asset Manifest
+ 
++## Latest storehouse material update
++
++Storehouse GLB now embeds three original generated PNG base colors: weathered oak,
++straw thatch and clay daub. Exact prompts: `assets/source/phase1/materials/` receipts
++`weathered-oak-receipt.json` and `roof-and-daub-receipt.json`. Export receipt records
++dimensions/hashes. Current GLB: 9,933,356 bytes, 15,550 triangles, five materials, no
++LOD. Wattle and earth remain constant-color. Geometry normals are not normal maps.
++Roof UVs follow ridge/slope coordinates. Sources may contain residual shading;
++tileability and material appearance require external QA. Previous sizes below are
++historical. Texture compression, normal maps and roughness maps remain pending.
++
+ This manifest records assets present through the current Phase 1 checkpoint. A missing row is not permission to use an asset, and no license is claimed for assets that have not been imported.
+ 
+ | Asset | Source / location | License | Format | Dimensions / mesh | Textures / maps | LOD | State | Culture | Usage |
+@@ -99,6 +110,67 @@ For every future art row, record exact triangle counts per LOD, texture dimensio
+ | Candidate | Source/license | Runtime form | Dimensions | Geometry/LOD | Materials | Culture/use | State |
+ | --- | --- | --- | --- | --- | --- | --- | --- |
+ | Small Boii storehouse | Original project code `src/render/storehouse.ts`; internal project work, no third-party art | Deterministic procedural PlayCanvas mesh; no external textures | Overall bounds 3.856 × 3.376 × 3.795 m including roof overhang; raised structural platform ~3.15 × 3.15 m | 15,910 vertices; 15,550 triangles; no LOD | Five solid non-metallic groups: weathered oak, hazel wattle, pale clay daub, straw thatch, packed earth | Boii / Late La Tène small raised storage candidate | Integrated as explicit `procedural-project-owned` WIP candidate; geometry tests, 3/3 lifecycle remount and software-WebGL2 screenshot passed. `ADMITTED_MODELS.storehouse` remains null; visual, historical and actual-hardware performance acceptance pending; `artGatePassed=false`. |
+-| Boii carpentry/workshop shelter | Original project code `src/render/workshop.ts`; internal project work, no third-party art | Deterministic procedural PlayCanvas mesh; no external textures | Overall bounds 5.24 × 3.607 × 3.675 m including roof overhang | 22,876 vertices; 22,480 triangles; no LOD | Four groups: weathered oak, straw thatch, packed earth, worked iron | Boii / Late La Tène open-sided craft shelter candidate | Integrated as explicit `procedural-project-owned` WIP candidate; 15/15 Node checks, 3/3 lifecycle remount and software-WebGL2 screenshot passed. Includes bench, trestles, split timber and restrained axe/chisel/gouge silhouettes. `ADMITTED_MODELS.workshop` remains null; visual, historical and actual-hardware performance acceptance pending; `artGatePassed=false`. |
++| Boii carpentry/workshop shelter | Original project code `src/render/workshop.ts`; internal project work, no third-party art | Deterministic procedural PlayCanvas mesh; no external textures | Overall bounds 5.24 × 3.607 × 3.675 m including roof overhang | 22,876 vertices; 22,480 triangles; no LOD | Four groups: weathered oak, straw thatch, packed earth, worked iron | Boii / Late La Tène open-sided craft shelter candidate | Integrated as explicit `procedural-project-owned` WIP candidate; 15/15 Node checks, 3/3 lifecycle remount and software-WebGL2 screenshot passed. Includes bench, trestles, split timber and restrained axe/chisel/gouge silhouettes. Superseded visually on the supplied-content branch by the user GLB; procedural fallback retained; visual, historical and actual-hardware performance acceptance pending; `artGatePassed=false`. |
+ 
+ Exact terrain paths, dimensions, published MD5 and SHA256 are recorded in `assets/source/phase1/terrain-receipt.json`. Exact dwelling generation settings, hashes, geometry and validation are recorded in `assets/source/phase1/dwelling-receipt.json`. Exact procedural storehouse source, deterministic seed, geometry statistics and CI evidence are recorded in `assets/source/phase1/storehouse-receipt.json`. Exact procedural workshop source, deterministic seed, geometry statistics and CI evidence are recorded in `assets/source/phase1/workshop-receipt.json`. All images are retained at acquired resolution. The dwelling concept is a 2D design, not a rendered game screenshot. Its preview does not prove final mesh quality.
++
++## User-supplied content branch
++
++| Asset | Source / rights | Format / textures | Geometry / LOD | Scale / use | State |
++| --- | --- | --- | --- | --- | --- |
++| Open carpentry workshop | User attachment; provider/license not supplied; noncommercial preview requested, release clearance pending | GLB, embedded 1024² PNG base color; metallicFactor corrected to 0 in derived copy | 65,301 vertices; 89,778 triangles; no LOD | 3.615 × 3.5 × 3.187 m; Boii craft shelter candidate | Replaces visible procedural workshop; visual/historical QA pending |
++| Adult worker | User attachment; provider/license not supplied; noncommercial preview requested, release clearance pending | GLB, embedded 1024² PNG base color; metallicFactor corrected to 0 in derived copy | 9,805 vertices; 14,106 triangles; no LOD, skeleton or animation | Reference height 1.72 m; five static instances | Integrated as Boii inhabitant candidate; visual/historical QA pending |
++
++Original uploads remain unchanged under `assets/source/phase1/user-supplied/`.
++`intake.json` records original/runtime hashes, bounds and structural validation.
++No provider license is inferred from the trimesh exporter metadata. Both assets lack
++normal and roughness textures; missing vertex normals are generated by the engine loader.
++
++Three original generated PNG concepts (storehouse, workshop, adult worker) and exact
++prompt JSON receipts are retained in `assets/source/phase1/`. They are design inputs,
++not game screenshots or evidence of historical acceptance. The optional free conversion
++script is `scripts/generate-free-trellis.py`; the storehouse receipt under `generated/`
++records a ZeroGPU quota rejection. No storehouse GLB was produced by that attempt.
++
++## Vegetation art direction — 2026-09-18
++
++Original oak/beech/birch concept sheet and exact prompt receipt added under
++`assets/source/phase1/vegetation/`. The production brief defines separate species,
++LOD budgets, materials, scale and integration. 2D reference only; no tree GLB added.
++Tests and visual acceptance delegated to external QA per user instruction.
++
++Single-object oak source candidate: `assets/source/phase1/vegetation/tree_oak_01-concept.png`.
++Original OpenAI-generated image; exact prompt and limitations in `tree_oak_01-receipt.json`.
++2D only, no geometry/polycount/LOD. No external conversion invoked, no runtime admission.
++
++## Standalone small storehouse GLB
++
++`public/assets/buildings/boii_storehouse_small.glb` is an offline export of the existing
++original project geometry in `src/render/storehouse.ts`, not a newly generated
++professional asset. 700,584 bytes; 15,550 triangles; 15,910 vertices; bounds
++3.856 × 3.376 × 3.795 m; Y-up, metres, ground-centred source origin. Five non-metallic
++material groups (timber, wattle, daub, thatch, earth), vertex normals and UVs.
++No textures or LOD. Source colors converted from sRGB to linear factors for glTF.
++Reproducible export: `node --experimental-strip-types scripts/export-storehouse.mjs`.
++Hashes and limitations: `assets/source/phase1/storehouse-glb-receipt.json`.
++Runtime still uses the same procedural candidate; no double placement or scene change.
++External QA should import the GLB, check scale, normals, material parity and appearance.
++No tests run for this task; detailed materials and a production UV unwrap remain needed.
++
++### Storehouse timber material pass
++
++Standalone GLB updated with an embedded original generated weathered-oak PNG base
++color on the timber group. Source and exact prompt: `assets/source/phase1/materials/`.
++Current GLB size: 3,752,308 bytes; geometry unchanged at 15,550 triangles. Latest hash
++and actual PNG dimensions are in `storehouse-glb-receipt.json`. Other four materials
++remain solid factors. No normal/roughness texture maps, compression or LOD yet.
++Original generated source, not a downloaded third-party photograph. Tileability,
++grain direction/stretching, cylinder UV seams and baked shading require external QA.
++No runtime slot change and no tests run. Prior untextured export statistics above are historical.
++
++### Storehouse scene integration
++
++The default Phase 1 storehouse slot now loads the textured GLB via the existing asset
++resolver/cache. Its procedural source remains available for explicit null-slot use.
++Dimensions and placement retained; no duplicate storehouse spawned. Runtime diagnostic
++source is `project-owned-glb`. Import/appearance/performance acceptance remains pending.
+diff --git a/docs/HANDOFF_PHASE_1.md b/docs/HANDOFF_PHASE_1.md
+index 57b5f40..2e2a3ff 100644
+--- a/docs/HANDOFF_PHASE_1.md
++++ b/docs/HANDOFF_PHASE_1.md
+@@ -1,3 +1,62 @@
++# Latest addition — textured storehouse in benchmark
++
++Material update: wood, straw and clay base colors now embedded. Roof UVs follow the
++roof slope. File size 9.93 MB; no texture compression, LOD, normal or roughness maps.
++QA: check repeat seams, UV stretching, colour balance, roof orientation and memory.
++Geometry/placement unchanged. Only exporter executed, no tests run. GitHub delivery
++remains blocked; local commit does not mean this handoff reached the separate chat.
++
++Default storehouse now uses `public/assets/buildings/boii_storehouse_small.glb`.
++Source geometry height retained at 3.3763 m, with existing pad and yaw. Timber base-color
++texture embedded in GLB; other materials still use constant factors. No LOD.
++
++Changed runtime: `src/render/benchmark-scene.ts`; asset-source expectations updated in
++`scripts/browser-phase1-smoke.mjs`, without running tests. Manifest/state updated.
++
++External QA: verify three structures and five inhabitants, exactly one storehouse,
++`storehouseCandidate=project-owned-glb`, 15,550 storehouse triangles, texture load,
++ground contact, wood grain/UV seams, WebGPU/WebGL2 and repeated scene loading.
++No tests, build or browser QA run for this addition. Art gate remains false.
++
++---
++
++# Supplied workshop and inhabitants — focused QA handoff
++
++Branch: `phase1/supplied-workshop-inhabitants`, based on main
++`53d2b6e2b37340dad2d6b649ceec60bab68292da`.
++
++Implemented: user workshop GLB replaces the visible procedural workshop; five static
++inhabitants share the supplied character model. Existing storehouse and runtime
++lifecycle remain intact. Runtime material factors corrected to non-metallic.
++Original uploads, hashes, three concepts and free-conversion receipts preserved.
++
++Runtime changes: `src/render/benchmark-scene.ts`, `index.html`,
++`public/assets/buildings/boii_carpentry_shed_open.glb`,
++`public/assets/characters/boii_adult_worker.glb`. Regression expectations updated in
++`scripts/browser-phase1-smoke.mjs`. Source records live under `assets/source/phase1/`.
++
++Minimum local validation: `npm run validate` passed (TypeScript, 15/15 Node tests,
++production build). Uploaded GLB structural/index/texture checks passed. Browser and
++visual acceptance have not been run for this branch. Build retains bundle-size and
++PlayCanvas `node:worker_threads` externalization warnings.
++
++External QA owner: chat “Kontrola repozitáře projektu”. Check:
++- Phase 1 loads three structures and five inhabitants; workshop reports
++  `user-supplied-glb` and 89,778 triangles; art gate stays false.
++- WebGPU and WebGL2, repeated mount/unmount and switching scenes during asset loading.
++- Model orientation, ground contact, scale, texture seams/hair artifacts, silhouettes
++  at RTS distance, and workshop materials under benchmark lighting.
++- Actual-hardware frame time and GPU memory, including five shared character instances.
++- Historical fit and source/license evidence before release.
++
++Risks: static unrigged characters, base-color-only materials, no LOD, relatively dense
++workshop mesh, trees still absent. Phase 1 remains incomplete and unpublished.
++
++---
++
++The following records describe earlier checkpoints; their validation does not certify
++the newly supplied models.
++
+ # Phase 1 checkpoint — NOT COMPLETE
+ 
+ ## IMPLEMENTED
+diff --git a/docs/PROJECT_STATE.md b/docs/PROJECT_STATE.md
+index a5c82fa..487d0d1 100644
+--- a/docs/PROJECT_STATE.md
++++ b/docs/PROJECT_STATE.md
+@@ -1,5 +1,11 @@
+ # Project state
+ 
++Latest content update: storehouse GLB embeds wood, straw and clay base colors.
++Roof UVs follow ridge/slope coordinates at a 0.65 m repeat scale. Geometry remains
++15,550 triangles; file size is 9,933,356 bytes. Texture compression and full PBR maps
++remain pending. No tests run. GitHub publishing remains blocked; local updates have
++not been delivered to the separate QA chat through GitHub.
++
+ ```json
+ {
+   "schema_version": 1,
+@@ -23,7 +29,10 @@
+   "phase_1_storehouse_merge_sha": "b7ca7e822c054227aed3bf9510abd2f3ff0a9a76",
+   "phase_1_workshop_pr": 25,
+   "phase_1_workshop_merge_sha": "2b0e2f522c1a2d09478879a298796141e4305249",
+-  "phase_1_status": "THREE_STRUCTURE_CONTENT_CHECKPOINT_ART_GATE_OPEN",
++  "phase_1_status": "SUPPLIED_WORKSHOP_AND_FIVE_STATIC_INHABITANTS_QA_PENDING",
++  "supplied_content_local_validation": "typecheck, 15/15 Node tests, production build passed; browser/visual QA pending",
++  "content_branch": "phase1/supplied-workshop-inhabitants",
++  "content_base_main_sha": "53d2b6e2b37340dad2d6b649ceec60bab68292da",
+   "hosting_strategy": "Vite/GitHub Pages reference build; no Floot migration performed",
+   "deployment": {
+     "provider": "github_pages",
+@@ -128,7 +137,7 @@
+ 
+ - `main` contains the verified Phase 0.5 runtime foundation, the reconciled Phase 1 environment checkpoint, and the merged storehouse/workshop content candidates.
+ - The Phase 1 checkpoint is technically integrated but is not a completed art milestone: runtime diagnostics explicitly report `artGatePassed=false`.
+-- Current benchmark content: three visible structures (dwelling plus project-owned procedural storehouse/workshop candidates), no inhabitants, no trees, and procedural meadow ground cover. Production GLB slots for storehouse/workshop/inhabitant/tree remain intentionally unfilled.
++- Current content branch: three structures (dwelling, textured project-owned storehouse GLB, user-supplied workshop GLB), five static inhabitants sharing one user-supplied GLB, no trees, and procedural meadow ground cover. Workshop fallback remains available. Tree GLB slot remains unfilled. Historical CI results above describe the prior main checkpoint, not this branch.
+ - The current public GitHub Pages deployment is still the previously verified Phase 0.5 foundation. Phase 1 has not been published through the manual release workflow.
+ - Floot/React remains unnecessary. If introduced later it must remain a thin host around the PlayCanvas runtime and must not own the game loop.
+ 
+@@ -152,7 +161,7 @@ These graphics checks establish integration/runtime correctness in software-back
+ ## CURRENT LIMITS / RISKS
+ 
+ - `artGatePassed=false`: the Phase 1 visual benchmark is incomplete.
+-- Missing benchmark content is now concentrated in suitable south/central Bohemian deciduous trees/forest composition and five readable Boii inhabitants.
++- Missing benchmark content is now concentrated in suitable south/central Bohemian deciduous trees/forest composition and inhabitant rigging/animation. Uploaded models have base-color textures only, no LOD, and unconfirmed source/license; release clearance is pending.
+ - The current dwelling, storehouse and workshop candidates still require visual, historical and actual-hardware performance acceptance; none has a production LOD.
+ - Terrain, stream banks, vegetation distribution, lighting/material balance and settlement composition need production art polish after the missing object classes exist.
+ - Actual-hardware GPU performance remains unmeasured.
+@@ -160,7 +169,7 @@ These graphics checks establish integration/runtime correctness in software-back
+ 
+ ## NEXT TASK
+ 
+-Continue Phase 1 content production. Prioritize the remaining visible benchmark objects before adding new gameplay systems: (1) a suitable central-European deciduous tree/vegetation set, then (2) five readable Boii inhabitants. Keep provenance/receipts for every candidate/admitted asset, preserve lifecycle remount safety, and rerun the complete regression suite and rendered Phase 1 smoke. After all required content exists, perform visual/historical review and actual-hardware performance/LOD QA before setting `artGatePassed=true`.
++Continue Phase 1 content production. Prioritize the remaining visible benchmark objects before adding new gameplay systems: (1) a suitable central-European deciduous tree/vegetation set, then (2) rigging/animation and material refinement for the five static Boii inhabitants. Keep provenance/receipts for every candidate/admitted asset, preserve lifecycle remount safety, and rerun the complete regression suite and rendered Phase 1 smoke. After all required content exists, perform visual/historical review and actual-hardware performance/LOD QA before setting `artGatePassed=true`.
+ 
+ ## PHASE GATE
+ 
+@@ -169,3 +178,29 @@ Continue Phase 1 content production. Prioritize the remaining visible benchmark
+ **PHASE 0.5: PASS / COMPLETE_VERIFIED / DEPLOYED.**
+ 
+ **PHASE 1: AUTHORIZED / TECHNICAL CHECKPOINT INTEGRATED / ART GATE OPEN.**
++
++## Latest content-only addition — 2026-09-18
++
++Created original oak/beech/birch concept and 3D production brief in
++`assets/source/phase1/vegetation/`. No runtime change; tree slot remains empty.
++No tests run for this content task. Free model download returned HTTP 403; local
++`game-dev` CLI unavailable. Earlier push remains blocked by approval review; no retry.
++
++Single-object oak concept added for the first tree conversion. Exact prompt preserved.
++Conversion and foliage reconstruction remain pending; tests left to external QA.
++
++Standalone storehouse model now exists at
++`public/assets/buildings/boii_storehouse_small.glb` (15,550 triangles, five materials).
++Exported from the existing candidate, not a replacement professional art pass.
++Runtime unchanged. No tests run; GLB import and visual QA delegated externally.
++
++Storehouse GLB material pass: embedded weathered-oak base color added to timber;
++3.75 MB, geometry unchanged. Runtime still displays its procedural candidate.
++External QA owns texture tiling, UV seams and material review; no tests run here.
++
++Latest content integration: benchmark now loads `buildings/boii_storehouse_small.glb`
++with embedded timber base color, preserving the candidate height (3.3763 m), position
++and orientation. Procedural source remains available when the model slot is null.
++Diagnostics report `storehouseCandidate=project-owned-glb`; smoke expectation updated
++to match the asset source. No tests/build/browser run in this task per user instruction.
++External QA pending; earlier successful tests do not certify this change.
+diff --git a/index.html b/index.html
+index b90fb0c..8c1774d 100644
+--- a/index.html
++++ b/index.html
+@@ -15,7 +15,7 @@
+         <p class="eyebrow">Environment study · 01</p>
+         <h2 id="phase-title">The Stream Valley</h2>
+         <p>A clearing above the water.<br>A place for the first settlement.</p>
+-        <p class="muted">Work in progress: dwelling plus project-owned storehouse and workshop candidates integrated; inhabitants and trees pending.</p>
++        <p class="muted">Work in progress: dwelling, storehouse candidate, workshop and five inhabitants integrated; trees and animation pending.</p>
+         <p id="status" role="status">Preparing the landscape…</p>
+         <button id="pause" type="button" aria-pressed="false" disabled>Pause simulation</button>
+       </section>
+diff --git a/public/ASSET_CREDITS.txt b/public/ASSET_CREDITS.txt
+index 8c6db2e..b11dac5 100644
+--- a/public/ASSET_CREDITS.txt
++++ b/public/ASSET_CREDITS.txt
+@@ -13,3 +13,10 @@ Official free Hugging Face Space: https://huggingface.co/spaces/microsoft/TRELLI
+ TRELLIS.2 model/code license reference (MIT): https://github.com/microsoft/TRELLIS.2/blob/main/LICENSE
+ Exact generation settings and hashes: assets/source/phase1/dwelling-receipt.json (source package).
+ Current project use is noncommercial per user instruction; visual and historical QA are pending.
++
++User-supplied open carpentry workshop and adult worker GLBs:
++Source: project user attachments; original provider and license not supplied.
++Integrated at user request for noncommercial preview; release clearance pending.
++Derived runtime copies set metallicFactor=0; original uploads preserved.
++No MIT or CC0 license is asserted for these two models.
++Hashes and technical intake: assets/source/phase1/user-supplied/intake.json.
+diff --git a/scripts/browser-phase1-smoke.mjs b/scripts/browser-phase1-smoke.mjs
+index c73d8f0..53a7114 100644
+--- a/scripts/browser-phase1-smoke.mjs
++++ b/scripts/browser-phase1-smoke.mjs
+@@ -142,10 +142,11 @@ try {
+       Number(diagnostics.tick) >= 1 &&
+       Number(diagnostics.drawCalls) >= 1 &&
+       Number(diagnostics.structures) >= 3 &&
+-      diagnostics.storehouseCandidate === 'procedural-project-owned' &&
++      diagnostics.storehouseCandidate === 'project-owned-glb' &&
+       Number(diagnostics.storehouseTriangles) >= 15_000 &&
+-      diagnostics.workshopCandidate === 'procedural-project-owned' &&
+-      Number(diagnostics.workshopTriangles) >= 20_000 &&
++      diagnostics.workshopCandidate === 'user-supplied-glb' &&
++      Number(diagnostics.workshopTriangles) === 89_778 &&
++      Number(diagnostics.inhabitants) === 5 &&
+       Number(diagnostics.grassClumps) >= 1
+     ) {
+       healthyState = state;
+@@ -164,10 +165,11 @@ try {
+     diagnostics?.failed !== false || diagnostics?.deviceLost !== false ||
+     Number(diagnostics?.tick) < 1 || Number(diagnostics?.drawCalls) < 1 ||
+     Number(diagnostics?.structures) < 3 ||
+-    diagnostics?.storehouseCandidate !== 'procedural-project-owned' ||
++    diagnostics?.storehouseCandidate !== 'project-owned-glb' ||
+     Number(diagnostics?.storehouseTriangles) < 15_000 ||
+-    diagnostics?.workshopCandidate !== 'procedural-project-owned' ||
+-    Number(diagnostics?.workshopTriangles) < 20_000
++    diagnostics?.workshopCandidate !== 'user-supplied-glb' ||
++    Number(diagnostics?.workshopTriangles) !== 89_778 ||
++    Number(diagnostics?.inhabitants) !== 5
+   ) {
+     throw new Error(`Phase 1 scene became unhealthy before evidence capture: ${JSON.stringify(finalState)}`);
+   }
+diff --git a/src/render/benchmark-scene.ts b/src/render/benchmark-scene.ts
+index d7a146b..703479f 100644
+--- a/src/render/benchmark-scene.ts
++++ b/src/render/benchmark-scene.ts
+@@ -13,6 +13,7 @@ import {
+   type Application,
+   type ContainerResource,
+   type Mesh,
++  type RenderComponent,
+ } from 'playcanvas';
+ import { resolveAsset, type AssetResolver } from '../assets/resolve-asset';
+ import type { RuntimeScene } from './scene';
+@@ -44,9 +45,9 @@ export interface BenchmarkModels {
+ // Never silently replace missing production models with primitives.
+ export const ADMITTED_MODELS: BenchmarkModels = {
+   dwelling: 'buildings/boii_dwelling_rectangular.glb',
+-  storehouse: null,
+-  workshop: null,
+-  inhabitant: null,
++  storehouse: 'buildings/boii_storehouse_small.glb',
++  workshop: 'buildings/boii_carpentry_shed_open.glb',
++  inhabitant: 'characters/boii_adult_worker.glb',
+   tree: null,
+ };
+ 
+@@ -263,7 +264,7 @@ export class BenchmarkScene implements RuntimeScene {
+   private async populate(): Promise<void> {
+     const entries: [string | null, string, number, number][] = [
+       [this.models.dwelling, 'Boii dwelling', 4.5, 0],
+-      [this.models.storehouse, 'Boii storehouse', 3.2, 1],
++      [this.models.storehouse, 'Boii storehouse', 3.3762917082335404, 1],
+       [this.models.workshop, 'Boii craft shelter', 3.5, 2],
+     ];
+     for (const [path, name, height, index] of entries) {
+@@ -271,6 +272,13 @@ export class BenchmarkScene implements RuntimeScene {
+       const resource = await this.assets.model(path);
+       if (!this.active) return;
+       const entity = instantiateAtHeight(resource, name, height);
++      if (index === 1 || index === 2) {
++        const triangles = (entity.findComponents('render') as RenderComponent[])
++          .reduce((total, render) => total + render.meshInstances.reduce((sum, instance) =>
++            sum + (instance.mesh.primitive[0]?.count ?? 0) / 3, 0), 0);
++        if (index === 1) this.storehouseTriangles = triangles;
++        else this.workshopTriangles = triangles;
++      }
+       const pad = SETTLEMENT[index]!;
+       entity.setPosition(pad.x, pad.y, pad.z);
+       entity.setEulerAngles(0, index === 0 ? 15 : -25, 0);
+@@ -360,9 +368,11 @@ export class BenchmarkScene implements RuntimeScene {
+       inhabitants: this.inhabitants,
+       trees: this.trees,
+       grassClumps: this.grassClumps,
+-      storehouseCandidate: this.storehouseTriangles > 0 ? 'procedural-project-owned' : 'absent',
++      storehouseCandidate: this.storehouseTriangles > 0
++        ? (this.models.storehouse ? 'project-owned-glb' : 'procedural-project-owned') : 'absent',
+       storehouseTriangles: this.storehouseTriangles,
+-      workshopCandidate: this.workshopTriangles > 0 ? 'procedural-project-owned' : 'absent',
++      workshopCandidate: this.workshopTriangles > 0
++        ? (this.models.workshop ? 'user-supplied-glb' : 'procedural-project-owned') : 'absent',
+       workshopTriangles: this.workshopTriangles,
+       drawCalls: this.drawCalls,
+     };

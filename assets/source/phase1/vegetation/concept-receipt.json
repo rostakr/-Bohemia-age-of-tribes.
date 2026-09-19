@@ -1,0 +1,11 @@
+{
+  "asset": "central-european-trees-concept",
+  "type": "2D concept only",
+  "provider": "OpenAI image generation",
+  "prompt": "Create a professional botanical 3D game asset concept sheet for BOHEMIA AGE OF TRIBES, grounded historical Central European landscape, NOT fantasy or stylized low poly. Wide landscape sheet, three evenly separated full trees on uniform pale warm grey studio background, each including full crown and roots meeting a tiny neutral ground footprint, NO scenery, NO overlap, NO people. Left: mature pedunculate oak Quercus robur 14 metres tall, broad irregular spreading crown, thick deeply fissured grey brown bark, visible crooked primary limbs, clustered lobed green foliage with open air gaps. Centre: European beech Fagus sylvatica 16 metres tall, smooth silver grey trunk, ascending fine branches, oval green leaves, domed crown with readable internal branch structure. Right: silver birch Betula pendula 12 metres tall, slim white papery bark with black fissures near base, airy narrow asymmetrical crown, delicate drooping twigs and small triangular leaves. Realistic physically based material appearance, soft neutral daylight, restrained late spring greens differentiated between species, sharp bark and leaf detail, excellent silhouettes readable at RTS distance. Scientifically informed concept visualization, not an archaeological claim. Clean understated bottom labels only: QUERCUS ROBUR, FAGUS SYLVATICA, BETULA PENDULA. No logos, no UI, no border. This sheet is an original art direction reference for creating separate production models.",
+  "created": "2026-09-18",
+  "runtime_admitted": false,
+  "qa": "Not performed; delegated to external QA chat",
+  "model_status": "No GLB created",
+  "production_note": "Do not reconstruct all three trees as a single mesh. Reduce exposed roots to ground contact; concept exaggerates root visibility."
+}
