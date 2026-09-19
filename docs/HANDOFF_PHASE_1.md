@@ -1,69 +1,116 @@
 # Phase 1 checkpoint — NOT COMPLETE
 
-## IMPLEMENTED
+## Current runtime checkpoint
 
-220 m environment study with rolling terrain and three level placement sites, recessed stream bed and animated ripple material, feathered earth path, woodland leaf litter, chunked procedural meadow, 9 acquired CC0 terrain textures, engine lighting/fog/CameraFrame effects, terrain-aware inspection camera, asynchronous GLB/texture ownership and bounds normalization. Default entry is the environment study; ?scene=calibration retains Phase 0. Controls are shown in the UI; 1/2/3 select views, WASD/arrows pan, QE rotate, wheel zooms, Shift-drag pans.
+PlayCanvas 2.22.1 remains the sole game/render engine. The Phase 0.5 lifecycle, explicit canvas ownership, fixed timestep, asset resolver and WebGPU → WebGL2 fallback remain intact. Phase 2 gameplay/economy/combat/AI has not started.
 
-## ASSETS ADDED/CHANGED
+Current benchmark composition:
 
-Three Poly Haven terrain material sets (diffuse/OpenGL-normal/roughness), acquisition receipt and published credits; original dwelling concept PNG and briefs; and one rectangular dwelling GLB generated with the free official Microsoft TRELLIS.2 Hugging Face Space. The dwelling is 5,621,848 bytes, 99,298 triangles and 105,019 vertices, with embedded 2048 px base-color and metallic-roughness WebP maps. It has no LOD. Structural checks, texture decoding and pinned-engine `EXT_texture_webp` parser support passed; visual, historical and performance QA remain pending. The roundhouse, workshop, inhabitant and tree slots remain null, and the scene contains no primitive substitutes for them.
+- dwelling: admitted generated LOD1, `trellis-derived-generated-lod1`, 53,538 triangles;
+- storehouse: admitted project-owned textured GLB, `public/assets/buildings/boii_storehouse_small.glb`, 15,550 triangles;
+- workshop: existing `procedural-project-owned` candidate, 22,480 triangles;
+- inhabitants: five instances of the existing `procedural-project-owned-readability-prototype`, 1,404 triangles per shared mesh;
+- trees: 32 instances of the existing `procedural-project-owned` candidate, 15,980 triangles per shared mesh;
+- `artGatePassed=false`.
 
-## MINIMUM VALIDATION PERFORMED
+## Storehouse-only reconciliation result
 
-`npm run validate` after dwelling integration: TypeScript passed; 7/7 Node tests passed; production build passed. New tests check finite geometry, index validity, upward winding, submerged stream bed and level building pads. Renderer execution/screenshots and 60 FPS were NOT established. Old environment blocked browser localhost; game-dev CLI is absent. Engine bundle warnings remain as recorded in PROJECT_STATE.
+The Astra/content handoff was reconciled conservatively. Only the storehouse was admitted to canonical runtime use.
 
-## CONCRETE BLOCKER / NEXT ACTION
+Storehouse runtime asset:
 
-The authorized free official Microsoft TRELLIS.2 Hugging Face conversion succeeded, and `public/assets/buildings/boii_dwelling_rectangular.glb` is admitted for runtime evaluation. The current version remains constrained to free tools and noncommercial use. The earlier fal.ai attempt returned HTTP 403 `balance_exhausted` and produced no conversion. Phase 1 remains blocked on actual-GPU visual and performance review, historical review of the dwelling, and free acquisition/conversion of the roundhouse, workshop, inhabitant and tree slots. All other asset briefs are in assets/source/PHASE1_ASSET_REQUESTS.md.
+- path: `public/assets/buildings/boii_storehouse_small.glb`;
+- SHA-256: `2e1e054a8a5d66c0a349015d2662a2831894c675378ac11a8e5db90ae15b2b95`;
+- size: 9,933,356 bytes;
+- 15,910 vertices / 15,550 triangles;
+- 5 primitives / 5 materials;
+- NORMAL on 5/5 primitives;
+- TEXCOORD_0 on 5/5 primitives;
+- three embedded 1254×1254 PNG base-color textures;
+- no external GLTF dependencies;
+- no skins or animations;
+- no production LOD.
 
-## QA HANDOFF
+The supplied workshop and supplied adult-worker GLBs remain rejected for canonical runtime admission. Their canonical runtime files are absent. Their original GLBs and intake/provenance remain preserved under `assets/source/phase1/user-supplied/`.
 
-- Confirm current remote main and external Phase 0 QA before merging; this standalone package has no verified main SHA. Preserve other chat's changes.
-- npm ci; npm run validate; npm run preview. Verify default scene with ?debug=1 and forced ?renderer=webgl2&debug=1 on an actual GPU.
-- Check no missing textures, finite diagnostics, camera drag/pan/zoom/presets, keyboard focus, resize, pause and hidden-tab return.
-- Inspect path and water edges for z-fighting, blending, TAA ghosting and texture normal orientation. Compare ?scene=calibration for baseline regressions.
-- Review the admitted rectangular dwelling on an actual GPU: confirm embedded WebP rendering, orientation and grounding, generated backside quality, silhouette and historical plausibility. Assess its 99,298-triangle cost and lack of LOD against the performance budget; loading and structural validation do not establish visual or historical acceptance. Source the four remaining null model slots through free routes, then record license and topology evidence before admission.
-- Measure and add appropriate tree batching/instancing/LOD against the actual assets; validate resource teardown and repeated scene loads.
-- Capture settlement, close craft view and river view on both renderers; perform historical and commercial visual gate review. Frame rate targets remain unmeasured.
-- Update docs/PROJECT_STATE.md; no Phase 2 until Phase 1 acceptance.
+Reasons remain unchanged:
 
-## KNOWN RISKS
+- supplied workshop: 89,778 triangles, above the current target, and required NORMAL data missing;
+- supplied adult worker: 14,106 triangles is performance-usable, but required NORMAL data is missing and prior visual review found severe patchwork/mis-projected texture on face, clothing and rear surfaces.
 
-This is an environment checkpoint, not the completed milestone. One dwelling structure is integrated; the other structures, inhabitants and forest trees are still absent. No animation, production sky/environment reflections or vegetation LOD implemented. Camera/effects/asset-load runtime paths are typechecked but not GPU verified. No GitHub upload/deployment occurred here. No broader gameplay systems changed.
+Do not restore either rejected GLB to `public/assets/...` merely by synthesizing normals. A new candidate must pass structural and visual QA.
 
-## FILES CHANGED SINCE PHASE 0
+## Current-main QA evidence
 
-```text
-AGENTS.md
-README.md
-assets/source/PHASE1_ASSET_REQUESTS.md
-assets/source/phase1/boii-dwelling-concept.png
-assets/source/phase1/dwelling-receipt.json
-assets/source/phase1/terrain-receipt.json
-docs/ASSET_MANIFEST.md
-docs/HANDOFF_PHASE_1.md
-docs/PROJECT_STATE.md
-index.html
-package.json
-public/ASSET_CREDITS.txt
-public/assets/buildings/boii_dwelling_rectangular.glb
-public/assets/materials/terrain/brown_mud_02_diff_1k.jpg
-public/assets/materials/terrain/brown_mud_02_nor_gl_1k.jpg
-public/assets/materials/terrain/brown_mud_02_rough_1k.jpg
-public/assets/materials/terrain/forest_ground_04_diff_1k.jpg
-public/assets/materials/terrain/forest_ground_04_nor_gl_1k.jpg
-public/assets/materials/terrain/forest_ground_04_rough_1k.jpg
-public/assets/materials/terrain/grass_path_2_diff_1k.jpg
-public/assets/materials/terrain/grass_path_2_nor_gl_1k.jpg
-public/assets/materials/terrain/grass_path_2_rough_1k.jpg
-scripts/check-landscape.mjs
-src/main.ts
-src/render/benchmark-scene.ts
-src/render/inspection-camera.ts
-src/render/landscape.ts
-src/render/meadow.ts
-src/render/runtime.ts
-src/render/scene-assets.ts
-src/render/scene.ts
-src/style.css
-```
+Verified current `main` SHA: `47728da23ae73a01b298b935d59a431bc6088548`.
+
+GitHub Actions workflow run `35410230067`: **PASS**.
+
+The run passed:
+
+- `npm ci`;
+- `npm run typecheck`;
+- 22/22 Node tests;
+- strict `npm run check:phase1-assets`;
+- production build;
+- `smoke:webgl2`;
+- `smoke:interactions`;
+- `smoke:lifecycle` with 3/3 remount cycles;
+- software `smoke:webgpu`;
+- `smoke:phase1`;
+- dedicated storehouse admission smoke;
+- dedicated storehouse close-up smoke.
+
+Phase 1 runtime diagnostics on the verified run included:
+
+- `structures=3`;
+- `dwellingCandidate=trellis-derived-generated-lod1`;
+- `dwellingLod=1`;
+- `dwellingTriangles=53538`;
+- `storehouseCandidate=project-owned-glb`;
+- `storehouseTriangles=15550`;
+- `workshopCandidate=procedural-project-owned`;
+- `workshopTriangles=22480`;
+- `treeCandidate=procedural-project-owned`;
+- `trees=32`;
+- `inhabitantCandidate=procedural-project-owned-readability-prototype`;
+- `inhabitants=5`;
+- `failed=false`;
+- `deviceLost=false`;
+- `tick>=1`;
+- `drawCalls>=1`.
+
+Storehouse screenshot evidence artifact: `10574496297`; artifact ZIP SHA-256 `3c7b252e33f2e3b1b53feea9f2e2e1476b9da258f944ac962158a7d55868706b`.
+
+Files:
+
+- `supplied-storehouse-webgl2-1920x1080.png`;
+- `supplied-storehouse-closeup-1920x1080.png`.
+
+## Visual QA verdict
+
+**PASS for WIP runtime admission only.**
+
+The screenshots show one storehouse, not a duplicate. Its scale is credible against the inhabitant and surrounding buildings; supports meet the ground; roof orientation is correct; embedded base-color textures render; there is no obvious missing texture, catastrophic UV projection, gross seam, baked-lighting artifact or accidental metallic material response in the captured views.
+
+Known limitations remain:
+
+- no normal map;
+- no roughness-map texture;
+- no texture/mesh compression;
+- no production storehouse LOD;
+- existing UVs retain close-up wood-grain stretching risk;
+- actual-hardware GPU/VRAM/frame-time acceptance pending;
+- final historical/material/art acceptance pending.
+
+Therefore `artGatePassed=false` remains authoritative.
+
+## Git history / integration
+
+The storehouse-only reconciliation was merged through PR #51. The subsequent PR #57 removed redundant storehouse query-route plumbing and restored the scoped working agreement without changing storehouse admission or QA behavior.
+
+Do not replay the old Astra handoff wholesale and do not reset to the pre-reconciliation `b34a449...` baseline. Continue from current `main` and reconcile any future work against the current head first.
+
+## Next Phase 1 work
+
+Continue only with bounded Phase 1 content/art tasks. Keep the procedural workshop and inhabitant prototype until materially better candidates pass strict + visual QA. Storehouse optimization/LOD/full-PBR work requires separate evidence and must not silently redefine the already verified admission checkpoint. Phase 2 gameplay remains blocked while the Phase 1 art/hardware gate is open.
