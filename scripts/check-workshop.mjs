@@ -49,7 +49,7 @@ test('procedural workshop triangles are non-degenerate', () => {
       const bx = data.positions[ib], by = data.positions[ib + 1], bz = data.positions[ib + 2];
       const cx = data.positions[ic], cy = data.positions[ic + 1], cz = data.positions[ic + 2];
       const abx = bx - ax, aby = by - ay, abz = bz - az;
-      const acx = cx - ax, acy = cy - ay, acz = cx - ax;
+      const acx = cx - ax, acy = cy - ay, acz = cz - az;
       const nx = aby * acz - abz * acy;
       const ny = abz * acx - abx * acz;
       const nz = abx * acy - aby * acx;
