@@ -1,10 +1,11 @@
 import './style.css';
 import { CONFIG } from './config';
 import { CalibrationScene } from './render/calibration-scene';
-import { BenchmarkScene } from './render/benchmark-scene';
+import { ADMITTED_MODELS, BenchmarkScene } from './render/benchmark-scene';
 import type { ViewName } from './render/inspection-camera';
 import { createGameRuntime, type GameRuntime, type RuntimeSnapshot } from './render/runtime';
 import type { RuntimeScene } from './render/scene';
+import { WorkerPreviewScene } from './render/worker-preview-scene';
 
 interface DebugRuntimeBridge {
   mount(): Promise<void>;
@@ -38,7 +39,14 @@ const parameters = new URLSearchParams(window.location.search);
 const debug = parameters.get('debug') === '1';
 const forceWebGL2 = parameters.get('renderer') === 'webgl2';
 const calibration = parameters.get('scene') === 'calibration';
-const runningLabel = calibration ? 'Foundation running' : 'Scene running';
+const workerCloseup = parameters.get('scene') === 'worker-preview';
+const projectWorkerPreview = parameters.get('worker') === 'project';
+const runningLabel = calibration
+  ? 'Foundation running'
+  : workerCloseup
+    ? 'Worker preview running'
+    : 'Scene running';
+const PROJECT_WORKER_PATH = 'characters/boii_adult_worker_project.glb';
 
 let runtime: GameRuntime | undefined;
 let activeBenchmarkScene: BenchmarkScene | undefined;
@@ -48,7 +56,10 @@ let mountGeneration = 0;
 
 function createScene(): RuntimeScene {
   if (calibration) return new CalibrationScene();
-  const benchmark = new BenchmarkScene();
+  if (workerCloseup) return new WorkerPreviewScene();
+  const benchmark = new BenchmarkScene(projectWorkerPreview
+    ? { ...ADMITTED_MODELS, inhabitant: PROJECT_WORKER_PATH }
+    : ADMITTED_MODELS);
   activeBenchmarkScene = benchmark;
   return benchmark;
 }
@@ -85,7 +96,11 @@ function setSelectedView(selected: HTMLButtonElement): void {
 }
 
 function resetHostUi(): void {
-  status.textContent = calibration ? 'Starting the renderer…' : 'Preparing the landscape…';
+  status.textContent = calibration
+    ? 'Starting the renderer…'
+    : workerCloseup
+      ? 'Preparing the worker preview…'
+      : 'Preparing the landscape…';
   pauseButton.disabled = true;
   pauseButton.textContent = 'Pause simulation';
   pauseButton.setAttribute('aria-pressed', 'false');
@@ -93,7 +108,7 @@ function resetHostUi(): void {
   diagnostics.textContent = '';
   errorPanel.hidden = true;
   errorText.textContent = '';
-  for (const button of viewButtons) button.disabled = calibration;
+  for (const button of viewButtons) button.disabled = calibration || workerCloseup;
 }
 
 async function mount(): Promise<void> {
