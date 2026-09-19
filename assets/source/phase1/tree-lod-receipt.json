@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "asset": "Central European mature deciduous tree procedural LOD candidates",
+  "project": "BOHEMIA: AGE OF TRIBES",
+  "created": "2026-09-19",
+  "source": {
+    "type": "original_project_code",
+    "lod0_path": "src/render/tree.ts",
+    "lod_source_path": "src/render/tree-lod.ts",
+    "initial_lod_source_commit": "9318617e2b6102843ba64ffc2f3b66f31332dc84",
+    "third_party_art": false,
+    "external_generator": null,
+    "cost": 0,
+    "license_note": "Internal project work; no third-party mesh, texture or generated external asset is incorporated."
+  },
+  "purpose": "Implement the already documented Phase 1 LOD1/LOD2 geometry targets without selecting runtime switching distances before actual-hardware QA.",
+  "lod0_reference": {
+    "source": "src/render/tree.ts",
+    "triangles": 15980,
+    "vertices": 8980,
+    "bounds_metres": {
+      "width": 11.106874439122981,
+      "height": 13.289766870663216,
+      "depth": 11.402900414546375
+    }
+  },
+  "candidates": [
+    {
+      "level": 1,
+      "output": "public/assets/environment/tree_central_europe_lod1.glb",
+      "output_tracking": "generated CI/build artifact; not canonical runtime admission",
+      "target_triangles": "6000-8000",
+      "triangles": 6084,
+      "vertices": 3684,
+      "bounds_metres": {
+        "width": 11.657881995613337,
+        "height": 13.164831049449031,
+        "depth": 11.37479580138455
+      },
+      "foliage_clumps": 80,
+      "foliage_segments": "8 longitude x 4 latitude rings",
+      "branch_count": 16,
+      "materials": ["Tree bark", "Summer foliage"],
+      "foliage_vertex_colors": true,
+      "textures": 0,
+      "sha256": "657964b3c9ce8843ed3b1ddc86f3b8a9faa196114aa0b7fc6dd9f20a1dbb8da8",
+      "bytes": 236632
+    },
+    {
+      "level": 2,
+      "output": "public/assets/environment/tree_central_europe_lod2.glb",
+      "output_tracking": "generated CI/build artifact; not canonical runtime admission",
+      "target_triangles": "1500-2500",
+      "triangles": 2120,
+      "vertices": 1320,
+      "bounds_metres": {
+        "width": 12.673689306675493,
+        "height": 12.834929224402622,
+        "depth": 10.72053566423701
+      },
+      "foliage_clumps": 50,
+      "foliage_segments": "6 longitude x 3 latitude rings",
+      "branch_count": 8,
+      "materials": ["Tree bark", "Summer foliage"],
+      "foliage_vertex_colors": true,
+      "textures": 0,
+      "sha256": "efbcf81e02d212bfadbaad93a903fafbec121437ec5fa11e6f46c252c67aa07b",
+      "bytes": 85884
+    }
+  ],
+  "generation": {
+    "deterministic": true,
+    "generator": "scripts/export-tree-lods.mjs",
+    "structural_test": "scripts/check-tree-lods.mjs",
+    "units": "metres",
+    "up_axis": "Y",
+    "pivot": "ground-centred source origin",
+    "geometry_strategy": "Reduced branch radial sections/count plus reduced foliage clump tessellation; silhouette scale and opaque vertex-coloured crown strategy retained.",
+    "runtime_switching": "not implemented",
+    "switching_reason": "Distance thresholds remain blocked on actual-hardware benchmark evidence as specified in the original tree receipt."
+  },
+  "validation": {
+    "workflow": "Validate tree LOD candidates",
+    "workflow_run": 35409461053,
+    "artifact_id": 10573374786,
+    "geometry_tests": "2/2 passed",
+    "strict_lod1": "passed: 2 primitives, 2/2 normals, 2/2 UV0, 2 materials, no textures",
+    "strict_lod2": "passed: 2 primitives, 2/2 normals, 2/2 UV0, 2 materials, no textures",
+    "deterministic_hashes_recorded": true
+  },
+  "admission": {
+    "canonical_runtime_changed": false,
+    "distance_switching_enabled": false,
+    "art_gate_passed": false,
+    "visual_acceptance": "pending",
+    "botanical_acceptance": "pending",
+    "actual_hardware_performance": "pending"
+  }
+}

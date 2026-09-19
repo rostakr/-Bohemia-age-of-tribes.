@@ -1,0 +1,45 @@
+name: Validate tree LOD candidates
+
+on:
+  pull_request:
+    paths:
+      - 'src/render/tree-lod.ts'
+      - 'scripts/check-tree-lods.mjs'
+      - 'scripts/export-tree-lods.mjs'
+      - 'assets/source/phase1/tree-lod-receipt.json'
+      - '.github/workflows/validate-tree-lods.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-tree-lods:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Validate deterministic LOD geometry
+        run: node --experimental-strip-types --test scripts/check-tree-lods.mjs
+      - name: Export tree LOD GLBs
+        run: node --experimental-strip-types scripts/export-tree-lods.mjs
+      - name: Strict-check LOD1 GLB
+        run: node scripts/check-glb.mjs public/assets/environment/tree_central_europe_lod1.glb --min-tris 6000 --max-tris 8000 --require-normals --require-uv0
+      - name: Strict-check LOD2 GLB
+        run: node scripts/check-glb.mjs public/assets/environment/tree_central_europe_lod2.glb --min-tris 1500 --max-tris 2500 --require-normals --require-uv0
+      - name: Record deterministic file evidence
+        run: |
+          wc -c public/assets/environment/tree_central_europe_lod1.glb
+          sha256sum public/assets/environment/tree_central_europe_lod1.glb
+          wc -c public/assets/environment/tree_central_europe_lod2.glb
+          sha256sum public/assets/environment/tree_central_europe_lod2.glb
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tree-lod-candidate-glbs
+          path: |
+            public/assets/environment/tree_central_europe_lod1.glb
+            public/assets/environment/tree_central_europe_lod2.glb
+          retention-days: 7
