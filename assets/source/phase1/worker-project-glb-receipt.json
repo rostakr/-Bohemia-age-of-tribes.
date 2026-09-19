@@ -53,8 +53,10 @@
     "rig_required_for_milestone": false
   },
   "validation": {
-    "workflow_run": 35410565353,
-    "artifact_id": 10573896330,
+    "structural_workflow_run": 35410565353,
+    "runtime_workflow_run": 35410760368,
+    "runtime_artifact_id": 10573941723,
+    "runtime_artifact_sha256": "b1cb804d0357b4c72e745f33b686b36ff8c14e2de3faf979d2d4c74ce533f94b",
     "geometry_tests": "2/2 passed",
     "determinism": "passed",
     "finite_attributes": "passed",
@@ -63,13 +65,26 @@
     "uvs_inside_single_atlas": "passed",
     "strict_glb_intake": "passed",
     "normals": "1/1 primitive",
-    "uv0": "1/1 primitive"
+    "uv0": "1/1 primitive",
+    "vite_production_build": "passed",
+    "isolated_playcanvas_webgl2_preview": "passed",
+    "worker_resource_loaded": true,
+    "inhabitants_observed": 5,
+    "structures_observed": 3,
+    "renderer_failed": false,
+    "device_lost": false,
+    "screenshot": {
+      "path": "artifacts/phase1/project-worker-webgl2-1920x1080.png",
+      "bytes": 3168618,
+      "sha256": "c26786fb061f29aea00b68a1f44ce381968d1eb538a5586fc3680904a558896c",
+      "review": "No catastrophic mesh breakup, inverted scale or grounding failure observed. Five figures are readable as inhabitants at the RTS benchmark distance; art remains visibly stylized/coarse and is not treated as final visual acceptance."
+    }
   },
   "limitations": [
     "Static candidate; no rig or animation",
     "Base-color atlas only; no normal/roughness/AO maps",
-    "Procedural facial and cloth detail requires visual art-direction review",
-    "No isolated PlayCanvas runtime render has yet been counted as acceptance",
+    "Procedural facial and cloth detail remains visibly stylized and requires visual art-direction review",
+    "Historical acceptance remains pending independent QA",
     "Not wired into ADMITTED_MODELS or default benchmark"
   ],
   "admission": {
