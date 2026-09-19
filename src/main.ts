@@ -1,7 +1,7 @@
 import './style.css';
 import { CONFIG } from './config';
 import { CalibrationScene } from './render/calibration-scene';
-import { ADMITTED_MODELS, BenchmarkScene } from './render/benchmark-scene';
+import { BenchmarkScene } from './render/benchmark-scene';
 import type { ViewName } from './render/inspection-camera';
 import { createGameRuntime, type GameRuntime, type RuntimeSnapshot } from './render/runtime';
 import type { RuntimeScene } from './render/scene';
@@ -38,7 +38,6 @@ const parameters = new URLSearchParams(window.location.search);
 const debug = parameters.get('debug') === '1';
 const forceWebGL2 = parameters.get('renderer') === 'webgl2';
 const calibration = parameters.get('scene') === 'calibration';
-const suppliedStorehouse = parameters.get('storehouse') === 'supplied';
 const runningLabel = calibration ? 'Foundation running' : 'Scene running';
 
 let runtime: GameRuntime | undefined;
@@ -49,9 +48,7 @@ let mountGeneration = 0;
 
 function createScene(): RuntimeScene {
   if (calibration) return new CalibrationScene();
-  const benchmark = suppliedStorehouse
-    ? new BenchmarkScene({ ...ADMITTED_MODELS, storehouse: 'buildings/boii_storehouse_small.glb' })
-    : new BenchmarkScene();
+  const benchmark = new BenchmarkScene();
   activeBenchmarkScene = benchmark;
   return benchmark;
 }
