@@ -23,13 +23,29 @@ jobs:
       - run: npm ci
       - name: Full project validation with regenerated storehouse
         run: npm run validate
-      - name: Verify compact storehouse output
+      - name: Verify compact GLB and complete runtime payload
         shell: bash
         run: |
-          node -e "const {statSync}=require('node:fs'); const p='public/assets/buildings/boii_storehouse_small.glb'; const n=statSync(p).size; console.log('storehouse-bytes', n); if(n>900000) throw new Error('Storehouse GLB exceeds 900 kB compact-runtime ceiling: '+n)"
+          node - <<'NODE'
+          const { statSync } = require('node:fs');
+          const glb = statSync('public/assets/buildings/boii_storehouse_small.glb').size;
+          const files = [
+            'public/assets/materials/storehouse/weathered-oak-basecolor-runtime-512.jpg',
+            'public/assets/materials/storehouse/straw-thatch-basecolor-runtime-512.jpg',
+            'public/assets/materials/storehouse/clay-daub-basecolor-runtime-512.jpg',
+          ];
+          const textures = files.reduce((sum, file) => sum + statSync(file).size, 0);
+          const total = glb + textures;
+          console.log(JSON.stringify({ glb, textures, total }));
+          if (glb > 800000) throw new Error(`Storehouse GLB exceeds 800 kB target: ${glb}`);
+          if (total > 1110000) throw new Error(`Storehouse combined runtime payload exceeds 1.11 MB: ${total}`);
+          NODE
           npm run check:storehouse-glb
           sha256sum public/assets/buildings/boii_storehouse_small.glb
-          sha256sum assets/source/phase1/materials/runtime/*.jpg
+          sha256sum public/assets/materials/storehouse/*.jpg
+          test "$(sha256sum public/assets/materials/storehouse/weathered-oak-basecolor-runtime-512.jpg | cut -d' ' -f1)" = "c6abab6dd1959b80929657ffeda3a2425d6f3d965ae4d7f46ea45d774d1e8684"
+          test "$(sha256sum public/assets/materials/storehouse/straw-thatch-basecolor-runtime-512.jpg | cut -d' ' -f1)" = "0564f253d920fcdb6bc2e300687abe067912991b53e0e9fa72abdd1c7e5a8f0a"
+          test "$(sha256sum public/assets/materials/storehouse/clay-daub-basecolor-runtime-512.jpg | cut -d' ' -f1)" = "dc10ae700c143796fda36947149a4a47299b6e36a8f4cb1b2b3dd4b9c3f67ede"
       - name: Phase 0 WebGL2 browser smoke
         run: npm run smoke:webgl2
       - name: Phase 0 interaction smoke
@@ -50,7 +66,9 @@ jobs:
           name: compact-storehouse-current-baseline
           path: |
             public/assets/buildings/boii_storehouse_small.glb
+            public/assets/materials/storehouse/*.jpg
             assets/source/phase1/storehouse-glb-receipt.json
+            assets/source/phase1/materials/runtime-basecolor-receipt.json
             artifacts/phase1/phase1-webgl2-1920x1080.png
             artifacts/phase1/supplied-storehouse-webgl2-1920x1080.png
             artifacts/phase1/supplied-storehouse-closeup-1920x1080.png
