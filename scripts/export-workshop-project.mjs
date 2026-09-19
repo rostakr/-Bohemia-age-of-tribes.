@@ -35,20 +35,18 @@ let byteLength = 0;
 const textureRecords = [];
 const textureByMaterial = new Map();
 for (const [material, file] of [
-  ['timber', 'runtime/weathered-oak-basecolor-runtime-512.jpg'],
-  ['thatch', 'runtime/straw-thatch-basecolor-runtime-512.jpg'],
+  ['timber', 'weathered-oak-basecolor-runtime-512.jpg'],
+  ['thatch', 'straw-thatch-basecolor-runtime-512.jpg'],
 ]) {
-  const bytes = readFileSync(new URL(`../assets/source/phase1/materials/${file}`, import.meta.url));
-  const padding = (4 - byteLength % 4) % 4;
-  if (padding) { chunks.push(Buffer.alloc(padding)); byteLength += padding; }
-  const bufferView = gltf.bufferViews.push({ buffer: 0, byteOffset: byteLength, byteLength: bytes.length }) - 1;
-  chunks.push(bytes); byteLength += bytes.length;
-  const imageIndex = gltf.images.push({ name: file.split('/').at(-1), bufferView, mimeType: 'image/jpeg' }) - 1;
+  const bytes = readFileSync(new URL(`../assets/source/phase1/materials/runtime/${file}`, import.meta.url));
+  const imageIndex = gltf.images.push({ name: file, uri: `../materials/${file}` }) - 1;
   textureByMaterial.set(material, gltf.textures.push({ source: imageIndex, sampler: 0 }) - 1);
   textureRecords.push({
-    name: file,
+    name: `runtime/${file}`,
+    public_path: `public/assets/materials/${file}`,
+    uri: `../materials/${file}`,
     material,
-    embedded: true,
+    embedded: false,
     width: 512,
     height: 512,
     bytes: bytes.length,
@@ -135,6 +133,7 @@ const glb = Buffer.concat([
 ]);
 writeFileSync(output, glb);
 
+const textureBytes = textureRecords.reduce((sum, texture) => sum + texture.bytes, 0);
 const record = {
   asset: 'boii_carpentry_shed_project',
   source: 'src/render/workshop.ts',
@@ -144,13 +143,14 @@ const record = {
   output: 'public/assets/buildings/boii_carpentry_shed_project.glb',
   sha256: createHash('sha256').update(glb).digest('hex'),
   bytes: glb.length,
+  total_runtime_transfer_bytes: glb.length + textureBytes,
   stats: workshopStats(geometry),
   material_groups: materials.map(entry => entry[0]),
   units: 'metres',
   up_axis: 'Y',
   pivot: 'source origin; runtime normalization/ground contact still requires QA if admitted',
   textures: textureRecords,
-  texture_transfer_note: 'Original 1254px RGB PNGs remain unchanged. Embedded workshop base colors are documented 512px JPEG derivatives created with Pillow 12.3.0, LANCZOS resize, quality 90, 4:4:4, optimize+progressive.',
+  texture_transfer_note: 'Original 1254px RGB PNGs remain unchanged. Runtime workshop base colors are documented 512px JPEG derivatives created with Pillow 12.3.0, LANCZOS resize, quality 90, 4:4:4, optimize+progressive. They are served as external public assets because PlayCanvas/Chrome 152 headless could not decode the same progressive JPEG bytes from embedded GLB image bufferViews.',
   uv_strategy: {
     timber: 'existing project geometry UVs; known stretching remains a visual QA item',
     thatch: `projected ridge/slope coordinates at ${UV_REPEAT_METRES} m repeat`,
@@ -168,4 +168,4 @@ const record = {
   ],
 };
 writeFileSync(receipt, JSON.stringify(record, null, 2) + '\n');
-console.log(JSON.stringify({ output: record.output, bytes: record.bytes, stats: record.stats, sha256: record.sha256 }));
+console.log(JSON.stringify({ output: record.output, bytes: record.bytes, totalRuntimeTransferBytes: record.total_runtime_transfer_bytes, stats: record.stats, sha256: record.sha256 }));
