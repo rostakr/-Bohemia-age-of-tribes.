@@ -1,6 +1,10 @@
 # Asset Manifest
 
-This is the current authoritative Phase 1 asset-state summary. The exact pre-storehouse-admission long-form manifest is preserved byte-for-byte at `docs/archive/ASSET_MANIFEST_PRE_TEXTURED_STOREHOUSE.md`. Detailed generator/provider/license notes remain in the source receipts under `assets/source/phase1/` and in Git history.
+This is the current authoritative Phase 1 asset-state summary. The exact pre-storehouse-admission long-form manifest is preserved byte-for-byte at `docs/archive/ASSET_MANIFEST_PRE_TEXTURED_STOREHOUSE.md`. Detailed generator/provider/source notes remain in the source receipts under `assets/source/phase1/` and in Git history.
+
+## Project-owner supplied asset rights policy
+
+All current and future files supplied by the project owner are considered cleared for use in this project. Licence investigation, licence-text archival, provider-rights verification and licence-based QA/release blocking are not required for those files. Source/provider metadata may still be retained where useful for technical provenance and reproducibility. Historical, visual, technical, structural and performance QA remain fully applicable.
 
 ## Runtime engine / foundation
 
@@ -62,7 +66,7 @@ Detailed source/export/material evidence:
 
 ## Supplied workshop / worker — provenance only, not runtime admission
 
-The Astra/content handoff also supplied workshop and adult-worker GLBs. They are **not admitted** to canonical runtime paths.
+The Astra/content handoff also supplied workshop and adult-worker GLBs. Their usage rights are cleared by the project owner. They are **not admitted** to canonical runtime paths for technical/visual reasons only.
 
 - Supplied workshop: **89,778 tris**, above the current workshop target, and strict intake reports missing required `NORMAL`.
 - Supplied worker: **14,106 tris** is potentially efficient enough for RTS use, but strict intake reports missing required `NORMAL`; the previously reviewed textured preview was rejected for severe patchwork / mis-projected face, clothing and rear textures.
@@ -73,7 +77,7 @@ The Astra/content handoff also supplied workshop and adult-worker GLBs. They are
 
 For every future production candidate record:
 
-1. exact source/provider/version/acquisition route and rights evidence;
+1. source/provider/acquisition route where useful for provenance and reproducibility; project-owner-supplied assets require no further licence review;
 2. runtime destination and source receipt;
 3. units, Y-up orientation, ground-centred pivot and dimensions;
 4. vertices/triangles per LOD;
