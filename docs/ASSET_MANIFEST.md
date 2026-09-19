@@ -1,107 +1,87 @@
 # Asset Manifest
 
-This manifest records assets present through the current Phase 1 checkpoint. A missing row is not permission to use an asset, and no license is claimed for assets that have not been imported.
+This is the current authoritative Phase 1 asset-state summary. The exact pre-storehouse-admission long-form manifest is preserved byte-for-byte at `docs/archive/ASSET_MANIFEST_PRE_TEXTURED_STOREHOUSE.md`. Detailed generator/provider/license notes remain in the source receipts under `assets/source/phase1/` and in Git history.
 
-| Asset | Source / location | License | Format | Dimensions / mesh | Textures / maps | LOD | State | Culture | Usage |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| PlayCanvas 2.22.1 | npm `playcanvas`; https://github.com/playcanvas/engine | MIT; notice in `public/PLAYCANVAS-LICENSE.txt` | JS/TS declarations | Not applicable | Not applicable | Not applicable | Installed, pinned, bundled | Neutral | Runtime engine |
-| Calibration floor | Original code, `src/render/calibration-scene.ts` | Internal project work; no third-party art | Engine plane primitive | 20 × 20 m; engine-default topology | None; solid diagnostic material | None | Implemented greybox | Neutral | Disposable scale/render check |
-| Height marker | Original code, `src/render/calibration-scene.ts` | Internal project work; no third-party art | Engine box primitive | 0.45 × 1.8 × 0.45 m; engine-default topology | None; solid diagnostic material | None | Implemented greybox | Neutral | Disposable height/render check |
+## Runtime engine / foundation
 
-Asset directories are reserved as follows:
+| Asset | Source / license | Runtime role | State |
+| --- | --- | --- | --- |
+| PlayCanvas 2.22.1 | npm `playcanvas`, MIT; notice in `public/PLAYCANVAS-LICENSE.txt` | Sole 3D/gameplay engine | Pinned and integrated |
+| Calibration floor + 1.8 m marker | Original project code | Phase 0 renderer/scale diagnostics | Verified |
+| Terrain / stream / meadow | Original project code + admitted Poly Haven CC0 terrain maps | Phase 1 environment benchmark | Integrated; art polish/hardware QA still open |
 
-- Runtime: `public/assets/buildings`, `characters`, `environment`, `materials`, `animations`, and `ui`
-- Editable source files: `assets/source`
+## Admitted Phase 1 runtime assets / candidates
 
-No professional or commercial art asset is included in Phase 0.
+| Asset | Source / rights | Runtime form | Geometry / scale | Materials / textures | Admission state |
+| --- | --- | --- | --- | --- | --- |
+| Rectangular Boii dwelling | Original project concept converted through Microsoft TRELLIS.2 official free Hugging Face route; exact receipt in `assets/source/phase1/dwelling-receipt.json` | Source LOD0 GLB plus deterministic generated LOD1/LOD2 | LOD0 99,298 tris; LOD1 53,538 tris active in benchmark; LOD2 31,286 tris | Two embedded WebP material images preserved byte-for-byte by LOD generator | WIP runtime candidate; LOD1 visually reviewed at RTS distance; final historical/art + hardware thresholds open; `artGatePassed=false` |
+| **Small Boii storehouse** | Original project geometry `src/render/storehouse.ts`; reproducible export `scripts/export-storehouse.mjs`; project-owned generated material sources under `assets/source/phase1/materials/` | **`public/assets/buildings/boii_storehouse_small.glb`** | 15,910 vertices; 15,550 tris; bounds ~3.856 × 3.376 × 3.795 m; no LOD; file 9,933,356 bytes | Five materials. Timber/thatch/daub use three embedded PNG base colors; wattle/earth use factors. Geometry normals + UV0 present on all five primitives. No normal/roughness maps. | **Admitted as `project-owned-glb` WIP candidate.** Strict GLB intake + full runtime QA passed in run `35408681042`; evidence artifact `10573840636`. Final compression/PBR/LOD/historical/art/hardware acceptance open; `artGatePassed=false`. |
+| Boii carpentry/workshop shelter | Original project code `src/render/workshop.ts`; internal project work | Procedural PlayCanvas mesh | 22,876 vertices; 22,480 tris; ~5.24 × 3.607 × 3.675 m | Project-owned procedural materials | WIP candidate `procedural-project-owned`; production GLB slot remains null; final art/historical/hardware acceptance open |
+| Mature central-European deciduous tree | Original project code `src/render/tree.ts`; internal project work | Shared procedural mesh, 32 runtime instances | 8,980 vertices; 15,980 tris candidate mesh; ~11.107 × 13.290 × 11.403 m | Vertex-coloured summer foliage + bark material | WIP composition candidate; production GLB/LOD/botanical/hardware acceptance open |
+| Generic Boii adult inhabitant readability prototype | Original project code `src/render/inhabitant.ts`; internal project work | One shared procedural mesh cloned to five static entities | 910 vertices; 1,404 tris; ~1.717 m high | One vertex-coloured non-metallic material | Readability prototype only, not production character. Production GLB/atlas/rig/art acceptance remains open |
 
-## Phase 1 provider review
+## Environment texture assets
 
-One Phase 1 dwelling model is imported for evaluation. The GLB/model slots for storehouse, workshop, inhabitant and tree remain empty; project-owned procedural storehouse, workshop and deciduous-tree candidates are integrated separately and are not represented as admitted production models. On 2026-09-17,
-the live fal.ai catalog was reviewed for an image-to-3D route. `meshy/v7/image-to-3d`
-advertised textured PBR GLB output, controllable topology, and a price of USD 0.80 per
-generation. Five conversions would cost USD 4.00 before concept-image generation.
+| Asset | Source / license | Maps | State |
+| --- | --- | --- | --- |
+| `grass_path_2` | Poly Haven, CC0 | 1K diffuse / normal GL / roughness | Integrated |
+| `forest_ground_04` | Poly Haven, CC0 | 1K diffuse / normal GL / roughness | Integrated |
+| `brown_mud_02` | Poly Haven, CC0 | 1K diffuse / normal GL / roughness | Integrated |
 
-The Meshy route was not run. Fal's terms disclaim originality and non-infringement of
-output and state that third-party materials may have additional terms. Meshy's
-applicable output terms could not be retrieved through the available provider
-connection, so that specific route remains uncleared.
+Exact terrain hashes and dimensions are recorded in `assets/source/phase1/terrain-receipt.json`.
 
-- fal terms reviewed: https://fal.ai/legal/terms-of-service (last updated 2026-09-08)
-- Candidate endpoint: `meshy/v7/image-to-3d`
-- Candidate unit price observed: USD 0.80/generation
-- Candidate output: GLB plus base-color, metallic, roughness, and normal maps when PBR is enabled
-- Required clearance before use: written terms covering commercial redistribution of
-  generated meshes and embedded textures in a shipped game, modification, and team use
-- Production briefs: `assets/source/PHASE1_ASSET_REQUESTS.md`
+## Storehouse admission evidence
 
-### TRELLIS.2 follow-up
+Current storehouse GLB structural result:
 
-Microsoft's official TRELLIS.2 repository states that both the model and code are
-released under MIT, and its `LICENSE` grants use, modification, publication,
-distribution, sublicensing and sale of the software without a non-commercial
-restriction. The repository separately identifies `nvdiffrast` and `nvdiffrec` as
-dependencies under their own licenses; these are inference/rendering dependencies and
-are not shipped in a generated GLB. This makes TRELLIS.2 materially clearer than the
-Meshy route for generating from an original project-owned concept. As usual for
-generative output, neither Microsoft nor fal warrants originality or non-infringement.
+- file: `public/assets/buildings/boii_storehouse_small.glb`
+- size: **9,933,356 bytes**
+- triangles: **15,550**
+- vertices: **15,910**
+- primitives: **5**
+- materials: **5**
+- NORMAL: **5/5 primitives**
+- TEXCOORD_0: **5/5 primitives**
+- embedded images/textures: **3 / 3**
+- external dependencies: **0**
+- animations / skins: **0 / 0**
+- strict intake: **PASS**
+- runtime/load/render/remount/WebGPU/WebGL2/close-up QA: **PASS** in workflow `35408681042`
+- evidence artifact: `10573840636`, SHA-256 `eaee51e6987cf4e9d87c66c4d2865d846bf3a3e8753fba06881e6ff7dafb58e2`
 
-- Official repository: https://github.com/microsoft/TRELLIS.2
-- Official license: https://github.com/microsoft/TRELLIS.2/blob/main/LICENSE
-- Candidate fal endpoint: `fal-ai/trellis-2`
-- Candidate price observed 2026-09-17: USD 0.05/unit
-- Candidate output: textured GLB; 1K/2K/4K texture option; configurable decimation
-- Execution status: a project-owned dwelling concept was created locally. Automatic
-  approval review initially rejected its fal.ai upload as an external disclosure; the
-  user later granted broad external-service consent and specifically authorized the
-  exact image for the official Microsoft TRELLIS.2 Hugging Face Space. An authorized
-  fal.ai attempt then returned HTTP 403 `balance_exhausted`; no conversion ran and no
-  model was admitted. The current version is restricted to free tools and
-  noncommercial use. The free official Hugging Face conversion succeeded; exact input, settings, hashes and output checks are recorded in `assets/source/phase1/dwelling-receipt.json`.
+Visual review supports WIP admission: scale and raised support geometry are plausible against inhabitants/buildings; roof orientation is correct; ground contact/shadow is stable; no obvious UV collapse, gross seam or projection corruption was visible in the benchmark and close-up evidence.
 
-### Poly Haven tree follow-up
+Known limits: base-color-focused material pass, no normal/roughness maps, no storehouse LOD, no texture compression, and 9.93 MB is heavy for an object of this size. These remain Phase 1 art/performance work and do not justify `artGatePassed=true`.
 
-The official Poly Haven model API was queried on 2026-09-17. Its 521-model inventory
-contained no oak, birch, or beech tree model. Available broadleaf trees were identified
-as tropical or southern African species and were rejected for the Bohemian benchmark.
-No mismatched tree was imported. Poly Haven's assets remain a valid CC0 source when a
-botanically suitable model becomes available: https://polyhaven.com/license.
+Detailed source/export/material evidence:
 
-## Commercial asset gate
+- `assets/source/phase1/storehouse-receipt.json`
+- `assets/source/phase1/storehouse-glb-receipt.json`
+- `assets/source/phase1/materials/weathered-oak-receipt.json`
+- `assets/source/phase1/materials/roof-and-daub-receipt.json`
 
-Before purchase, import, or mass production, add a proposed entry and verify:
+## Supplied workshop / worker — provenance only, not runtime admission
 
-1. Store page, author, exact product/version, acquisition date, and source files.
-2. License terms for redistribution in a shipped browser game, team use, modification, and generated derivatives.
-3. Historical and regional fit with the applicable culture and period.
-4. Technical fit: format, scale, topology, materials, texture sizes, animation rig, performance, and WebGPU/WebGL2 behavior.
-5. Required edits, attribution, proof of purchase, and the approved production destination.
+The Astra/content handoff also supplied workshop and adult-worker GLBs. They are **not admitted** to canonical runtime paths.
 
-Do not infer a license from availability, and do not record a planned asset as owned or imported.
+- Supplied workshop: **89,778 tris**, above the current workshop target, and strict intake reports missing required `NORMAL`.
+- Supplied worker: **14,106 tris** is potentially efficient enough for RTS use, but strict intake reports missing required `NORMAL`; the previously reviewed textured preview was rejected for severe patchwork / mis-projected face, clothing and rear textures.
+- Original supplied files and intake metadata are retained under `assets/source/phase1/user-supplied/` for provenance and future reference.
+- Do not restore these files to `public/assets/...` or populate `ADMITTED_MODELS.workshop` / `ADMITTED_MODELS.inhabitant` without a new clean candidate and full structural + visual QA.
 
-For every future art row, record exact triangle counts per LOD, texture dimensions and material maps, units/pivot, culture, runtime destination and implementation state. Prefer GLB/glTF, metres, Y-up and a ground-centred pivot for freestanding objects. Rig orientation and sockets must be specified for characters. Treat KTX2/Meshopt/Draco as pipeline decisions requiring a verified runtime decoder path, not as already configured features.
+## Asset gate rules
 
-## Phase 1 admitted environment assets
+For every future production candidate record:
 
-| Asset | Source/license | Format/maps | Size | Geometry/LOD | Culture/use | State |
-| --- | --- | --- | --- | --- | --- | --- |
-| grass_path_2 | Poly Haven, CC0; https://polyhaven.com/a/grass_path_2 | JPG diffuse/normal GL/roughness | 1K maps | Texture; no geometry/LOD | Neutral, meadow ground | Downloaded, hash verified, integrated; GPU QA pending |
-| forest_ground_04 | Poly Haven, CC0; https://polyhaven.com/a/forest_ground_04 | JPG diffuse/normal GL/roughness | 1K maps | Texture; no geometry/LOD | Neutral, leaf litter | Downloaded, hash verified, integrated; GPU QA pending |
-| brown_mud_02 | Poly Haven, CC0; https://polyhaven.com/a/brown_mud_02 | JPG diffuse/normal GL/roughness | 1K maps | Texture; no geometry/LOD | Neutral, worn path | Downloaded, hash verified, integrated; GPU QA pending |
-| Landscape | Original scene code | Procedural mesh | 220 × 220 m | 64,800 triangles; no LOD | Neutral, terrain | Topology checks passed |
-| Stream | Original scene code | Procedural mesh + analytic normal map | 220 m; 128² normal data | 440 triangles; no LOD | Neutral, water | Integrated; visual QA pending |
-| Meadow ground cover | Original scene code | Spatially chunked grass ribbons | Variable clumps; see runtime diagnostics | 9 triangles/clump; frustum-cullable chunks; no LOD | Neutral, ground detail | Integrated; no claim of tree replacement |
-| Boii dwelling concept | Original generated concept, not third-party art | PNG, assets/source/phase1/boii-dwelling-concept.png | 1536 × 1024 | 2D only; no model/LOD | Boii, conversion input | Created and converted through authorized free official Hugging Face route; not historical validation |
-| Rectangular Boii dwelling | Original concept converted with Microsoft TRELLIS.2 official Hugging Face Space; MIT model/code reference | Source LOD0 GLB with embedded 2048 × 2048 WebP base-color and metallic-roughness maps; `EXT_texture_webp`; deterministic generated LOD1/LOD2 preserve embedded image bytes | Source 5,621,848 bytes; scaled bounds 8.002 × 4.5 × 5.443 m | LOD0 105,019 vertices / 99,298 tris preserved; generated LOD1 55,089 / 53,538; generated LOD2 34,205 / 31,286; generated GLBs are build outputs, not Git-tracked | Boii dwelling candidate; noncommercial current project use | LOD pipeline integrated for evaluation; benchmark uses generated LOD1. Deterministic GLB/hash/texture-preservation checks required in CI; historical/visual and actual-hardware acceptance remain open; `artGatePassed=false`. |
+1. exact source/provider/version/acquisition route and rights evidence;
+2. runtime destination and source receipt;
+3. units, Y-up orientation, ground-centred pivot and dimensions;
+4. vertices/triangles per LOD;
+5. texture dimensions and exact map set;
+6. UV/NORMAL/tangent requirements as applicable;
+7. external dependencies and compression/decoder requirements;
+8. historical/regional fit;
+9. WebGL2/WebGPU/runtime/lifecycle evidence;
+10. actual-hardware performance before final LOD thresholds are selected.
 
-## Phase 1 internal content candidates
-
-| Candidate | Source/license | Runtime form | Dimensions | Geometry/LOD | Materials | Culture/use | State |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Small Boii storehouse | Original project code `src/render/storehouse.ts`; internal project work, no third-party art | Deterministic procedural PlayCanvas mesh; no external textures | Overall bounds 3.856 × 3.376 × 3.795 m including roof overhang; raised structural platform ~3.15 × 3.15 m | 15,910 vertices; 15,550 triangles; no LOD | Five solid non-metallic groups: weathered oak, hazel wattle, pale clay daub, straw thatch, packed earth | Boii / Late La Tène small raised storage candidate | Integrated as explicit `procedural-project-owned` WIP candidate; geometry tests, 3/3 lifecycle remount and software-WebGL2 screenshot passed. `ADMITTED_MODELS.storehouse` remains null; visual, historical and actual-hardware performance acceptance pending; `artGatePassed=false`. |
-| Boii carpentry/workshop shelter | Original project code `src/render/workshop.ts`; internal project work, no third-party art | Deterministic procedural PlayCanvas mesh; no external textures | Overall bounds 5.24 × 3.607 × 3.675 m including roof overhang | 22,876 vertices; 22,480 triangles; no LOD | Four groups: weathered oak, straw thatch, packed earth, worked iron | Boii / Late La Tène open-sided craft shelter candidate | Integrated as explicit `procedural-project-owned` WIP candidate; 15/15 Node checks, 3/3 lifecycle remount and software-WebGL2 screenshot passed. Includes bench, trestles, split timber and restrained axe/chisel/gouge silhouettes. `ADMITTED_MODELS.workshop` remains null; visual, historical and actual-hardware performance acceptance pending; `artGatePassed=false`. |
-| Mature central-European deciduous tree | Original project code `src/render/tree.ts`; internal project work, no third-party art | Deterministic shared procedural PlayCanvas meshes; no external textures; vertex-coloured foliage | Overall bounds 11.107 × 13.290 × 11.403 m at base scale | 8,980 vertices; 15,980 triangles at LOD0; 32 shared-mesh runtime instances; LOD1/LOD2 plan documented in receipt | Two groups: bark and summer foliage | South/central Bohemian broadleaf forest-edge composition candidate | Integrated as explicit `procedural-project-owned` WIP candidate; 17/17 Node checks, 3/3 lifecycle remount, software WebGPU regression and software-WebGL2 screenshot passed. `ADMITTED_MODELS.tree` remains null; botanical/visual/historical and actual-hardware performance acceptance pending; `artGatePassed=false`. |
-
-| Generic Boii adult inhabitant readability prototype | Original project code `src/render/inhabitant.ts`; internal project work; no third-party mesh or texture | One shared procedural PlayCanvas mesh with vertex colours, cloned to five static benchmark inhabitants | Measured bounds 0.840 × 1.717 × 0.395 m | 910 vertices; 1,404 triangles per shared prototype; no rig/LOD. **Prototype deviation:** production brief remains 25k–50k triangles with one 2K atlas | One vertex-coloured non-metallic material | Boii / Late La Tène generic adult worker readability study | Integrated only as `procedural-project-owned-readability-prototype`; five static figures are intended to prove settlement scale/readability, not production character quality. `ADMITTED_MODELS.inhabitant` remains null; production GLB, visual/historical and actual-hardware acceptance remain pending; `artGatePassed=false`. |
-
-Exact terrain paths, dimensions, published MD5 and SHA256 are recorded in `assets/source/phase1/terrain-receipt.json`. Exact dwelling generation settings, source hashes, geometry and validation are recorded in `assets/source/phase1/dwelling-receipt.json`; deterministic generated LOD settings/hashes/evidence are recorded in `assets/source/phase1/dwelling-lod-receipt.json`. Exact procedural storehouse source, deterministic seed, geometry statistics and CI evidence are recorded in `assets/source/phase1/storehouse-receipt.json`. Exact procedural workshop source, deterministic seed, geometry statistics and CI evidence are recorded in `assets/source/phase1/workshop-receipt.json`. Exact procedural tree source, geometry/placement seeds, LOD plan and CI evidence are recorded in `assets/source/phase1/tree-receipt.json`. Exact inhabitant prototype scope, production-brief deviation and reconciliation QA are recorded in `assets/source/phase1/inhabitant-study-receipt.json`. All images are retained at acquired resolution. The dwelling concept is a 2D design, not a rendered game screenshot. Its preview does not prove final mesh quality.
+A generated/source asset is not final production art merely because it imports and renders. `artGatePassed=false` remains authoritative until the remaining Phase 1 art, historical and hardware gates are explicitly satisfied or waived.
