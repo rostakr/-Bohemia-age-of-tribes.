@@ -11,6 +11,7 @@ Status: **PASS for WIP runtime admission; final art gate remains open.**
 - Runtime: 22/22 Node tests, production build, Phase 0 regressions, 3/3 remount, software WebGPU, Phase 1 WebGL2, admission and close-up smokes all passed.
 - Visual review: scale and raised grounding are plausible in the benchmark; roof orientation is correct; no obvious UV collapse, gross seam or projection corruption was visible.
 - Limits: base-color-focused material pass only; no normal/roughness maps, no storehouse LOD, no texture compression; 9.93 MB is heavy for the object size; actual desktop-GPU performance and final historical/art acceptance remain pending.
+- Pre-admission long-form state/manifest were preserved as exact Git blobs under `docs/archive/` before the final documentation normalization.
 
 The supplied workshop and supplied adult-worker GLBs are **not admitted to runtime**. Their originals remain under `assets/source/phase1/user-supplied/` for provenance. The workshop exceeds the target budget and lacks required normals; the worker lacks required normals and its earlier textured preview was visually rejected for projection artifacts.
 
