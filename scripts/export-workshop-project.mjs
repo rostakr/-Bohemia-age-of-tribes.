@@ -2,12 +2,15 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { calculateNormals } from 'playcanvas';
-import { createWorkshopGeometry, workshopStats } from '../src/render/workshop.ts';
+import {
+  createWorkshopGeometry,
+  workshopStats,
+  WORKSHOP_UV_REPEAT_METRES,
+} from '../src/render/workshop.ts';
 
 const output = new URL('../public/assets/buildings/boii_carpentry_shed_project.glb', import.meta.url);
 const receipt = new URL('../assets/source/phase1/workshop-project-glb-receipt.json', import.meta.url);
 const geometry = createWorkshopGeometry();
-const UV_REPEAT_METRES = 0.65;
 const materials = [
   ['timber', [0.32, 0.21, 0.12], 0.955, 0],
   ['thatch', [0.50, 0.38, 0.16], 0.985, 0],
@@ -82,7 +85,7 @@ for (const [name, color, roughness, metallic] of materials) {
   let uvs = mesh.uvs;
   if (name === 'thatch') {
     // Workshop roof ridge runs along X. Keep straw scale stable across both roof planes;
-    // V follows approximate slope distance from the ridge. This is a project UV pass,
+    // V follows approximate slope distance from the ridge. This remains a project UV pass,
     // not a claim of physically scanned material coordinates.
     const halfRun = 1.62;
     const slope = Math.hypot(halfRun, 3.48 - 2.30);
@@ -90,7 +93,10 @@ for (const [name, color, roughness, metallic] of materials) {
     for (let i = 0; i < mesh.positions.length; i += 3) {
       const x = mesh.positions[i];
       const z = mesh.positions[i + 2];
-      uvs.push(x / UV_REPEAT_METRES, Math.abs(z) * slope / halfRun / UV_REPEAT_METRES);
+      uvs.push(
+        x / WORKSHOP_UV_REPEAT_METRES,
+        Math.abs(z) * slope / halfRun / WORKSHOP_UV_REPEAT_METRES,
+      );
     }
   }
   const material = gltf.materials.push({
@@ -151,18 +157,19 @@ const record = {
   pivot: 'source origin; runtime normalization/ground contact still requires QA if admitted',
   textures: textureRecords,
   uv_strategy: {
-    timber: 'existing project geometry UVs; known stretching remains a visual QA item',
-    thatch: `projected ridge/slope coordinates at ${UV_REPEAT_METRES} m repeat`,
-    earth: 'solid factor; UV0 retained for structural compatibility',
-    iron: 'solid metallic/roughness factors; UV0 retained for structural compatibility',
+    repeat_metres: WORKSHOP_UV_REPEAT_METRES,
+    timber_boxes: 'local physical face dimensions divided by repeat scale',
+    timber_cylinders: 'circumference-scaled U, member-length V and duplicated seam vertices',
+    thatch: `projected ridge/slope coordinates at ${WORKSHOP_UV_REPEAT_METRES} m repeat`,
+    earth: 'physical box-face UVs retained for structural compatibility; solid factor at export',
+    iron: 'physical box-face UVs retained for structural compatibility; solid metallic/roughness factors',
   },
   lod: 'none',
   status: 'Project-owned QA candidate only; not admitted to canonical runtime',
   validation: 'Must pass strict GLB structure check and separate browser/visual/historical QA before any runtime admission',
   limitations: [
     'Timber/thatch use base-color textures only; no normal or roughness maps',
-    'Timber UVs still require a production unwrap/physical repeat pass',
-    'Original source PNGs are embedded unchanged; transfer size remains unoptimized',
+    'Original source PNGs are embedded unchanged; transfer size remains unoptimized on this branch',
     'No LOD, rig or animation applies; this is a static structure',
   ],
 };
