@@ -40,9 +40,9 @@ Reasons remain unchanged:
 
 Do not restore either rejected GLB to `public/assets/...` merely by synthesizing normals. A new candidate must pass structural and visual QA.
 
-## Current-main QA evidence
+## Verified runtime-baseline QA evidence
 
-Verified current `main` SHA: `47728da23ae73a01b298b935d59a431bc6088548`.
+The runtime/content baseline used for the final storehouse admission evidence is SHA `47728da23ae73a01b298b935d59a431bc6088548`.
 
 GitHub Actions workflow run `35410230067`: **PASS**.
 
@@ -87,6 +87,8 @@ Files:
 - `supplied-storehouse-webgl2-1920x1080.png`;
 - `supplied-storehouse-closeup-1920x1080.png`.
 
+The later docs-only evidence correction did not change runtime code or assets. PR #61 head workflow `35414533581` passed the complete validation suite, merge commit `dad5e3babb40990e5e643b348c35c3c3572acad4` was created, and post-merge main workflow `35414735338` also passed the complete validation suite.
+
 ## Visual QA verdict
 
 **PASS for WIP runtime admission only.**
@@ -107,9 +109,9 @@ Therefore `artGatePassed=false` remains authoritative.
 
 ## Git history / integration
 
-The storehouse-only reconciliation was merged through PR #51. The subsequent PR #57 removed redundant storehouse query-route plumbing and restored the scoped working agreement without changing storehouse admission or QA behavior.
+The storehouse-only reconciliation was merged through PR #51. The subsequent PR #57 removed redundant storehouse query-route plumbing and restored the scoped working agreement without changing storehouse admission or QA behavior. PR #61 corrected stale QA documentation only; it did not change runtime behavior or assets.
 
-Do not replay the old Astra handoff wholesale and do not reset to the pre-reconciliation `b34a449...` baseline. Continue from current `main` and reconcile any future work against the current head first.
+Do not replay the old Astra handoff wholesale and do not reset to the pre-reconciliation `b34a449...` baseline. Continue from the actual current `main` and reconcile any future work against the current head first.
 
 ## Next Phase 1 work
 

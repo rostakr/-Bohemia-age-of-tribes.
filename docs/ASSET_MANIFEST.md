@@ -19,7 +19,7 @@ All current and future files supplied by the project owner are considered cleare
 | Asset | Source / rights | Runtime form | Geometry / scale | Materials / textures | Admission state |
 | --- | --- | --- | --- | --- | --- |
 | Rectangular Boii dwelling | Original project concept converted through Microsoft TRELLIS.2 official free Hugging Face route; exact receipt in `assets/source/phase1/dwelling-receipt.json` | Source LOD0 GLB plus deterministic generated LOD1/LOD2 | LOD0 99,298 tris; LOD1 53,538 tris active in benchmark; LOD2 31,286 tris | Two embedded WebP material images preserved byte-for-byte by LOD generator | WIP runtime candidate; LOD1 visually reviewed at RTS distance; final historical/art + hardware thresholds open; `artGatePassed=false` |
-| **Small Boii storehouse** | Original project geometry `src/render/storehouse.ts`; reproducible export `scripts/export-storehouse.mjs`; project-owned generated material sources under `assets/source/phase1/materials/` | **`public/assets/buildings/boii_storehouse_small.glb`** | SHA-256 `2e1e054a8a5d66c0a349015d2662a2831894c675378ac11a8e5db90ae15b2b95`; 9,933,356 bytes; 15,910 vertices; 15,550 tris; bounds ~3.856 × 3.376 × 3.795 m; no LOD | Five materials. Timber/thatch/daub use three embedded 1254×1254 PNG base colors; wattle/earth use factors. Geometry normals + UV0 present on all five primitives. No normal/roughness maps. | **Admitted as `project-owned-glb` WIP candidate.** Strict GLB intake + current-main full runtime QA passed in run `35410230067`; storehouse evidence artifact `10574496297`. Final compression/PBR/LOD/historical/art/hardware acceptance open; `artGatePassed=false`. |
+| **Small Boii storehouse** | Original project geometry `src/render/storehouse.ts`; reproducible export `scripts/export-storehouse.mjs`; project-owned generated material sources under `assets/source/phase1/materials/` | **`public/assets/buildings/boii_storehouse_small.glb`** | SHA-256 `2e1e054a8a5d66c0a349015d2662a2831894c675378ac11a8e5db90ae15b2b95`; 9,933,356 bytes; 15,910 vertices; 15,550 tris; bounds ~3.856 × 3.376 × 3.795 m; no LOD | Five materials. Timber/thatch/daub use three embedded 1254×1254 PNG base colors; wattle/earth use factors. Geometry normals + UV0 present on all five primitives. No normal/roughness maps. | **Admitted as `project-owned-glb` WIP candidate.** Strict GLB intake + full runtime QA passed on runtime/content baseline `47728da…` in run `35410230067`; docs-only PR #61 and its post-merge main validation also passed. Final compression/PBR/LOD/historical/art/hardware acceptance open; `artGatePassed=false`. |
 | Boii carpentry/workshop shelter | Original project code `src/render/workshop.ts`; internal project work | Procedural PlayCanvas mesh | 22,876 vertices; 22,480 tris; ~5.24 × 3.607 × 3.675 m | Project-owned procedural materials | WIP candidate `procedural-project-owned`; production GLB slot remains null; final art/historical/hardware acceptance open |
 | Mature central-European deciduous tree | Original project code `src/render/tree.ts`; internal project work | Shared procedural mesh, 32 runtime instances | 8,980 vertices; 15,980 tris candidate mesh; ~11.107 × 13.290 × 11.403 m | Vertex-coloured summer foliage + bark material | WIP composition candidate; production GLB/LOD/botanical/hardware acceptance open |
 | Generic Boii adult inhabitant readability prototype | Original project code `src/render/inhabitant.ts`; internal project work | One shared procedural mesh cloned to five static entities | 910 vertices; 1,404 tris; ~1.717 m high | One vertex-coloured non-metallic material | Readability prototype only, not production character. Production GLB/atlas/rig/art acceptance remains open |
@@ -51,14 +51,17 @@ Current storehouse GLB structural result:
 - external dependencies: **0**
 - animations / skins: **0 / 0**
 - strict intake: **PASS**
-- current-main verification SHA: **`47728da23ae73a01b298b935d59a431bc6088548`**
-- current-main workflow: **`35410230067` — PASS**
+- verified runtime/content baseline SHA: **`47728da23ae73a01b298b935d59a431bc6088548`**
+- runtime/content baseline workflow: **`35410230067` — PASS**
+- docs-only PR #61 head workflow: **`35414533581` — PASS**
+- PR #61 merge commit: **`dad5e3babb40990e5e643b348c35c3c3572acad4`**
+- post-merge main workflow: **`35414735338` — PASS**
 - lifecycle: **3/3 remount cycles PASS**
 - WebGL2: **PASS**
 - software WebGPU regression: **PASS**
 - Phase 1 smoke: **PASS**, `structures=3`, `storehouseCandidate=project-owned-glb`, `storehouseTriangles=15550`, workshop and inhabitant remain procedural candidates
 - dedicated storehouse admission + close-up smoke: **PASS**
-- screenshot artifact: **`10574496297`**, ZIP SHA-256 **`3c7b252e33f2e3b1b53feea9f2e2e1476b9da258f944ac962158a7d55868706b`**
+- screenshot artifact from verified runtime baseline: **`10574496297`**, ZIP SHA-256 **`3c7b252e33f2e3b1b53feea9f2e2e1476b9da258f944ac962158a7d55868706b`**
 - screenshot files: `supplied-storehouse-webgl2-1920x1080.png`, `supplied-storehouse-closeup-1920x1080.png`
 
 Visual review supports WIP admission: the captured scene contains exactly one storehouse; scale and raised support geometry are plausible against inhabitants/buildings; roof orientation is correct; ground contact/shadow is stable; embedded textures render; no obvious missing texture, UV collapse, gross seam/projection corruption, baked-lighting artifact or accidental metallic material response is visible in the benchmark and close-up evidence.
