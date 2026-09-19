@@ -1,4 +1,5 @@
 name: Validate compact storehouse current baseline
+# QA retarget refresh: revalidate the unchanged storehouse candidate against qa/phase1-integration.
 
 on:
   pull_request:
