@@ -7,6 +7,7 @@ on:
       - 'assets/source/phase1/worker-project-glb-receipt.json'
       - 'scripts/check-project-adult-worker.mjs'
       - 'scripts/export-project-adult-worker.mjs'
+      - 'scripts/refine-project-adult-worker-glb.mjs'
       - 'scripts/browser-project-worker-smoke.mjs'
       - 'scripts/browser-project-worker-closeup.mjs'
       - 'src/main.ts'
@@ -28,7 +29,9 @@ jobs:
         run: node --experimental-strip-types --test scripts/check-project-adult-worker.mjs
       - name: Export worker GLB and 2K atlas
         run: node --experimental-strip-types scripts/export-project-adult-worker.mjs
-      - name: Strict-check project worker GLB
+      - name: Refine close-up proportions and regenerate normals
+        run: node scripts/refine-project-adult-worker-glb.mjs
+      - name: Strict-check refined project worker GLB
         run: node scripts/check-glb.mjs public/assets/characters/boii_adult_worker_project.glb --min-tris 25000 --max-tris 50000 --require-normals --require-uv0
       - name: Record deterministic file evidence
         run: |
