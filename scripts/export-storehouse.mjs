@@ -7,10 +7,9 @@ const source = new URL('../src/render/storehouse.ts', import.meta.url);
 const temporary = new URL('../src/render/storehouse.node-export.ts', import.meta.url);
 const output = new URL('../public/assets/buildings/boii_storehouse_small.glb', import.meta.url);
 const receipt = new URL('../assets/source/phase1/storehouse-glb-receipt.json', import.meta.url);
-// Node strip-types requires an explicit extension for this bundler-style import.
 writeFileSync(temporary, readFileSync(source, 'utf8').replace("from './landscape';", "from './landscape.ts';"), { flag: 'wx' });
 try {
-  const { createStorehouseGeometry, storehouseStats } = await import(temporary.href);
+  const { createStorehouseGeometry, storehouseStats, STOREHOUSE_UV_REPEAT_METRES } = await import(temporary.href);
   const geometry = createStorehouseGeometry();
   const materials = [
     ['timber', [0.34, 0.23, 0.13], 0.95],
@@ -21,29 +20,22 @@ try {
   ];
   const gltf = { asset: { version: '2.0', generator: 'BOHEMIA offline storehouse export' },
     scene: 0, scenes: [{ nodes: [0] }], nodes: [{ name: 'Boii small storehouse — WIP', mesh: 0 }],
-    meshes: [{ primitives: [] }], materials: [], buffers: [], bufferViews: [], accessors: [] };
+    meshes: [{ primitives: [] }], materials: [], buffers: [], bufferViews: [], accessors: [],
+    images: [], textures: [], samplers: [{ magFilter: 9729, minFilter: 9987, wrapS: 10497, wrapT: 10497 }] };
   const chunks = [];
   let byteLength = 0;
   const textureRecords = [];
   const textureByMaterial = new Map();
-  gltf.images = [];
-  gltf.textures = [];
-  gltf.samplers = [{ magFilter: 9729, minFilter: 9987, wrapS: 10497, wrapT: 10497 }];
   for (const [material, file] of [
-    ['timber', 'weathered-oak-basecolor.png'],
-    ['thatch', 'straw-thatch-basecolor.png'],
-    ['daub', 'clay-daub-basecolor.png'],
+    ['timber', 'weathered-oak-basecolor-runtime-512.jpg'],
+    ['thatch', 'straw-thatch-basecolor-runtime-512.jpg'],
+    ['daub', 'clay-daub-basecolor-runtime-512.jpg'],
   ]) {
-    const bytes = readFileSync(new URL(`../assets/source/phase1/materials/${file}`, import.meta.url));
-    const padding = (4 - byteLength % 4) % 4;
-    if (padding) { chunks.push(Buffer.alloc(padding)); byteLength += padding; }
-    const bufferView = gltf.bufferViews.push({ buffer: 0, byteOffset: byteLength, byteLength: bytes.length }) - 1;
-    chunks.push(bytes); byteLength += bytes.length;
-    const imageIndex = gltf.images.push({ name: file, bufferView, mimeType: 'image/png' }) - 1;
+    const bytes = readFileSync(new URL(`../assets/source/phase1/materials/runtime/${file}`, import.meta.url));
+    const imageIndex = gltf.images.push({ name: file, uri: `data:image/jpeg;base64,${bytes.toString('base64')}` }) - 1;
     textureByMaterial.set(material, gltf.textures.push({ source: imageIndex, sampler: 0 }) - 1);
-    textureRecords.push({ name: file, material, embedded: true,
-      width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20),
-      sha256: createHash('sha256').update(bytes).digest('hex') });
+    textureRecords.push({ name: `runtime/${file}`, material, embedded: true, encoding: 'data-uri', width: 512, height: 512,
+      bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') });
   }
   function accessor(values, width, type, componentType, target, bounds = false) {
     const padding = (4 - byteLength % 4) % 4;
@@ -62,16 +54,10 @@ try {
     }
     return gltf.accessors.push(entry) - 1;
   }
-  // PlayCanvas diffuse colors are sRGB; glTF baseColorFactor is linear.
   const linear = value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
   for (const [name, color, roughness] of materials) {
     const mesh = geometry[name];
     const texture = textureByMaterial.get(name);
-    // Continuous roof-space UVs: U follows the ridge, V follows the roof slope.
-    // Avoid rotating the straw with the individual box face UV conventions.
-    const uvs = name === 'thatch' ? mesh.positions.flatMap((value, index, positions) =>
-      index % 3 === 0 ? [positions[index + 2] / 0.65,
-        Math.abs(value) * Math.hypot(1.72, 1.2) / 1.72 / 0.65] : []) : mesh.uvs;
     const material = gltf.materials.push({ name, pbrMetallicRoughness: {
       baseColorFactor: texture !== undefined ? [1, 1, 1, 1] : [...color.map(linear), 1],
       ...(texture !== undefined ? { baseColorTexture: { index: texture, texCoord: 0 } } : {}),
@@ -80,7 +66,7 @@ try {
     gltf.meshes[0].primitives.push({ mode: 4, material, attributes: {
       POSITION: accessor(new Float32Array(mesh.positions), 3, 'VEC3', 5126, 34962, true),
       NORMAL: accessor(new Float32Array(calculateNormals(mesh.positions, mesh.indices)), 3, 'VEC3', 5126, 34962),
-      TEXCOORD_0: accessor(new Float32Array(uvs), 2, 'VEC2', 5126, 34962),
+      TEXCOORD_0: accessor(new Float32Array(mesh.uvs), 2, 'VEC2', 5126, 34962),
     }, indices: accessor(new Uint32Array(mesh.indices), 1, 'SCALAR', 5125, 34963) });
   }
   gltf.buffers.push({ byteLength });
@@ -100,13 +86,20 @@ try {
     sha256: createHash('sha256').update(glb).digest('hex'), bytes: glb.length,
     stats: storehouseStats(geometry), material_groups: materials.map(x => x[0]),
     units: 'metres', up_axis: 'Y', pivot: 'ground-centred source origin',
+    uv_strategy: {
+      repeat_metres: STOREHOUSE_UV_REPEAT_METRES,
+      boxes: 'physical-size UVs per face; repeat sampler preserves approximately constant texel density',
+      cylinders: 'duplicated U=0/U=1 seam vertices; V follows member length',
+      roof: 'local Z/ridge versus local X/slope UV orientation from source geometry',
+    },
     textures: textureRecords,
-    lod: 'none', status: 'Exported WIP candidate; used by benchmark storehouse slot',
-    validation: 'No tests or renderer QA run; delegated to external QA',
-    limitations: ['Timber, thatch and daub have base-color textures; wattle and earth use solid factors',
-      'No normal or roughness maps; generated albedo tileability and shading require review',
-      'Existing cylinder seam and box UVs need a production unwrap to avoid grain stretching',
-      'Roughness mapped from source gloss; visual parity requires external review'] };
+    texture_transfer_note: 'Original 1254px RGB PNGs remain unchanged. Runtime base colors are documented 512px JPEG derivatives created with Pillow 12.3.0, LANCZOS resize, quality 90, 4:4:4, optimize+progressive. JPEGs are stored as self-contained data URIs: strict intake forbids external dependencies, while PlayCanvas/Chrome 152 headless could not decode the same JPEG bytes from GLB image bufferViews.',
+    lod: 'none', status: 'Exported WIP candidate; QA-only supplied-storehouse preview route',
+    validation: 'Exporter output requires strict GLB check plus browser/visual QA after regeneration',
+    limitations: ['Timber, thatch and daub have lossy base-color runtime derivatives; wattle and earth use solid factors',
+      'No normal or roughness maps; generated albedo tileability and baked shading require review',
+      '512px runtime base colors are appropriate for the current RTS benchmark, not close-up final production acceptance',
+      'Roughness uses scalar factors only; visual parity requires external review'] };
   writeFileSync(receipt, JSON.stringify(record, null, 2) + '\n');
-  console.log(JSON.stringify({ output: record.output, bytes: record.bytes, stats: record.stats }));
+  console.log(JSON.stringify({ output: record.output, bytes: record.bytes, stats: record.stats, uv: record.uv_strategy }));
 } finally { rmSync(temporary, { force: true }); }
