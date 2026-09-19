@@ -73,54 +73,54 @@ for (let i = 0; i < vertexCount; i++) {
     shoes++;
   }
 
-  // Pull spherical shoulder caps firmly into the tunic silhouette instead of armour-like bulges.
+  // Merge spherical shoulder caps into the tunic silhouette instead of armour-like bulges.
   if (isTunic(u, v) && y > 1.22 && y < 1.48 && Math.abs(x) > 0.20) {
     const sign = Math.sign(x) || 1;
-    x = sign * (0.20 + (Math.abs(x) - 0.20) * 0.30);
-    y = 1.34 + (y - 1.34) * 0.78;
-    z *= 0.58;
+    x = sign * (0.20 + (Math.abs(x) - 0.20) * 0.14);
+    y = 1.34 + (y - 1.34) * 0.68;
+    z *= 0.38;
     shoulders++;
   }
 
   // Smaller hands, still readable at RTS distance.
   if (isSkin(u, v) && y > 0.68 && y < 0.94 && Math.abs(x) > 0.26) {
     const cx = x < 0 ? -0.360 : 0.360;
-    x = cx + (x - cx) * 0.68;
-    y = 0.815 + (y - 0.815) * 0.78;
-    z = 0.068 + (z - 0.068) * 0.68;
+    x = cx + (x - cx) * 0.62;
+    y = 0.815 + (y - 0.815) * 0.72;
+    z = 0.068 + (z - 0.068) * 0.62;
     hands++;
   }
 
-  // Collapse the separate beard sphere into a small flat chin patch.
+  // Hide the separate beard sphere inside the head; beard is not required for this milestone.
   if (isHair(u, v) && y > 1.43 && y < 1.60 && z > 0.075) {
-    x *= 0.50;
-    y = 1.520 + (y - 1.525) * 0.38;
-    z = 0.096 + (z - 0.116) * 0.15;
+    x *= 0.25;
+    y = 1.515 + (y - 1.525) * 0.25;
+    z = 0.030 + (z - 0.116) * 0.05;
     beard++;
   }
 
-  // Keep ears close to the head silhouette rather than separate large ovals.
+  // Embed ears into the head silhouette rather than separate ovals.
   if (isSkin(u, v) && y > 1.54 && y < 1.64 && Math.abs(x) > 0.108 && z < 0.055) {
     const sign = Math.sign(x) || 1;
-    x = sign * (0.108 + (Math.abs(x) - 0.108) * 0.25);
-    y = 1.590 + (y - 1.590) * 0.65;
-    z = 0.018 + (z - 0.018) * 0.42;
+    x = sign * (0.105 + (Math.abs(x) - 0.108) * 0.08);
+    y = 1.590 + (y - 1.590) * 0.42;
+    z = 0.016 + (z - 0.018) * 0.25;
     ears++;
   }
 
   // Restrain the procedural nose/front-of-face protrusion.
   if (isSkin(u, v) && y > 1.54 && y < 1.63 && Math.abs(x) < 0.045 && z > 0.105) {
-    x *= 0.70;
-    y = 1.585 + (y - 1.585) * 0.72;
-    z = 0.104 + (z - 0.111) * 0.50;
+    x *= 0.62;
+    y = 1.585 + (y - 1.585) * 0.62;
+    z = 0.098 + (z - 0.111) * 0.36;
     face++;
   }
 
-  // Keep brows as small embedded hair accents rather than a visor-like bar.
+  // Hide rectangular brow geometry inside the hair/head mass; texture can carry the cue later.
   if (isHair(u, v) && y > 1.60 && y < 1.635 && z > 0.095) {
-    x *= 0.46;
-    y = 1.615 + (y - 1.615) * 0.50;
-    z = 0.101 + (z - 0.111) * 0.20;
+    x *= 0.28;
+    y = 1.615 + (y - 1.615) * 0.30;
+    z = 0.040 + (z - 0.111) * 0.08;
     brows++;
   }
 
@@ -176,7 +176,7 @@ receipt.art_refinement = {
   normals_regenerated: true,
   bounds_regenerated: true,
   transformed_vertices: { shoes, shoulders, hands, beard, ears, face, brows },
-  purpose: 'Reduce close-up toy-like exaggeration while preserving the RTS silhouette and 26,140-triangle budget',
+  purpose: 'Remove close-up toy-like protrusions while preserving the RTS silhouette and 26,140-triangle budget',
 };
 writeFileSync(receiptFile, JSON.stringify(receipt, null, 2) + '\n');
 
