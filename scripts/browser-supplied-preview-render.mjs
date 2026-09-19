@@ -103,6 +103,13 @@ const profileDir = mkdtempSync(join(tmpdir(), 'bohemia-supplied-preview-'));
 let chrome;
 let cdp;
 
+async function screenshot(name) {
+  const shot = await cdp.send('Page.captureScreenshot', { format: 'png', fromSurface: true, captureBeyondViewport: false });
+  const screenshotPath = resolve(artifactsDir, name);
+  writeFileSync(screenshotPath, Buffer.from(shot.data, 'base64'));
+  return screenshotPath;
+}
+
 async function capture(kind, expectedTriangles) {
   const url = `http://${host}:${previewPort}/?scene=supplied-preview&asset=${kind}&renderer=webgl2&debug=1`;
   await cdp.send('Page.navigate', { url });
@@ -129,7 +136,7 @@ async function capture(kind, expectedTriangles) {
     ) break;
     await sleep(250);
   }
-  const diagnostics = state?.diagnostics;
+  let diagnostics = state?.diagnostics;
   if (!diagnostics || diagnostics.previewAsset !== kind || diagnostics.modelLoaded !== true || Number(diagnostics.previewTriangles) !== expectedTriangles) {
     throw new Error(`Timed out waiting for ${kind} supplied preview: ${JSON.stringify(state)}`);
   }
@@ -140,15 +147,30 @@ async function capture(kind, expectedTriangles) {
     const diagnostics = document.querySelector('#diagnostics'); if (diagnostics) diagnostics.style.display = 'none';
     return true;
   })()`);
-  const shot = await cdp.send('Page.captureScreenshot', { format: 'png', fromSurface: true, captureBeyondViewport: false });
-  const screenshotPath = resolve(artifactsDir, `supplied-${kind}-1920x1080.png`);
-  writeFileSync(screenshotPath, Buffer.from(shot.data, 'base64'));
+  state = await evaluate(cdp, stateExpression);
+  diagnostics = state?.diagnostics ?? diagnostics;
+  const frontPath = await screenshot(`supplied-${kind}-front-1920x1080.png`);
+  const frontYaw = Number(diagnostics?.previewYawDegrees ?? 0);
+
+  // The QA scene rotates at 20 degrees/second. Nine seconds gives an opposite-side view
+  // while preserving identical camera/light/material conditions.
+  await sleep(9000);
+  state = await evaluate(cdp, stateExpression);
+  diagnostics = state?.diagnostics;
+  if (!diagnostics || diagnostics.previewAsset !== kind || diagnostics.modelLoaded !== true || diagnostics.failed !== false) {
+    throw new Error(`${kind} preview became unhealthy before rear capture: ${JSON.stringify(state)}`);
+  }
+  const rearPath = await screenshot(`supplied-${kind}-rear-1920x1080.png`);
+
   console.log(JSON.stringify({
     kind,
     tick: diagnostics.tick,
     drawCalls: diagnostics.drawCalls,
     previewTriangles: diagnostics.previewTriangles,
-    screenshot: screenshotPath,
+    frontYaw,
+    rearYaw: diagnostics.previewYawDegrees,
+    frontScreenshot: frontPath,
+    rearScreenshot: rearPath,
   }, null, 2));
 }
 
@@ -172,7 +194,7 @@ try {
 
   await capture('workshop', 89_778);
   await capture('worker', 14_106);
-  console.log('Supplied normals preview render smoke passed.');
+  console.log('Supplied normals preview multi-angle render smoke passed.');
 } finally {
   cdp?.close();
   await stopProcess(chrome);
