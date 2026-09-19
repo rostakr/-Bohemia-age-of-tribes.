@@ -16,7 +16,9 @@ const atlasTiles = [
   { name: 'leather', col: 2, row: 0, rgb: [72, 42, 24] },
   { name: 'skin', col: 0, row: 1, rgb: [176, 126, 92] },
   { name: 'hair', col: 1, row: 1, rgb: [54, 36, 24] },
-  { name: 'accent', col: 2, row: 1, rgb: [94, 100, 94] },
+  // The former accent slot is dedicated to the face. The tiny buckle is remapped to
+  // leather during deterministic polish so this tile can carry non-protruding features.
+  { name: 'face', col: 2, row: 1, rgb: [176, 126, 92] },
 ];
 
 function crc32(buffer) {
@@ -39,6 +41,12 @@ function pngChunk(type, data) {
   return result;
 }
 
+function ellipse(u, v, cx, cy, rx, ry) {
+  const dx = (u - cx) / rx;
+  const dy = (v - cy) / ry;
+  return dx * dx + dy * dy <= 1;
+}
+
 function makeAtlasPng() {
   const width = ATLAS_SIZE, height = ATLAS_SIZE;
   const stride = width * 3 + 1;
@@ -54,6 +62,8 @@ function makeAtlasPng() {
       let [r, g, b] = tile.rgb;
       const localX = Math.floor(x - tile.col * third);
       const localY = y - tile.row * half;
+      const localU = Math.max(0, Math.min(1, localX / third));
+      const localV = Math.max(0, Math.min(1, localY / half));
       if (tile.name === 'tunic' || tile.name === 'trousers') {
         if (localY % 24 === 12) { r -= 10; g -= 10; b -= 10; }
         if (localX % 28 === 14) { r += 7; g += 7; b += 7; }
@@ -61,6 +71,28 @@ function makeAtlasPng() {
         r -= 12; g -= 12; b -= 12;
       } else if (tile.name === 'hair' && (localX + Math.floor(localY / 3)) % 16 === 0) {
         r -= 10; g -= 10; b -= 10;
+      } else if (tile.name === 'face') {
+        // Head UVs are remapped here by the polish script. U≈0.25 is the front centre;
+        // V runs from chin/neck toward crown. Features are texture-only to avoid the
+        // primitive-like facial protrusions rejected by QA.
+        const hairLine = 0.74 + 0.018 * Math.sin(localU * Math.PI * 10);
+        if (localV >= hairLine) {
+          [r, g, b] = [58, 39, 27];
+          if ((localX + Math.floor(localY / 4)) % 19 === 0) { r -= 7; g -= 7; b -= 7; }
+        }
+        const leftEye = ellipse(localU, localV, 0.193, 0.585, 0.015, 0.013);
+        const rightEye = ellipse(localU, localV, 0.307, 0.585, 0.015, 0.013);
+        if (leftEye || rightEye) [r, g, b] = [54, 39, 30];
+        const leftBrow = Math.abs(localV - 0.627) < 0.006 && localU > 0.166 && localU < 0.220;
+        const rightBrow = Math.abs(localV - 0.627) < 0.006 && localU > 0.280 && localU < 0.334;
+        if (leftBrow || rightBrow) [r, g, b] = [66, 43, 29];
+        const mouth = Math.abs(localV - 0.305) < 0.006 && localU > 0.217 && localU < 0.283;
+        if (mouth) [r, g, b] = [104, 64, 50];
+        // Very restrained nose/cheek tonal cues, kept close to base skin colour.
+        if (ellipse(localU, localV, 0.250, 0.455, 0.012, 0.050)) { r -= 8; g -= 6; b -= 4; }
+        if (ellipse(localU, localV, 0.165, 0.445, 0.045, 0.060) || ellipse(localU, localV, 0.335, 0.445, 0.045, 0.060)) {
+          r += 4; g += 2;
+        }
       }
       const divider = Math.abs(x - Math.floor(third)) <= 1 || Math.abs(x - Math.floor(third * 2)) <= 1 || Math.abs(y - half) <= 1;
       if (divider) r = g = b = 20;
@@ -184,7 +216,7 @@ const record = {
     bytes: atlas.length,
     sha256: createHash('sha256').update(atlas).digest('hex'),
     slots: atlasTiles.map(tile => tile.name),
-    generation: 'deterministic project-owned RGB PNG; no external generator or third-party texture',
+    generation: 'deterministic project-owned RGB PNG; no external generator or third-party texture; face slot contains flat non-protruding facial/hair cues',
   },
   materials: 1,
   textures: 1,
