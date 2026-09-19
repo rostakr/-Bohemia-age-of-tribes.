@@ -9,12 +9,15 @@ export class WorkerPreviewScene implements RuntimeScene {
   private root: Entity | undefined;
   private assets: SceneAssets | undefined;
   private groundMaterial: StandardMaterial | undefined;
+  private app: Application | undefined;
   private loaded = false;
   private destroyed = false;
+  private drawCalls = 0;
 
   async enter(app: Application): Promise<void> {
     if (this.root) throw new Error('Worker preview scene already entered');
     this.destroyed = false;
+    this.app = app;
     this.root = new Entity('Project adult worker QA close-up');
     app.root.addChild(this.root);
     this.assets = new SceneAssets(app);
@@ -81,7 +84,10 @@ export class WorkerPreviewScene implements RuntimeScene {
   }
 
   fixedUpdate(_dtSeconds: number, _tick: number): void {}
-  update(_dtSeconds: number, _interpolationAlpha: number): void {}
+
+  update(_dtSeconds: number, _interpolationAlpha: number): void {
+    this.drawCalls = this.app?.stats.drawCalls.total ?? 0;
+  }
 
   diagnostics(): SceneDiagnostics {
     return {
@@ -91,6 +97,7 @@ export class WorkerPreviewScene implements RuntimeScene {
       workerLoaded: this.loaded,
       workerPath: WORKER_PATH,
       workerTargetHeight: 1.72,
+      drawCalls: this.drawCalls,
     };
   }
 
@@ -98,11 +105,13 @@ export class WorkerPreviewScene implements RuntimeScene {
     if (this.destroyed) return;
     this.destroyed = true;
     this.loaded = false;
+    this.drawCalls = 0;
     this.root?.destroy();
     this.root = undefined;
     this.groundMaterial?.destroy();
     this.groundMaterial = undefined;
     this.assets?.destroy();
     this.assets = undefined;
+    this.app = undefined;
   }
 }
