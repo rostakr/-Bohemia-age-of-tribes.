@@ -1,0 +1,55 @@
+{
+  "purpose": "Phase 1 QA-renderable copies of the two supplied GLBs with explicit NORMAL accessors",
+  "source_policy": "Archived user-supplied originals remain byte-for-byte unchanged. Preview outputs are generated only for QA and are not canonical runtime admission.",
+  "license_status": "Project owner confirms every supplied asset is licensed for this noncommercial personal-use project; exact licence identifier/text remains pending archival where not already recorded.",
+  "generator": "scripts/add-glb-normals.mjs",
+  "generator_method": "Area-weighted vertex normals computed from existing indexed TRIANGLES geometry; existing POSITION, UV, materials and embedded textures are preserved.",
+  "validation_workflow": ".github/workflows/validate-supplied-normals-preview.yml",
+  "candidates": [
+    {
+      "asset": "boii_carpentry_shed_open",
+      "source": "assets/source/phase1/user-supplied/boii_carpentry_shed_open.original.glb",
+      "source_sha256": "079a36689153538124c388faf84b0ab6e49b4b3b6d41c41a1f8de2aae5e32b1f",
+      "source_bytes": 3923436,
+      "triangles": 89778,
+      "vertices": 65301,
+      "output": "public/assets/buildings/boii_carpentry_shed_open_qa_preview.glb",
+      "expected_output_bytes": 4707200,
+      "expected_output_sha256": "86008b2cab9f5df653c18967e46734fc48fd34c03188ca6034e0bce8c0cb20e2",
+      "expected_primitives": 1,
+      "expected_normal_primitives": 1,
+      "expected_uv0_primitives": 1,
+      "status": "technical QA preview only; above the current 20k-45k workshop target and not canonical-admitted"
+    },
+    {
+      "asset": "boii_adult_worker",
+      "source": "assets/source/phase1/user-supplied/boii_adult_worker.original.glb",
+      "source_sha256": "40f00021016c8157459cc4dab9612bba849654afe89c82c45795cdb0d0d21a0c",
+      "source_bytes": 1639660,
+      "triangles": 14106,
+      "vertices": 9805,
+      "output": "public/assets/characters/boii_adult_worker_qa_preview.glb",
+      "expected_output_bytes": 1757468,
+      "expected_output_sha256": "c0faf805add95da38efeb3439d8c40cabc3295e9eb351fb364397554e165b953",
+      "expected_primitives": 1,
+      "expected_normal_primitives": 1,
+      "expected_uv0_primitives": 1,
+      "status": "technical QA preview only; below the current production character triangle brief and not canonical-admitted"
+    }
+  ],
+  "prior_equivalent_evidence": {
+    "pull_request": 50,
+    "workflow_run": 35407528961,
+    "result": "PASS",
+    "strict_preview_checks": "passed for both candidates",
+    "webgl2": "passed",
+    "interactions": "passed",
+    "lifecycle_remount_3x": "passed",
+    "software_webgpu": "passed",
+    "phase1_benchmark_smoke": "passed; default benchmark did not render preview candidates",
+    "artifact_hashes_verified_after_download": true
+  },
+  "current_base": "b15b927fb1ad0af1886d0d36c23a241c4dc01a57",
+  "current_branch_validation": "pending isolated preview workflow",
+  "art_gate": false
+}
