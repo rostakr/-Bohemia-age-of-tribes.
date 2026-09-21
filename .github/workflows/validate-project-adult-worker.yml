@@ -1,10 +1,8 @@
-name: Validate project adult worker R2 candidate
+name: Validate supplied worker production derivative
 
 on:
   pull_request:
     paths:
-      - 'assets/source/phase1/worker/**'
-      - 'scripts/check-project-adult-worker.mjs'
       - 'scripts/export-project-adult-worker.mjs'
       - 'scripts/browser-project-worker-smoke.mjs'
       - 'scripts/browser-project-worker-closeup.mjs'
@@ -13,8 +11,11 @@ on:
       - '.github/workflows/validate-project-adult-worker.yml'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  validate-project-adult-worker-r2:
+  validate-supplied-worker-production:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,32 +24,52 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - name: Validate deterministic R2 worker geometry
-        run: node --experimental-strip-types --test scripts/check-project-adult-worker.mjs
-      - name: Export final R2 worker GLB and 2K atlas
-        run: node --experimental-strip-types scripts/export-project-adult-worker.mjs
-      - name: Strict-check final R2 worker GLB
-        run: node scripts/check-glb.mjs public/assets/characters/boii_adult_worker_project.glb --min-tris 25000 --max-tris 50000 --require-normals --require-uv0
+
+      - name: Fetch pinned licensed supplied worker source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/phase1
+          git fetch --no-tags --depth=1 origin phase1/supplied-normals-preview-r3
+          test "$(git rev-parse FETCH_HEAD)" = "91f4466802c4790681a2f7f2c5e9b11299ea9ac1"
+          git show FETCH_HEAD:assets/source/phase1/user-supplied/boii_adult_worker.original.glb > artifacts/phase1/supplied-worker-source.glb
+          echo "40f00021016c8157459cc4dab9612bba849654afe89c82c45795cdb0d0d21a0c  artifacts/phase1/supplied-worker-source.glb" | sha256sum -c -
+          test "$(wc -c < artifacts/phase1/supplied-worker-source.glb)" = "1639660"
+
+      - name: Deterministically derive production worker
+        run: |
+          node scripts/export-project-adult-worker.mjs
+          sha256sum public/assets/characters/boii_adult_worker_project.glb artifacts/phase1/project-worker-derived-receipt.json > /tmp/worker-first.sha256
+          node scripts/export-project-adult-worker.mjs
+          sha256sum public/assets/characters/boii_adult_worker_project.glb artifacts/phase1/project-worker-derived-receipt.json > /tmp/worker-second.sha256
+          diff -u /tmp/worker-first.sha256 /tmp/worker-second.sha256
+
+      - name: Strict-check supplied production derivative
+        run: node scripts/check-glb.mjs public/assets/characters/boii_adult_worker_project.glb --min-tris 42000 --max-tris 42500 --require-normals --require-uv0
+
       - name: Record deterministic file evidence
         run: |
           wc -c public/assets/characters/boii_adult_worker_project.glb
           sha256sum public/assets/characters/boii_adult_worker_project.glb
-          wc -c artifacts/phase1/worker-adult-basecolor-2048.png
-          sha256sum artifacts/phase1/worker-adult-basecolor-2048.png
-      - name: Build with generated R2 worker preview asset
+          cat artifacts/phase1/project-worker-derived-receipt.json
+
+      - name: Build with supplied production derivative
         run: npm run build
-      - name: Isolated PlayCanvas R2 worker RTS smoke
+
+      - name: Isolated PlayCanvas supplied-derived worker RTS smoke
         run: node scripts/browser-project-worker-smoke.mjs
-      - name: Isolated PlayCanvas R2 worker close-up
+
+      - name: Isolated PlayCanvas supplied-derived worker close-up
         run: node scripts/browser-project-worker-closeup.mjs
+
       - uses: actions/upload-artifact@v4
         with:
-          name: project-adult-worker-r2-candidate
+          name: supplied-worker-production-derivative
           path: |
+            artifacts/phase1/supplied-worker-source.glb
             public/assets/characters/boii_adult_worker_project.glb
-            artifacts/phase1/worker-adult-basecolor-2048.png
+            artifacts/phase1/project-worker-derived-receipt.json
             artifacts/phase1/project-worker-webgl2-1920x1080.png
             artifacts/phase1/project-worker-closeup-webgl2-1200x1200.png
-            assets/source/phase1/worker-project-glb-receipt.json
           if-no-files-found: error
           retention-days: 7
