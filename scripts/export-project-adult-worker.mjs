@@ -1,306 +1,381 @@
-// Offline project-owned adult-worker R2 export for Phase 1 QA. Not a runtime dependency.
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-import { deflateSync } from 'node:zlib';
-import { calculateNormals } from 'playcanvas';
-import { createProjectAdultWorkerGeometry, projectAdultWorkerStats } from '../assets/source/phase1/worker/worker-geometry.ts';
+import { dirname } from 'node:path';
 
-const output = new URL('../public/assets/characters/boii_adult_worker_project.glb', import.meta.url);
-const atlasOutput = new URL('../artifacts/phase1/worker-adult-basecolor-2048.png', import.meta.url);
-const receipt = new URL('../assets/source/phase1/worker-project-glb-receipt.json', import.meta.url);
+const SOURCE_COMMIT = '91f4466802c4790681a2f7f2c5e9b11299ea9ac1';
+const SOURCE_BRANCH = 'phase1/supplied-normals-preview-r3';
+const SOURCE_REPO_PATH = 'assets/source/phase1/user-supplied/boii_adult_worker.original.glb';
+const SOURCE_SHA256 = '40f00021016c8157459cc4dab9612bba849654afe89c82c45795cdb0d0d21a0c';
+const SOURCE_BLOB_SHA = '132c6f926cc7c0b4683cdd3ebedc1d6f5e461e4d';
 
-const ATLAS_SIZE = 2048;
-const atlasTiles = [
-  { name: 'tunic', col: 0, row: 0, rgb: [118, 82, 47] },
-  { name: 'trousers', col: 1, row: 0, rgb: [65, 62, 54] },
-  { name: 'leather', col: 2, row: 0, rgb: [72, 43, 25] },
-  { name: 'skin', col: 0, row: 1, rgb: [181, 132, 96] },
-  { name: 'face', col: 1, row: 1, rgb: [181, 132, 96] },
-  { name: 'accent', col: 2, row: 1, rgb: [90, 94, 88] },
-];
+const [inputPath = 'artifacts/phase1/supplied-worker-source.glb',
+  outputPath = 'public/assets/characters/boii_adult_worker_project.glb',
+  receiptPath = 'artifacts/phase1/project-worker-derived-receipt.json'] = process.argv.slice(2);
 
-function crc32(buffer) {
-  let crc = 0xffffffff;
-  for (const value of buffer) {
-    crc ^= value;
-    for (let bit = 0; bit < 8; bit++) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1));
-  }
-  return (crc ^ 0xffffffff) >>> 0;
+function sha256(buffer) {
+  return createHash('sha256').update(buffer).digest('hex');
 }
 
-function pngChunk(type, data) {
-  const typeBytes = Buffer.from(type, 'ascii');
-  const body = Buffer.concat([typeBytes, data]);
-  const result = Buffer.alloc(12 + data.length);
-  result.writeUInt32BE(data.length, 0);
-  typeBytes.copy(result, 4);
-  data.copy(result, 8);
-  result.writeUInt32BE(crc32(body), 8 + data.length);
+function parseGlb(buffer) {
+  if (buffer.length < 20 || buffer.toString('ascii', 0, 4) !== 'glTF') throw new Error('invalid GLB magic/header');
+  if (buffer.readUInt32LE(4) !== 2) throw new Error('expected GLB 2.0');
+  if (buffer.readUInt32LE(8) !== buffer.length) throw new Error('declared GLB length mismatch');
+  let offset = 12;
+  let json;
+  let bin;
+  while (offset + 8 <= buffer.length) {
+    const length = buffer.readUInt32LE(offset);
+    const type = buffer.readUInt32LE(offset + 4);
+    const start = offset + 8;
+    const end = start + length;
+    if (end > buffer.length) throw new Error('GLB chunk exceeds file bounds');
+    if (type === 0x4e4f534a) json = JSON.parse(buffer.subarray(start, end).toString('utf8').replace(/\u0000+$/g, '').trimEnd());
+    if (type === 0x004e4942) bin = Buffer.from(buffer.subarray(start, end));
+    offset = end;
+  }
+  if (!json || !bin) throw new Error('GLB must contain JSON and BIN chunks');
+  if (json.asset?.version !== '2.0') throw new Error('glTF asset.version must be 2.0');
+  if (!Array.isArray(json.buffers) || json.buffers.length !== 1 || json.buffers[0]?.uri) {
+    throw new Error('converter supports one embedded GLB buffer only');
+  }
+  return { json, bin };
+}
+
+function accessorInfo(gltf, accessorIndex) {
+  const accessor = gltf.accessors?.[accessorIndex];
+  if (!accessor || accessor.sparse) throw new Error(`unsupported accessor ${accessorIndex}`);
+  const view = gltf.bufferViews?.[accessor.bufferView];
+  if (!view || (view.buffer ?? 0) !== 0) throw new Error(`accessor ${accessorIndex} must use embedded buffer 0`);
+  const base = (view.byteOffset ?? 0) + (accessor.byteOffset ?? 0);
+  return { accessor, view, base };
+}
+
+function readFloatAccessor(gltf, bin, accessorIndex, width, type) {
+  const { accessor, view, base } = accessorInfo(gltf, accessorIndex);
+  if (accessor.componentType !== 5126 || accessor.type !== type) throw new Error(`${type} accessor ${accessorIndex} must use FLOAT`);
+  const stride = view.byteStride ?? width * 4;
+  if (stride < width * 4) throw new Error(`accessor ${accessorIndex} byteStride too small`);
+  const result = new Float64Array(accessor.count * width);
+  for (let i = 0; i < accessor.count; i++) {
+    const row = base + i * stride;
+    for (let c = 0; c < width; c++) result[i * width + c] = bin.readFloatLE(row + c * 4);
+  }
   return result;
 }
 
-function ellipse(u, v, cx, cy, rx, ry) {
-  const dx = (u - cx) / rx;
-  const dy = (v - cy) / ry;
-  return dx * dx + dy * dy <= 1;
+function readIndices(gltf, bin, accessorIndex) {
+  const { accessor, view, base } = accessorInfo(gltf, accessorIndex);
+  if (accessor.type !== 'SCALAR' || ![5121, 5123, 5125].includes(accessor.componentType)) {
+    throw new Error('indices must be unsigned SCALAR');
+  }
+  const bytes = accessor.componentType === 5121 ? 1 : accessor.componentType === 5123 ? 2 : 4;
+  const stride = view.byteStride ?? bytes;
+  const result = new Uint32Array(accessor.count);
+  for (let i = 0; i < result.length; i++) {
+    const at = base + i * stride;
+    result[i] = accessor.componentType === 5121
+      ? bin.readUInt8(at)
+      : accessor.componentType === 5123
+        ? bin.readUInt16LE(at)
+        : bin.readUInt32LE(at);
+  }
+  return result;
 }
 
-function makeAtlasPng() {
-  const width = ATLAS_SIZE;
-  const height = ATLAS_SIZE;
-  const stride = width * 3 + 1;
-  const raw = Buffer.alloc(stride * height);
-  const third = width / 3;
-  const half = height / 2;
-  const tileFor = (x, y) => atlasTiles[(y >= half ? 3 : 0) + Math.min(2, Math.floor(x / third))];
-
-  for (let y = 0; y < height; y++) {
-    const rowStart = y * stride;
-    raw[rowStart] = 0;
-    for (let x = 0; x < width; x++) {
-      const tile = tileFor(x, y);
-      let [r, g, b] = tile.rgb;
-      const localX = Math.floor(x - tile.col * third);
-      const localY = y - tile.row * half;
-      const localU = Math.max(0, Math.min(1, localX / third));
-      const localV = Math.max(0, Math.min(1, localY / half));
-
-      if (tile.name === 'tunic' || tile.name === 'trousers') {
-        const weave = Math.sin(localX * 0.17) * 4 + Math.sin(localY * 0.13) * 3;
-        r += weave; g += weave; b += weave;
-        if ((localX + localY) % 41 === 0) { r -= 7; g -= 7; b -= 7; }
-      } else if (tile.name === 'leather') {
-        const grain = Math.sin(localX * 0.09 + localY * 0.05) * 5;
-        r += grain; g += grain * 0.7; b += grain * 0.5;
-        if ((localX * 3 + localY) % 79 === 0) { r -= 8; g -= 6; b -= 4; }
-      } else if (tile.name === 'skin') {
-        const skinTone = Math.sin(localX * 0.05) * 1.5 + Math.sin(localY * 0.06) * 1.2;
-        r += skinTone; g += skinTone * 0.7; b += skinTone * 0.5;
-      } else if (tile.name === 'face') {
-        const skinTone = Math.sin(localX * 0.04) * 1.8 + Math.sin(localY * 0.05) * 1.4;
-        r += skinTone; g += skinTone * 0.7; b += skinTone * 0.5;
-
-        // Head UV seam is at the back; camera-facing facial meridian is U=0.5.
-        const hairLine = 0.765 + 0.018 * Math.cos((localU - 0.5) * Math.PI * 8);
-        const sideHair = Math.abs(localU - 0.5) > 0.34 && localV > 0.54;
-        if (localV >= hairLine || sideHair) {
-          [r, g, b] = [57, 39, 27];
-          if ((localX + Math.floor(localY / 4)) % 23 === 0) { r -= 6; g -= 5; b -= 4; }
-        }
-
-        const leftEye = ellipse(localU, localV, 0.435, 0.575, 0.024, 0.014);
-        const rightEye = ellipse(localU, localV, 0.565, 0.575, 0.024, 0.014);
-        if (leftEye || rightEye) [r, g, b] = [52, 39, 31];
-
-        const leftBrow = Math.abs(localV - 0.622) < 0.008 && localU > 0.395 && localU < 0.470;
-        const rightBrow = Math.abs(localV - 0.622) < 0.008 && localU > 0.530 && localU < 0.605;
-        if (leftBrow || rightBrow) [r, g, b] = [65, 44, 31];
-
-        if (ellipse(localU, localV, 0.500, 0.455, 0.018, 0.060)) {
-          r -= 8; g -= 5; b -= 3;
-        }
-        if (ellipse(localU, localV, 0.415, 0.445, 0.050, 0.070) ||
-            ellipse(localU, localV, 0.585, 0.445, 0.050, 0.070)) {
-          r += 4; g += 2;
-        }
-
-        const mouth = Math.abs(localV - 0.295) < 0.007 && localU > 0.455 && localU < 0.545;
-        if (mouth) [r, g, b] = [107, 68, 53];
-
-        const jawShadow = localV < 0.245 && Math.abs(localU - 0.5) < 0.23;
-        if (jawShadow) { r -= 5; g -= 4; b -= 3; }
-      }
-
-      const divider =
-        Math.abs(x - Math.floor(third)) <= 1 ||
-        Math.abs(x - Math.floor(third * 2)) <= 1 ||
-        Math.abs(y - half) <= 1;
-      if (divider) r = g = b = 20;
-
-      const offset = rowStart + 1 + x * 3;
-      raw[offset] = Math.max(0, Math.min(255, Math.round(r)));
-      raw[offset + 1] = Math.max(0, Math.min(255, Math.round(g)));
-      raw[offset + 2] = Math.max(0, Math.min(255, Math.round(b)));
+function computeSmoothNormals(positions, indices) {
+  const accumulated = new Float64Array(positions.length);
+  for (let i = 0; i < indices.length; i += 3) {
+    const ia = indices[i] * 3, ib = indices[i + 1] * 3, ic = indices[i + 2] * 3;
+    const abx = positions[ib] - positions[ia];
+    const aby = positions[ib + 1] - positions[ia + 1];
+    const abz = positions[ib + 2] - positions[ia + 2];
+    const acx = positions[ic] - positions[ia];
+    const acy = positions[ic + 1] - positions[ia + 1];
+    const acz = positions[ic + 2] - positions[ia + 2];
+    const nx = aby * acz - abz * acy;
+    const ny = abz * acx - abx * acz;
+    const nz = abx * acy - aby * acx;
+    for (const vertex of [ia, ib, ic]) {
+      accumulated[vertex] += nx;
+      accumulated[vertex + 1] += ny;
+      accumulated[vertex + 2] += nz;
     }
   }
-
-  const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(width, 0);
-  ihdr.writeUInt32BE(height, 4);
-  ihdr[8] = 8;
-  ihdr[9] = 2;
-  ihdr[10] = 0;
-  ihdr[11] = 0;
-  ihdr[12] = 0;
-
-  return Buffer.concat([
-    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
-    pngChunk('IHDR', ihdr),
-    pngChunk('IDAT', deflateSync(raw, { level: 9 })),
-    pngChunk('IEND', Buffer.alloc(0)),
-  ]);
+  const normals = new Float64Array(accumulated.length);
+  for (let i = 0; i < accumulated.length; i += 3) {
+    const length = Math.hypot(accumulated[i], accumulated[i + 1], accumulated[i + 2]);
+    if (length > 1e-20) {
+      normals[i] = accumulated[i] / length;
+      normals[i + 1] = accumulated[i + 1] / length;
+      normals[i + 2] = accumulated[i + 2] / length;
+    } else {
+      normals[i + 1] = 1;
+    }
+  }
+  return normals;
 }
 
-const geometry = createProjectAdultWorkerGeometry();
-const stats = projectAdultWorkerStats(geometry);
-const atlas = makeAtlasPng();
-mkdirSync(new URL('../artifacts/phase1/', import.meta.url), { recursive: true });
-writeFileSync(atlasOutput, atlas);
+function normalize3(x, y, z) {
+  const length = Math.hypot(x, y, z);
+  return length > 1e-20 ? [x / length, y / length, z / length] : [0, 1, 0];
+}
 
-const gltf = {
-  asset: { version: '2.0', generator: 'BOHEMIA project adult-worker R2 exporter' },
-  scene: 0,
-  scenes: [{ nodes: [0] }],
-  nodes: [{ name: 'Boii adult worker R2 — project-owned QA candidate', mesh: 0 }],
-  meshes: [{ primitives: [] }],
-  materials: [{
-    name: 'Worker R2 atlas material',
-    pbrMetallicRoughness: {
-      baseColorFactor: [1, 1, 1, 1],
-      baseColorTexture: { index: 0, texCoord: 0 },
-      metallicFactor: 0,
-      roughnessFactor: 0.94,
+function seamAwareUvCentroid(u0, v0, u1, v1, u2, v2) {
+  let a = u0, b = u1, c = u2;
+  const min = Math.min(a, b, c);
+  const max = Math.max(a, b, c);
+  if (max - min > 0.5) {
+    if (a < 0.5) a += 1;
+    if (b < 0.5) b += 1;
+    if (c < 0.5) c += 1;
+  }
+  const u = ((a + b + c) / 3) % 1;
+  return [u < 0 ? u + 1 : u, (v0 + v1 + v2) / 3];
+}
+
+function bounds3(values) {
+  const min = [Infinity, Infinity, Infinity];
+  const max = [-Infinity, -Infinity, -Infinity];
+  for (let i = 0; i < values.length; i += 3) {
+    for (let c = 0; c < 3; c++) {
+      min[c] = Math.min(min[c], values[i + c]);
+      max[c] = Math.max(max[c], values[i + c]);
+    }
+  }
+  return { min, max, size: min.map((v, i) => max[i] - v) };
+}
+
+function pad4(buffer, fill = 0) {
+  const padding = (4 - buffer.length % 4) % 4;
+  return padding ? Buffer.concat([buffer, Buffer.alloc(padding, fill)]) : buffer;
+}
+
+function buildGlb(gltf, bin) {
+  const paddedBin = pad4(bin, 0);
+  gltf.buffers = [{ byteLength: paddedBin.length }];
+  const paddedJson = pad4(Buffer.from(JSON.stringify(gltf), 'utf8'), 0x20);
+  const totalLength = 12 + 8 + paddedJson.length + 8 + paddedBin.length;
+  const output = Buffer.alloc(totalLength);
+  output.write('glTF', 0, 'ascii');
+  output.writeUInt32LE(2, 4);
+  output.writeUInt32LE(totalLength, 8);
+  let offset = 12;
+  output.writeUInt32LE(paddedJson.length, offset);
+  output.writeUInt32LE(0x4e4f534a, offset + 4);
+  paddedJson.copy(output, offset + 8);
+  offset += 8 + paddedJson.length;
+  output.writeUInt32LE(paddedBin.length, offset);
+  output.writeUInt32LE(0x004e4942, offset + 4);
+  paddedBin.copy(output, offset + 8);
+  return output;
+}
+
+async function main() {
+  const source = await readFile(inputPath);
+  const sourceHash = sha256(source);
+  if (sourceHash !== SOURCE_SHA256) {
+    throw new Error(`supplied worker SHA mismatch: expected ${SOURCE_SHA256}, got ${sourceHash}`);
+  }
+
+  const { json, bin } = parseGlb(source);
+  if ((json.meshes?.length ?? 0) !== 1 || (json.meshes?.[0]?.primitives?.length ?? 0) !== 1) {
+    throw new Error('expected exactly one mesh with one primitive');
+  }
+  const primitive = json.meshes[0].primitives[0];
+  if ((primitive.mode ?? 4) !== 4) throw new Error('worker primitive must be TRIANGLES');
+  if (!Number.isInteger(primitive.indices)) throw new Error('worker primitive must be indexed');
+  if (!Number.isInteger(primitive.attributes?.POSITION) || !Number.isInteger(primitive.attributes?.TEXCOORD_0)) {
+    throw new Error('worker primitive must contain POSITION and TEXCOORD_0');
+  }
+  const positions = readFloatAccessor(json, bin, primitive.attributes.POSITION, 3, 'VEC3');
+  const uvs = readFloatAccessor(json, bin, primitive.attributes.TEXCOORD_0, 2, 'VEC2');
+  const indices = readIndices(json, bin, primitive.indices);
+  if (indices.length % 3 !== 0) throw new Error('index count must be divisible by 3');
+  if (uvs.length / 2 !== positions.length / 3) throw new Error('POSITION/UV vertex count mismatch');
+
+  const sourceVertexCount = positions.length / 3;
+  const sourceTriangles = indices.length / 3;
+  if (sourceTriangles !== 14106) throw new Error(`unexpected source triangle count ${sourceTriangles}`);
+
+  const sourceNormals = computeSmoothNormals(positions, indices);
+  const newVertexCount = sourceVertexCount + sourceTriangles;
+  const newPositions = new Float32Array(newVertexCount * 3);
+  const newNormals = new Float32Array(newVertexCount * 3);
+  const newUvs = new Float32Array(newVertexCount * 2);
+  for (let i = 0; i < positions.length; i++) newPositions[i] = positions[i];
+  for (let i = 0; i < sourceNormals.length; i++) newNormals[i] = sourceNormals[i];
+  for (let i = 0; i < uvs.length; i++) newUvs[i] = uvs[i];
+
+  const newIndices = new Uint32Array(sourceTriangles * 9);
+  for (let tri = 0; tri < sourceTriangles; tri++) {
+    const a = indices[tri * 3];
+    const b = indices[tri * 3 + 1];
+    const c = indices[tri * 3 + 2];
+    const center = sourceVertexCount + tri;
+
+    const ap = a * 3, bp = b * 3, cp = c * 3, dp = center * 3;
+    newPositions[dp] = (positions[ap] + positions[bp] + positions[cp]) / 3;
+    newPositions[dp + 1] = (positions[ap + 1] + positions[bp + 1] + positions[cp + 1]) / 3;
+    newPositions[dp + 2] = (positions[ap + 2] + positions[bp + 2] + positions[cp + 2]) / 3;
+
+    const [nx, ny, nz] = normalize3(
+      sourceNormals[ap] + sourceNormals[bp] + sourceNormals[cp],
+      sourceNormals[ap + 1] + sourceNormals[bp + 1] + sourceNormals[cp + 1],
+      sourceNormals[ap + 2] + sourceNormals[bp + 2] + sourceNormals[cp + 2],
+    );
+    newNormals[dp] = nx;
+    newNormals[dp + 1] = ny;
+    newNormals[dp + 2] = nz;
+
+    const au = a * 2, bu = b * 2, cu = c * 2, du = center * 2;
+    const [u, v] = seamAwareUvCentroid(
+      uvs[au], uvs[au + 1],
+      uvs[bu], uvs[bu + 1],
+      uvs[cu], uvs[cu + 1],
+    );
+    newUvs[du] = u;
+    newUvs[du + 1] = v;
+
+    const out = tri * 9;
+    newIndices[out] = a; newIndices[out + 1] = b; newIndices[out + 2] = center;
+    newIndices[out + 3] = b; newIndices[out + 4] = c; newIndices[out + 5] = center;
+    newIndices[out + 6] = c; newIndices[out + 7] = a; newIndices[out + 8] = center;
+  }
+
+  const image = json.images?.[0];
+  if (!image || !Number.isInteger(image.bufferView) || image.uri) throw new Error('expected one embedded source image');
+  const imageView = json.bufferViews?.[image.bufferView];
+  if (!imageView || (imageView.buffer ?? 0) !== 0) throw new Error('embedded image must use buffer 0');
+  const imageStart = imageView.byteOffset ?? 0;
+  const imageBytes = Buffer.from(bin.subarray(imageStart, imageStart + imageView.byteLength));
+
+  const chunks = [];
+  const bufferViews = [];
+  const accessors = [];
+  let byteLength = 0;
+
+  function append(bytes, target) {
+    const padding = (4 - byteLength % 4) % 4;
+    if (padding) {
+      chunks.push(Buffer.alloc(padding));
+      byteLength += padding;
+    }
+    const viewIndex = bufferViews.length;
+    const entry = { buffer: 0, byteOffset: byteLength, byteLength: bytes.length };
+    if (target) entry.target = target;
+    bufferViews.push(entry);
+    chunks.push(bytes);
+    byteLength += bytes.length;
+    return viewIndex;
+  }
+
+  function addAccessor(typed, width, type, componentType, target, withBounds = false) {
+    const bytes = Buffer.from(typed.buffer, typed.byteOffset, typed.byteLength);
+    const viewIndex = append(bytes, target);
+    const entry = { bufferView: viewIndex, componentType, count: typed.length / width, type };
+    if (withBounds) {
+      const b = bounds3(typed);
+      entry.min = b.min;
+      entry.max = b.max;
+    }
+    accessors.push(entry);
+    return accessors.length - 1;
+  }
+
+  const imageBufferView = append(imageBytes);
+  const positionAccessor = addAccessor(newPositions, 3, 'VEC3', 5126, 34962, true);
+  const normalAccessor = addAccessor(newNormals, 3, 'VEC3', 5126, 34962);
+  const uvAccessor = addAccessor(newUvs, 2, 'VEC2', 5126, 34962);
+  const indexAccessor = addAccessor(newIndices, 1, 'SCALAR', 5125, 34963);
+
+  const outputJson = {
+    asset: {
+      version: '2.0',
+      generator: 'BOHEMIA supplied-worker production derivative: centroid tessellation + QA-verified smooth normals',
     },
-  }],
-  images: [],
-  textures: [],
-  samplers: [{ magFilter: 9729, minFilter: 9987, wrapS: 10497, wrapT: 10497 }],
-  buffers: [],
-  bufferViews: [],
-  accessors: [],
-};
+    scene: 0,
+    scenes: [{ nodes: [0] }],
+    nodes: [{ name: 'Boii adult worker — supplied licensed production derivative', mesh: 0 }],
+    meshes: [{
+      primitives: [{
+        mode: 4,
+        material: 0,
+        attributes: { POSITION: positionAccessor, NORMAL: normalAccessor, TEXCOORD_0: uvAccessor },
+        indices: indexAccessor,
+      }],
+    }],
+    materials: structuredClone(json.materials ?? []),
+    images: [{ bufferView: imageBufferView, mimeType: image.mimeType ?? 'image/png' }],
+    textures: structuredClone(json.textures ?? [{ source: 0 }]),
+    bufferViews,
+    accessors,
+    buffers: [{ byteLength: 0 }],
+  };
+  if (Array.isArray(json.samplers)) outputJson.samplers = structuredClone(json.samplers);
 
-const chunks = [];
-let byteLength = 0;
+  const outputBin = pad4(Buffer.concat(chunks), 0);
+  const output = buildGlb(outputJson, outputBin);
+  await mkdir(dirname(outputPath), { recursive: true });
+  await writeFile(outputPath, output);
 
-function appendBytes(bytes, target) {
-  const padding = (4 - byteLength % 4) % 4;
-  if (padding) {
-    chunks.push(Buffer.alloc(padding));
-    byteLength += padding;
-  }
-  const view = gltf.bufferViews.push({
-    buffer: 0,
-    byteOffset: byteLength,
-    byteLength: bytes.length,
-    ...(target ? { target } : {}),
-  }) - 1;
-  chunks.push(bytes);
-  byteLength += bytes.length;
-  return view;
+  const sourceBounds = bounds3(positions);
+  const outputBounds = bounds3(newPositions);
+  const outputHash = sha256(output);
+  const receipt = {
+    schema_version: 3,
+    asset: 'boii_adult_worker_supplied_production_derivative',
+    project: 'BOHEMIA: AGE OF TRIBES',
+    source: {
+      branch: SOURCE_BRANCH,
+      commit: SOURCE_COMMIT,
+      repo_path: SOURCE_REPO_PATH,
+      git_blob_sha: SOURCE_BLOB_SHA,
+      sha256: SOURCE_SHA256,
+      bytes: source.length,
+      triangles: sourceTriangles,
+      vertices: sourceVertexCount,
+      bounds: sourceBounds,
+      rights: 'Project owner confirms this supplied asset is licensed for this noncommercial project; exact licence identifier/provider metadata remains pending archival.',
+      prior_qa_evidence: 'PR #59 multi-angle PlayCanvas preview found the supplied worker visually coherent; no canonical admission was granted.',
+    },
+    derivation: {
+      method: 'Each original triangle is split at its planar centroid into three triangles. Original vertices, UVs and embedded base-color image are preserved; centroid UVs use seam-aware interpolation.',
+      topology_changed: true,
+      surface_shape_changed: false,
+      texture_reencoded: false,
+      normals: 'Area-weighted smooth normals generated with the same algorithmic convention as scripts/add-glb-normals.mjs used for QA preview evidence; centroid normals are normalized interpolation of the original vertex normals.',
+      triangle_multiplier: 3,
+    },
+    output: {
+      path: outputPath,
+      bytes: output.length,
+      sha256: outputHash,
+      triangles: newIndices.length / 3,
+      vertices: newVertexCount,
+      bounds: outputBounds,
+      materials: outputJson.materials.length,
+      textures: outputJson.textures.length,
+      images: outputJson.images.length,
+      primitives: 1,
+      normals: true,
+      uv0: true,
+      target_runtime_height_metres: 1.72,
+      rig: null,
+      animations: 0,
+    },
+    admission: {
+      canonical_runtime_changed: false,
+      art_gate_passed: false,
+      requires_independent_qa: true,
+    },
+  };
+  await mkdir(dirname(receiptPath), { recursive: true });
+  await writeFile(receiptPath, JSON.stringify(receipt, null, 2) + '\n');
+
+  console.log(JSON.stringify(receipt, null, 2));
 }
 
-function accessor(values, width, type, componentType, target, bounds = false) {
-  const bytes = Buffer.from(values.buffer, values.byteOffset, values.byteLength);
-  const view = appendBytes(bytes, target);
-  const entry = { bufferView: view, componentType, count: values.length / width, type };
-  if (bounds) {
-    entry.min = Array(width).fill(Infinity);
-    entry.max = Array(width).fill(-Infinity);
-    for (let i = 0; i < values.length; i++) {
-      const axis = i % width;
-      entry.min[axis] = Math.min(entry.min[axis], values[i]);
-      entry.max[axis] = Math.max(entry.max[axis], values[i]);
-    }
-  }
-  return gltf.accessors.push(entry) - 1;
-}
-
-const atlasView = appendBytes(atlas);
-const imageIndex = gltf.images.push({
-  name: 'worker-adult-r2-basecolor-2048.png',
-  bufferView: atlasView,
-  mimeType: 'image/png',
-}) - 1;
-gltf.textures.push({ source: imageIndex, sampler: 0 });
-
-const positions = new Float32Array(geometry.positions);
-const indices = new Uint32Array(geometry.indices);
-const uvs = new Float32Array(geometry.uvs);
-const normals = new Float32Array(calculateNormals(geometry.positions, geometry.indices));
-
-gltf.meshes[0].primitives.push({
-  mode: 4,
-  material: 0,
-  attributes: {
-    POSITION: accessor(positions, 3, 'VEC3', 5126, 34962, true),
-    NORMAL: accessor(normals, 3, 'VEC3', 5126, 34962),
-    TEXCOORD_0: accessor(uvs, 2, 'VEC2', 5126, 34962),
-  },
-  indices: accessor(indices, 1, 'SCALAR', 5125, 34963),
+main().catch((error) => {
+  console.error(error instanceof Error ? error.stack ?? error.message : String(error));
+  process.exit(1);
 });
-
-gltf.buffers.push({ byteLength });
-const json = Buffer.from(JSON.stringify(gltf));
-const jsonChunk = Buffer.concat([json, Buffer.alloc((4 - json.length % 4) % 4, 0x20)]);
-const binary = Buffer.concat([...chunks, Buffer.alloc((4 - byteLength % 4) % 4)]);
-
-const header = Buffer.alloc(12);
-header.writeUInt32LE(0x46546c67);
-header.writeUInt32LE(2, 4);
-header.writeUInt32LE(12 + 8 + jsonChunk.length + 8 + binary.length, 8);
-const chunkHeader = (size, type) => {
-  const b = Buffer.alloc(8);
-  b.writeUInt32LE(size);
-  b.writeUInt32LE(type, 4);
-  return b;
-};
-const glb = Buffer.concat([
-  header,
-  chunkHeader(jsonChunk.length, 0x4e4f534a),
-  jsonChunk,
-  chunkHeader(binary.length, 0x004e4942),
-  binary,
-]);
-writeFileSync(output, glb);
-
-const record = {
-  schema_version: 2,
-  asset: 'boii_adult_worker_project_r2',
-  source: 'assets/source/phase1/worker/worker-geometry.ts',
-  source_sha256: createHash('sha256')
-    .update(readFileSync(new URL('../assets/source/phase1/worker/worker-geometry.ts', import.meta.url)))
-    .digest('hex'),
-  source_rights: 'Original project R2 geometry and texture-generation code; supplied/rejected worker mesh is not reused',
-  output: 'public/assets/characters/boii_adult_worker_project.glb',
-  sha256: createHash('sha256').update(glb).digest('hex'),
-  bytes: glb.length,
-  stats,
-  units: 'metres',
-  up_axis: 'Y',
-  pivot: 'ground-centred near origin; shoe sole reaches approximately y=0',
-  pose: 'neutral relaxed standing pose',
-  construction: {
-    torso: 'continuous lofted tunic with sloped shoulders and restrained folds',
-    limbs: 'multi-ring swept limbs with natural taper and bend',
-    hands: 'tapered palm/finger sweep with separate small thumb branch',
-    shoes: 'lengthwise swept leather shoe profile with tapered toe',
-    head: 'custom lofted anatomical profile with geometric nose/brow/chin relief; no facial primitive overlays',
-  },
-  atlas: {
-    qa_output: 'artifacts/phase1/worker-adult-basecolor-2048.png',
-    width: ATLAS_SIZE,
-    height: ATLAS_SIZE,
-    bytes: atlas.length,
-    sha256: createHash('sha256').update(atlas).digest('hex'),
-    slots: atlasTiles.map(tile => tile.name),
-    generation: 'deterministic project-owned RGB PNG; face tile maps directly to the head UVs; no external generator or third-party texture',
-  },
-  materials: 1,
-  textures: 1,
-  maps: ['baseColor'],
-  rig: null,
-  animations: 0,
-  historical_brief: 'Late La Tène Boii generic adult worker: knee-length wool tunic, trousers, simple leather shoes, restrained earth palette, no armour/status jewellery/fantasy/Roman/medieval cues',
-  validation: 'Requires geometry tests, strict GLB intake, isolated PlayCanvas RTS/close-up review and full foundation regressions before QA admission',
-  limitations: [
-    'Static character; no rig or animation in this Phase 1 milestone',
-    'Base-color atlas only; no normal/roughness/AO maps',
-    'Not wired into ADMITTED_MODELS or default benchmark',
-    'Independent visual/historical QA remains required',
-  ],
-  admission: { canonical_runtime_changed: false, art_gate_passed: false },
-};
-
-writeFileSync(receipt, JSON.stringify(record, null, 2) + '\n');
-console.log(JSON.stringify(record, null, 2));
