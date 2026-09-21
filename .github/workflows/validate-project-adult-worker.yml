@@ -1,13 +1,11 @@
-name: Validate project adult worker candidate
+name: Validate project adult worker R2 candidate
 
 on:
   pull_request:
     paths:
       - 'assets/source/phase1/worker/**'
-      - 'assets/source/phase1/worker-project-glb-receipt.json'
       - 'scripts/check-project-adult-worker.mjs'
       - 'scripts/export-project-adult-worker.mjs'
-      - 'scripts/refine-project-adult-worker-glb.mjs'
       - 'scripts/browser-project-worker-smoke.mjs'
       - 'scripts/browser-project-worker-closeup.mjs'
       - 'src/main.ts'
@@ -16,7 +14,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  validate-project-adult-worker:
+  validate-project-adult-worker-r2:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,13 +23,11 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - name: Validate deterministic worker geometry
+      - name: Validate deterministic R2 worker geometry
         run: node --experimental-strip-types --test scripts/check-project-adult-worker.mjs
-      - name: Export rebuilt worker GLB and 2K atlas
+      - name: Export final R2 worker GLB and 2K atlas
         run: node --experimental-strip-types scripts/export-project-adult-worker.mjs
-      - name: Apply deterministic close-up surface polish
-        run: node scripts/refine-project-adult-worker-glb.mjs
-      - name: Strict-check polished project worker GLB
+      - name: Strict-check final R2 worker GLB
         run: node scripts/check-glb.mjs public/assets/characters/boii_adult_worker_project.glb --min-tris 25000 --max-tris 50000 --require-normals --require-uv0
       - name: Record deterministic file evidence
         run: |
@@ -39,15 +35,15 @@ jobs:
           sha256sum public/assets/characters/boii_adult_worker_project.glb
           wc -c artifacts/phase1/worker-adult-basecolor-2048.png
           sha256sum artifacts/phase1/worker-adult-basecolor-2048.png
-      - name: Build with generated worker preview asset
+      - name: Build with generated R2 worker preview asset
         run: npm run build
-      - name: Isolated PlayCanvas project-worker smoke
+      - name: Isolated PlayCanvas R2 worker RTS smoke
         run: node scripts/browser-project-worker-smoke.mjs
-      - name: Isolated PlayCanvas project-worker close-up
+      - name: Isolated PlayCanvas R2 worker close-up
         run: node scripts/browser-project-worker-closeup.mjs
       - uses: actions/upload-artifact@v4
         with:
-          name: project-adult-worker-candidate
+          name: project-adult-worker-r2-candidate
           path: |
             public/assets/characters/boii_adult_worker_project.glb
             artifacts/phase1/worker-adult-basecolor-2048.png
