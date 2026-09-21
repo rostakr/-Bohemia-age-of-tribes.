@@ -63,6 +63,8 @@ export const USE_PROCEDURAL_TREE_CANDIDATE = true;
 export const USE_PROCEDURAL_INHABITANT_CANDIDATE = true;
 export const DWELLING_LOD1_TRIANGLES = 53_538;
 export const STOREHOUSE_GLB_TRIANGLES = 15_550;
+export const WORKSHOP_PROJECT_GLB_PATH = 'buildings/boii_carpentry_shed_project.glb';
+export const WORKSHOP_PROJECT_GLB_TRIANGLES = 22_480;
 
 export class BenchmarkScene implements RuntimeScene {
   private root: Entity | undefined;
@@ -293,6 +295,9 @@ export class BenchmarkScene implements RuntimeScene {
       if (index === 1 && path === SUPPLIED_STOREHOUSE_PATH) {
         this.storehouseTriangles = STOREHOUSE_GLB_TRIANGLES;
       }
+      if (index === 2 && path === WORKSHOP_PROJECT_GLB_PATH) {
+        this.workshopTriangles = WORKSHOP_PROJECT_GLB_TRIANGLES;
+      }
       this.buildings++;
     }
 
@@ -437,7 +442,9 @@ export class BenchmarkScene implements RuntimeScene {
         ? (this.models.storehouse ? 'project-owned-glb' : 'procedural-project-owned')
         : 'absent',
       storehouseTriangles: this.storehouseTriangles,
-      workshopCandidate: this.workshopTriangles > 0 ? 'procedural-project-owned' : 'absent',
+      workshopCandidate: this.workshopTriangles > 0
+        ? (this.models.workshop === WORKSHOP_PROJECT_GLB_PATH ? 'project-owned-glb-preview' : 'procedural-project-owned')
+        : 'absent',
       workshopTriangles: this.workshopTriangles,
       treeCandidate: this.treeTriangles > 0 ? 'procedural-project-owned' : 'absent',
       treeCandidateTriangles: this.treeTriangles,
