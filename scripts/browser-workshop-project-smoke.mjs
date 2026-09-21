@@ -145,10 +145,10 @@ try {
       Number(diagnostics.structures) >= 3 &&
       diagnostics.dwellingCandidate === 'trellis-derived-generated-lod1' &&
       Number(diagnostics.dwellingTriangles) === 53_538 &&
-      diagnostics.storehouseCandidate === 'procedural-project-owned' &&
+      diagnostics.storehouseCandidate === 'project-owned-glb' &&
       Number(diagnostics.storehouseTriangles) === 15_550 &&
-      diagnostics.workshopCandidate === 'absent' &&
-      Number(diagnostics.workshopTriangles) === 0 &&
+      diagnostics.workshopCandidate === 'project-owned-glb-preview' &&
+      Number(diagnostics.workshopTriangles) === 22_480 &&
       Number(diagnostics.inhabitants) >= 5 &&
       Number(diagnostics.trees) >= 24
     ) {
@@ -169,9 +169,9 @@ try {
     diagnostics?.workshopPreview !== 'project-owned-glb' ||
     Number(diagnostics?.tick) < 1 || Number(diagnostics?.drawCalls) < 1 ||
     Number(diagnostics?.structures) < 3 ||
-    diagnostics?.storehouseCandidate !== 'procedural-project-owned' ||
+    diagnostics?.storehouseCandidate !== 'project-owned-glb' ||
     Number(diagnostics?.storehouseTriangles) !== 15_550 ||
-    diagnostics?.workshopCandidate !== 'absent' || Number(diagnostics?.workshopTriangles) !== 0
+    diagnostics?.workshopCandidate !== 'project-owned-glb-preview' || Number(diagnostics?.workshopTriangles) !== 22_480
   ) {
     throw new Error(`Project-workshop preview became unhealthy before evidence capture: ${JSON.stringify(finalState)}`);
   }
