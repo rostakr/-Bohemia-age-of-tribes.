@@ -25,6 +25,8 @@ export interface ProceduralWorkshop {
 
 type V3 = [number, number, number];
 
+export const WORKSHOP_UV_REPEAT_METRES = 0.65;
+
 function emptyMesh(): MeshData {
   return { positions: [], indices: [], uvs: [] };
 }
@@ -36,11 +38,13 @@ function addVertex(data: MeshData, p: V3, uv: [number, number] = [0, 0]): number
   return index;
 }
 
-function addQuad(data: MeshData, a: V3, b: V3, c: V3, d: V3): void {
+function addQuad(data: MeshData, a: V3, b: V3, c: V3, d: V3, widthMetres: number, heightMetres: number): void {
+  const u = widthMetres / WORKSHOP_UV_REPEAT_METRES;
+  const v = heightMetres / WORKSHOP_UV_REPEAT_METRES;
   const ia = addVertex(data, a, [0, 0]);
-  const ib = addVertex(data, b, [1, 0]);
-  const ic = addVertex(data, c, [1, 1]);
-  const id = addVertex(data, d, [0, 1]);
+  const ib = addVertex(data, b, [u, 0]);
+  const ic = addVertex(data, c, [u, v]);
+  const id = addVertex(data, d, [0, v]);
   data.indices.push(ia, ib, ic, ia, ic, id);
 }
 
@@ -63,12 +67,12 @@ function addOrientedBox(
   const p010 = corner(-1, 1, -1), p011 = corner(-1, 1, 1);
   const p100 = corner(1, -1, -1), p101 = corner(1, -1, 1);
   const p110 = corner(1, 1, -1), p111 = corner(1, 1, 1);
-  addQuad(data, p001, p101, p111, p011);
-  addQuad(data, p100, p000, p010, p110);
-  addQuad(data, p000, p001, p011, p010);
-  addQuad(data, p101, p100, p110, p111);
-  addQuad(data, p010, p011, p111, p110);
-  addQuad(data, p000, p100, p101, p001);
+  addQuad(data, p001, p101, p111, p011, halfX * 2, halfY * 2);
+  addQuad(data, p100, p000, p010, p110, halfX * 2, halfY * 2);
+  addQuad(data, p000, p001, p011, p010, halfZ * 2, halfY * 2);
+  addQuad(data, p101, p100, p110, p111, halfZ * 2, halfY * 2);
+  addQuad(data, p010, p011, p111, p110, halfZ * 2, halfX * 2);
+  addQuad(data, p000, p100, p101, p001, halfX * 2, halfZ * 2);
 }
 
 function normalize(v: V3): V3 {
@@ -86,23 +90,28 @@ function cross(a: V3, b: V3): V3 {
 }
 
 function addCylinder(data: MeshData, a: V3, b: V3, radius: number, sections = 8): void {
-  const axis = normalize([b[0] - a[0], b[1] - a[1], b[2] - a[2]]);
+  const delta: V3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+  const length = Math.hypot(delta[0], delta[1], delta[2]);
+  const axis = normalize(delta);
   const reference: V3 = Math.abs(axis[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0];
   const u = normalize(cross(axis, reference));
   const v = normalize(cross(axis, u));
   const ringA: number[] = [];
   const ringB: number[] = [];
-  for (let i = 0; i < sections; i++) {
-    const angle = i / sections * Math.PI * 2;
+  const circumferenceRepeats = Math.PI * 2 * radius / WORKSHOP_UV_REPEAT_METRES;
+  const lengthRepeats = length / WORKSHOP_UV_REPEAT_METRES;
+  for (let i = 0; i <= sections; i++) {
+    const fraction = i / sections;
+    const angle = fraction * Math.PI * 2;
     const ox = (u[0] * Math.cos(angle) + v[0] * Math.sin(angle)) * radius;
     const oy = (u[1] * Math.cos(angle) + v[1] * Math.sin(angle)) * radius;
     const oz = (u[2] * Math.cos(angle) + v[2] * Math.sin(angle)) * radius;
-    ringA.push(addVertex(data, [a[0] + ox, a[1] + oy, a[2] + oz], [i / sections, 0]));
-    ringB.push(addVertex(data, [b[0] + ox, b[1] + oy, b[2] + oz], [i / sections, 1]));
+    const texU = fraction * circumferenceRepeats;
+    ringA.push(addVertex(data, [a[0] + ox, a[1] + oy, a[2] + oz], [texU, 0]));
+    ringB.push(addVertex(data, [b[0] + ox, b[1] + oy, b[2] + oz], [texU, lengthRepeats]));
   }
   for (let i = 0; i < sections; i++) {
-    const next = (i + 1) % sections;
-    data.indices.push(ringA[i]!, ringB[i]!, ringB[next]!, ringA[i]!, ringB[next]!, ringA[next]!);
+    data.indices.push(ringA[i]!, ringB[i]!, ringB[i + 1]!, ringA[i]!, ringB[i + 1]!, ringA[i + 1]!);
   }
 }
 
