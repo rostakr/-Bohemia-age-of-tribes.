@@ -1,0 +1,62 @@
+name: Validate worker R2 candidate
+
+on:
+  pull_request:
+    paths:
+      - 'assets/source/phase1/worker-r2-source.json'
+      - 'scripts/build-worker-r2.mjs'
+      - 'scripts/compact-worker-r2.mjs'
+      - 'scripts/check-worker-r2.mjs'
+      - 'scripts/browser-worker-r2-smoke.mjs'
+      - 'scripts/browser-worker-r2-closeup.mjs'
+      - 'src/main.ts'
+      - 'src/render/worker-r2-preview-scene.ts'
+      - '.github/workflows/validate-worker-r2.yml'
+  workflow_dispatch:
+
+jobs:
+  validate-worker-r2:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Build deterministic worker R2 from pinned licensed source
+        run: node scripts/build-worker-r2.mjs
+      - name: Compact and verify byte-exact geometry and materials
+        run: node scripts/compact-worker-r2.mjs
+      - name: Verify deterministic rebuild and compaction
+        run: |
+          sha256sum public/assets/characters/boii_adult_worker_r2.glb > /tmp/worker-r2.sha256
+          node scripts/build-worker-r2.mjs
+          node scripts/compact-worker-r2.mjs
+          sha256sum --check /tmp/worker-r2.sha256
+      - name: Check compact R2 receipt and source identity
+        run: node scripts/check-worker-r2.mjs
+      - name: Strict-check worker R2 GLB
+        run: node scripts/check-glb.mjs public/assets/characters/boii_adult_worker_r2.glb --min-tris 28212 --max-tris 28212 --require-normals --require-uv0
+      - name: Record worker R2 file evidence
+        run: |
+          wc -c public/assets/characters/boii_adult_worker_r2.glb
+          sha256sum public/assets/characters/boii_adult_worker_r2.glb
+          cat artifacts/phase1/worker-r2-receipt.json
+      - name: Build with worker R2 preview path
+        run: npm run build
+      - name: Normal RTS worker R2 PlayCanvas smoke
+        run: node scripts/browser-worker-r2-smoke.mjs
+      - name: Neutral worker R2 PlayCanvas close-up
+        run: node scripts/browser-worker-r2-closeup.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: worker-r2-candidate
+          path: |
+            public/assets/characters/boii_adult_worker_r2.glb
+            artifacts/phase1/worker-r2-receipt.json
+            artifacts/phase1/worker-r2-webgl2-1920x1080.png
+            artifacts/phase1/worker-r2-closeup-webgl2-1200x1200.png
+            assets/source/phase1/worker-r2-source.json
+          if-no-files-found: error
+          retention-days: 7

@@ -1,118 +1,30 @@
-# Phase 1 checkpoint — NOT COMPLETE
+# Phase 1 handoff — COMPLETE / QA ACCEPTED
 
-## Current runtime checkpoint
+This file previously described an early Phase 1 checkpoint and is retained only as the stable legacy handoff filename. Its old `NOT COMPLETE`, null-asset and `artGatePassed=false` assertions are superseded.
 
-PlayCanvas 2.22.1 remains the sole game/render engine. The Phase 0.5 lifecycle, explicit canvas ownership, fixed timestep, asset resolver and WebGPU → WebGL2 fallback remain intact. Phase 2 gameplay/economy/combat/AI has not started.
+Current authoritative records:
 
-Current benchmark composition:
+- `docs/PROJECT_STATE.md`
+- `docs/ASSET_MANIFEST.md`
+- `docs/qa/PHASE1_WORK_QUEUE.md`
+- `docs/qa/PHASE1_COMPLETION_HANDOFF.md`
+- `docs/PHASE_2_TASK.md`
 
-- dwelling: admitted generated LOD1, `trellis-derived-generated-lod1`, 53,538 triangles;
-- storehouse: admitted project-owned textured GLB, `public/assets/buildings/boii_storehouse_small.glb`, 15,550 triangles;
-- workshop: existing `procedural-project-owned` candidate, 22,480 triangles;
-- inhabitants: five instances of the existing `procedural-project-owned-readability-prototype`, 1,404 triangles per shared mesh;
-- trees: 32 instances of the existing `procedural-project-owned` candidate, 15,980 triangles per shared mesh;
-- `artGatePassed=false`.
+## Final Phase 1 identity
 
-## Storehouse-only reconciliation result
+- status: **COMPLETE / QA ACCEPTED**
+- art gate: **PASS**
+- accepted candidate: `853d802e0512f4c89f068eb54f64337cf2a23195`
+- QA integration merge: `9d4c9fb642a2952efb279c0461378e5527891099`
+- accepted tree: `1fde280d7a8b61f3a1c87299b400fedc532c3b60`
+- canonical Phase 1 benchmark selector: `?candidate=phase1`
+- Phase 2 entry gate: **OPEN**
+- next task: `P2-RTS-INTERACTION-FOUNDATION`
 
-The Astra/content handoff was reconciled conservatively. Only the storehouse was admitted to canonical runtime use.
+The accepted benchmark contains the dwelling LOD1, compact storehouse, repaired project workshop, five compact R2 workers, terrain, stream, paths, meadow and current vegetation composition. Exact validation, visual QA, accepted limitations and hardware-benchmark disposition are recorded in `docs/qa/PHASE1_COMPLETION_HANDOFF.md`.
 
-Storehouse runtime asset:
+`ACTUAL_DESKTOP_GPU_BENCHMARK: NOT_AVAILABLE_IN_THIS_ENVIRONMENT` remains an explicitly accepted non-blocking limitation; no software CI FPS is represented as desktop hardware performance.
 
-- path: `public/assets/buildings/boii_storehouse_small.glb`;
-- SHA-256: `2e1e054a8a5d66c0a349015d2662a2831894c675378ac11a8e5db90ae15b2b95`;
-- size: 9,933,356 bytes;
-- 15,910 vertices / 15,550 triangles;
-- 5 primitives / 5 materials;
-- NORMAL on 5/5 primitives;
-- TEXCOORD_0 on 5/5 primitives;
-- three embedded 1254×1254 PNG base-color textures;
-- no external GLTF dependencies;
-- no skins or animations;
-- no production LOD.
+## Historical evidence
 
-The supplied workshop and supplied adult-worker GLBs remain rejected for canonical runtime admission. Their canonical runtime files are absent. Their original GLBs and intake/provenance remain preserved under `assets/source/phase1/user-supplied/`.
-
-Reasons remain unchanged:
-
-- supplied workshop: 89,778 triangles, above the current target, and required NORMAL data missing;
-- supplied adult worker: 14,106 triangles is performance-usable, but required NORMAL data is missing and prior visual review found severe patchwork/mis-projected texture on face, clothing and rear surfaces.
-
-Do not restore either rejected GLB to `public/assets/...` merely by synthesizing normals. A new candidate must pass structural and visual QA.
-
-## Verified runtime-baseline QA evidence
-
-The runtime/content baseline used for the final storehouse admission evidence is SHA `47728da23ae73a01b298b935d59a431bc6088548`.
-
-GitHub Actions workflow run `35410230067`: **PASS**.
-
-The run passed:
-
-- `npm ci`;
-- `npm run typecheck`;
-- 22/22 Node tests;
-- strict `npm run check:phase1-assets`;
-- production build;
-- `smoke:webgl2`;
-- `smoke:interactions`;
-- `smoke:lifecycle` with 3/3 remount cycles;
-- software `smoke:webgpu`;
-- `smoke:phase1`;
-- dedicated storehouse admission smoke;
-- dedicated storehouse close-up smoke.
-
-Phase 1 runtime diagnostics on the verified run included:
-
-- `structures=3`;
-- `dwellingCandidate=trellis-derived-generated-lod1`;
-- `dwellingLod=1`;
-- `dwellingTriangles=53538`;
-- `storehouseCandidate=project-owned-glb`;
-- `storehouseTriangles=15550`;
-- `workshopCandidate=procedural-project-owned`;
-- `workshopTriangles=22480`;
-- `treeCandidate=procedural-project-owned`;
-- `trees=32`;
-- `inhabitantCandidate=procedural-project-owned-readability-prototype`;
-- `inhabitants=5`;
-- `failed=false`;
-- `deviceLost=false`;
-- `tick>=1`;
-- `drawCalls>=1`.
-
-Storehouse screenshot evidence artifact: `10574496297`; artifact ZIP SHA-256 `3c7b252e33f2e3b1b53feea9f2e2e1476b9da258f944ac962158a7d55868706b`.
-
-Files:
-
-- `supplied-storehouse-webgl2-1920x1080.png`;
-- `supplied-storehouse-closeup-1920x1080.png`.
-
-The later docs-only evidence correction did not change runtime code or assets. PR #61 head workflow `35414533581` passed the complete validation suite, merge commit `dad5e3babb40990e5e643b348c35c3c3572acad4` was created, and post-merge main workflow `35414735338` also passed the complete validation suite.
-
-## Visual QA verdict
-
-**PASS for WIP runtime admission only.**
-
-The screenshots show one storehouse, not a duplicate. Its scale is credible against the inhabitant and surrounding buildings; supports meet the ground; roof orientation is correct; embedded base-color textures render; there is no obvious missing texture, catastrophic UV projection, gross seam, baked-lighting artifact or accidental metallic material response in the captured views.
-
-Known limitations remain:
-
-- no normal map;
-- no roughness-map texture;
-- no texture/mesh compression;
-- no production storehouse LOD;
-- existing UVs retain close-up wood-grain stretching risk;
-- actual-hardware GPU/VRAM/frame-time acceptance pending;
-- final historical/material/art acceptance pending.
-
-Therefore `artGatePassed=false` remains authoritative.
-
-## Git history / integration
-
-The storehouse-only reconciliation was merged through PR #51. The subsequent PR #57 removed redundant storehouse query-route plumbing and restored the scoped working agreement without changing storehouse admission or QA behavior. PR #61 corrected stale QA documentation only; it did not change runtime behavior or assets.
-
-Do not replay the old Astra handoff wholesale and do not reset to the pre-reconciliation `b34a449...` baseline. Continue from the actual current `main` and reconcile any future work against the current head first.
-
-## Next Phase 1 work
-
-Continue only with bounded Phase 1 content/art tasks. Keep the procedural workshop and inhabitant prototype until materially better candidates pass strict + visual QA. Storehouse optimization/LOD/full-PBR work requires separate evidence and must not silently redefine the already verified admission checkpoint. Phase 2 gameplay remains blocked while the Phase 1 art/hardware gate is open.
+Earlier checkpoint text remains recoverable from Git history and archive documents. It must not be interpreted as current project state or used to block Phase 2.

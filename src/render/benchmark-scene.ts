@@ -45,6 +45,7 @@ export interface BenchmarkModels {
 }
 
 export const SUPPLIED_STOREHOUSE_PATH = 'buildings/boii_storehouse_small.glb';
+export const PROJECT_WORKSHOP_PATH = 'buildings/boii_carpentry_shed_project.glb';
 
 // Never silently replace missing production models with primitives.
 export const ADMITTED_MODELS: BenchmarkModels = {
@@ -293,6 +294,7 @@ export class BenchmarkScene implements RuntimeScene {
       if (index === 1 && path === SUPPLIED_STOREHOUSE_PATH) {
         this.storehouseTriangles = STOREHOUSE_GLB_TRIANGLES;
       }
+      if (index === 2 && path === PROJECT_WORKSHOP_PATH) this.workshopTriangles = 22_540;
       this.buildings++;
     }
 
@@ -426,7 +428,8 @@ export class BenchmarkScene implements RuntimeScene {
       terrainMetres: 220,
       structures: this.buildings,
       inhabitants: this.inhabitants,
-      inhabitantCandidate: this.inhabitantTriangles > 0 ? 'procedural-project-owned-readability-prototype' : 'absent',
+      inhabitantCandidate: this.models.inhabitant && this.inhabitants > 0 ? 'glb-candidate'
+        : this.inhabitantTriangles > 0 ? 'procedural-project-owned-readability-prototype' : 'absent',
       inhabitantTriangles: this.inhabitantTriangles,
       trees: this.trees,
       grassClumps: this.grassClumps,
@@ -437,7 +440,9 @@ export class BenchmarkScene implements RuntimeScene {
         ? (this.models.storehouse ? 'project-owned-glb' : 'procedural-project-owned')
         : 'absent',
       storehouseTriangles: this.storehouseTriangles,
-      workshopCandidate: this.workshopTriangles > 0 ? 'procedural-project-owned' : 'absent',
+      workshopPreview: this.models.workshop === PROJECT_WORKSHOP_PATH ? 'project-owned-glb' : 'none',
+      workshopCandidate: this.workshopTriangles > 0
+        ? (this.models.workshop === PROJECT_WORKSHOP_PATH ? 'project-owned-glb-preview' : 'procedural-project-owned') : 'absent',
       workshopTriangles: this.workshopTriangles,
       treeCandidate: this.treeTriangles > 0 ? 'procedural-project-owned' : 'absent',
       treeCandidateTriangles: this.treeTriangles,

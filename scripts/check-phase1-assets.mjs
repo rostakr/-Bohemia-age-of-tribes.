@@ -7,6 +7,7 @@ const candidates = [
     path: 'public/assets/buildings/boii_storehouse_small.glb',
     min: 15000,
     max: 35000,
+    checker: 'scripts/check-storehouse-runtime.mjs',
   },
   {
     label: 'Boii carpentry shelter',
@@ -33,7 +34,7 @@ for (const candidate of candidates) {
   present++;
   console.log(`VALIDATE: ${candidate.label} — ${candidate.path}`);
   const result = spawnSync(process.execPath, [
-    'scripts/check-glb.mjs',
+    candidate.checker ?? 'scripts/check-glb.mjs',
     candidate.path,
     '--min-tris', String(candidate.min),
     '--max-tris', String(candidate.max),
