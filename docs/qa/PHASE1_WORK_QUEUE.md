@@ -2,102 +2,107 @@
 
 This file is the single authoritative work queue between Phase 1 DEV and QA.
 
+Updated: 2026-09-22
+
 ## Branch flow
 
 `feature DEV branch` → `qa/phase1-integration` → QA → `main`
 
-- DEV owns asset creation and implementation on a feature branch.
-- QA owns admission, regression testing, `docs/PROJECT_STATE.md`, integration into `qa/phase1-integration`, and the eventual merge to `main`.
-- DEV must not merge feature branches directly to `main`.
-- QA must not release another DEV task while a handoff is `QA_ACTIVE`. The active handoff must first become `ACCEPTED_IN_INTEGRATION`, be returned as `BLOCKED` with an explicit repair request, or be explicitly deferred.
-- A returned `BLOCKED` handoff may remain in the queue while another already-delivered handoff is later activated by QA.
+- DEV owns one active implementation task at a time.
+- QA owns admission, regression testing, `docs/PROJECT_STATE.md`, integration and release decisions.
+- No DEV feature branch merges directly to `main`.
+- Exactly one item may be `QA_ACTIVE`.
+- While an item is `QA_ACTIVE`, do not start a new DEV PR for another content direction.
 - `artGatePassed=false` remains authoritative until the complete Phase 1 art gate is accepted.
 
 ## Status vocabulary
 
-- `READY_FOR_QA` — DEV handoff exists and is queued for future QA activation.
-- `QA_ACTIVE` — the single handoff currently being evaluated by QA; no further DEV task is released until disposition.
-- `ACCEPTED_IN_INTEGRATION` — QA accepted the handoff and integrated it into `qa/phase1-integration`; it is not automatically accepted to `main`.
-- `BLOCKED` — cannot advance until the recorded dependency or repair is resolved.
-- `SUPERSEDED` — replaced by newer work/evidence or made obsolete by content already accepted elsewhere; should not be merged.
+- `QA_ACTIVE` — the single candidate currently under QA disposition.
+- `READY_FOR_QA` — complete DEV handoff waiting behind the active candidate.
+- `ACCEPTED_IN_INTEGRATION` — accepted and merged into `qa/phase1-integration`; not automatically accepted to `main`.
+- `BLOCKED` — evidence is retained but repair, fresh current-base work, or another dependency is required.
+- `SUPERSEDED` — replaced by a newer authoritative candidate; do not merge/reactivate.
 
-## Baseline
+## Current baselines
 
-- Verified `main`: `47728da23ae73a01b298b935d59a431bc6088548`
-- Verification: `Validate foundation` run `35410230067` — PASS.
-- Integration branch: `qa/phase1-integration`, created from the verified `main` SHA above.
-- Phase: `PHASE_1_CONTENT_ART_GATE`
-- Art gate: **OPEN — `artGatePassed=false`**
-- Current `QA_ACTIVE`: **none**. The latest DEV handoff (#60) was returned as `BLOCKED` after reproducible QA failure.
+- `main`: corrective head `a845caafc1ccf6268facde48539c75520c0ba921`; this reverts the accidental merge of blocked QA preview PR #63 and restores the production tree that existed at `c24efeacd556a979df9b67824ac9ae2d6f2ade3d`.
+- `qa/phase1-integration`: corrective head `fa14f26a8c6cde59745ba0b97d4bb42b1088a407` before this queue update; this reverts superseded worker PR #64 while preserving its history.
+- Compact storehouse PR #60 remains accepted in integration through merge `e3d5a8af4758cac6683024b4c237bf14f14bbd2f`.
+- Phase: `PHASE_1_CONTENT_ART_GATE`.
+- Art gate: **OPEN — `artGatePassed=false`**.
 
-## Current queue
+## Current QA_ACTIVE
 
-| Order | PR | Branch | Status | QA decision / dependency |
-| ---: | ---: | --- | --- | --- |
-| 1 | #60 | `phase1/storehouse-512-current-baseline` | **BLOCKED** | Latest DEV HANDOFF. Compact result itself is structurally promising: 791,800 B / 15,550 tris / 17,810 vertices / 5/5 NORMAL / 5/5 UV0; UV unit tests, typecheck, 23/23 Node tests, build, WebGL2 and interactions PASS. Admission is blocked because lifecycle initial mount reproducibly fails with `Renderer unavailable` in dedicated run `35412640794`, standard run `35412640899`, and retry job `105815391664`; downstream WebGPU/Phase-1/storehouse smokes never run. JPEG rebuild also does not currently reproduce the exact `runtime/*.jpg` bytes consumed by the exporter. Returned to DEV with repair contract below. |
-| 2 | #58 | `phase1/project-adult-worker-candidate` | **BLOCKED** | Independently QA-reviewed and returned for art repair. Head `2ee931a0…` is technically healthy: candidate workflow `35412134308` PASS and foundation workflow `35412134254` PASS; 26,140 tris is inside the 25k–50k target. Production visual admission fails: close-up remains procedural/placeholder with detached oval hands, spherical shoulder caps, simplified limbs, toy-like face/head construction and weak body/clothing transitions. |
-| 3 | #43 | `phase1/project-workshop-glb` | **READY_FOR_QA** | Project-owned workshop GLB candidate, 22,480 tris. Retargeted to `qa/phase1-integration`; needs isolated runtime/visual/historical QA before admission. |
-| 4 | #55 | `phase1/tree-lod-candidates` | **READY_FOR_QA** | Deterministic tree LOD1/LOD2 candidates. Retargeted to `qa/phase1-integration`; geometry can be QA-reviewed later, while runtime switch thresholds remain dependent on actual-hardware evidence. |
-| 5 | #48 | `phase1/workshop-lod1-r2` | **BLOCKED** | Depends on #43 workshop LOD0 being accepted first. Do not QA/merge the LOD branch ahead of its source candidate. |
-| — | #59 | `qa/supplied-preview-render` | **SUPERSEDED** | QA-only evidence task completed and closed. Dedicated multi-angle render run `35412011470` PASS and standard foundation run `35412011476` PASS. Supplied workshop/worker previews render, but neither is production-admitted. |
-| — | #53 | `phase1/supplied-normals-preview-r3` | **SUPERSEDED** | Closed. Structural normals-only preview work was superseded by #59, which performed actual PlayCanvas multi-angle render validation. |
-| — | #41 | `phase1/storehouse-uv-material-pass` | **SUPERSEDED** | Closed. Replaced by the fresh current-baseline storehouse candidate #60; do not replay the old stacked branch. |
-| — | #45 | `phase1/license-provenance-clarification` | **SUPERSEDED** | Closed. Old provenance-only branch is no longer a QA blocker. Project-owner-supplied assets are treated as cleared for this project; technical/visual/historical admission remains independent. |
+### #65 — supplied-source adult worker R2
 
-## Returned repair contract — PR #60 compact storehouse
+- PR: #65
+- Branch: `phase1/worker-production-r2-current`
+- Synced head after the #64 revert: `16d42772b736fc7c936f062e3fef089b086060bd`
+- Base: `qa/phase1-integration`
+- Status: **QA_ACTIVE**
+- Canonical runtime/admission: unchanged pending QA decision.
 
-The compact update is **not** accepted into `qa/phase1-integration`. DEV repair must:
+Candidate evidence from code head `a45e2a09fd352734d3ba8bf9f881c17e07668f23`:
+- pinned licensed supplied source SHA-256 `0ca4d24829f89ad60815102b5d08a6bcdfb9c5d724653ac08306ffe04dfae1f2`;
+- R2 output 28,212 triangles / 56,424 vertices;
+- GLB 3,615,224 B, SHA-256 `c0e8144f07d84bfcd7b3e5118df59c1d589a65f23f512099ed75cb1881ba81b8`;
+- NORMAL 1/1, UV0 1/1, one material/image/texture, no skin/animations;
+- dedicated worker run `35729095078`: SUCCESS;
+- foundation run `35729095028`: SUCCESS;
+- RTS WebGL2 preview and neutral close-up: PASS;
+- artifact `10693924659`, digest `sha256:0d7654f5f760a88d2c1811a6c5017a9625feededf0de8baadbffd00115ca0103`.
 
-1. identify and fix the default Phase-1 initialization/lifecycle failure without replacing or bypassing the established runtime/lifecycle architecture;
-2. make `smoke:lifecycle` initial mount and all 3 remount cycles PASS against the current integration base;
-3. allow software WebGPU, normal Phase-1 benchmark, storehouse admission and storehouse close-up smokes to actually execute and PASS;
-4. make the JPEG rebuild path reproduce the exact bytes consumed by `scripts/export-storehouse.mjs`, or add an explicit byte/hash equality check that fails when rebuilt and runtime JPEGs diverge;
-5. retain strict 5/5 NORMAL + 5/5 UV0 checks and the ≤900 kB compact-runtime ceiling;
-6. keep the change storehouse-scoped; no gameplay, simulation or Phase-2 changes;
-7. preserve `artGatePassed=false` until QA accepts the repaired handoff.
+QA decision criteria:
+1. human silhouette/anatomy at close-up;
+2. Late La Tène visual restraint and clothing/material coherence;
+3. normal RTS readability and grounding;
+4. no renderer/lifecycle/foundation regression;
+5. provenance remains pinned and reproducible;
+6. treat the deterministic triangle split only as geometry normalization — doubling triangles is **not** by itself evidence of improved visual detail;
+7. the 3.62 MB payload is a known optimization issue; if visual QA accepts the candidate, compaction may be a separate isolated follow-up without changing the reviewed silhouette/material.
 
-Observed current compact output before the runtime gate failure:
-- GLB: 791,800 B;
-- SHA-256 observed in dedicated run: `775c4d918c3d59f0d6dd622af7a6bdcc4ef84af9ac10aeffd10654d3eaef9d90`;
-- 15,550 triangles / 17,810 vertices;
-- runtime JPEG hashes actually consumed by the exporter in that run: clay `33401ac8…`, thatch `5885b879…`, oak `8d1324d4…`;
-- rebuild workflow `35412640855` instead asserts separate rebuilt hashes: oak `c6abab6d…`, thatch `0564f253…`, clay `dc10ae70…`.
+No new worker PR is authorized while #65 is `QA_ACTIVE`. QA must either accept it into integration, return one explicit repair contract, or explicitly supersede it.
 
-## Returned repair contract — PR #58 adult worker
+## Closed / parked items
 
-The current candidate is **not** admitted. DEV repair must:
+| PR | Status | Disposition |
+| ---: | --- | --- |
+| #60 | **ACCEPTED_IN_INTEGRATION** | Compact storehouse accepted into `qa/phase1-integration`; keep as current storehouse implementation baseline. |
+| #64 | **SUPERSEDED** | Closed. It was merged concurrently, then cleanly reverted from integration by `fa14f26a8c6cde59745ba0b97d4bb42b1088a407`. Do not reactivate; #65 is authoritative worker candidate. |
+| #63 | **BLOCKED** | Closed QA evidence. Runtime CI passed, but visual QA found roof/thatch, roof-edge, interior readability and grounding/material blockers. Its accidental merge to `main` was reverted by `a845caafc1ccf6268facde48539c75520c0ba921`. |
+| #55 | **BLOCKED** | Closed/parked old tree-LOD lineage. Rebuild later from the then-current integration base; runtime switching still requires actual-hardware evidence. |
+| #43 | **SUPERSEDED** | Closed old stacked workshop candidate; superseded by later #63 evidence. |
+| #48 | **SUPERSEDED** | Closed workshop LOD branch tied to superseded #43 lineage. |
+| #58 | **SUPERSEDED** | Closed technical fallback; not admitted for production art. |
 
-1. preserve the existing runtime architecture and target scale of about 1.72 m;
-2. keep worker geometry inside the documented 25k–50k triangle target;
-3. replace placeholder anatomy with a coherent human silhouette — integrated hands/wrists, natural shoulder-to-upper-arm transition, cleaner elbows/knees/feet and plausible head/neck proportions;
-4. materially improve face/hair/beard readability without primitive-like protrusions;
-5. preserve historically restrained Late La Tène worker clothing and avoid fantasy, Roman or medieval cues;
-6. provide a new isolated neutral close-up plus the normal RTS benchmark render through PlayCanvas WebGL2;
-7. rerun strict GLB checks and the full foundation regression suite on the repaired head;
-8. leave `ADMITTED_MODELS` and `artGatePassed=false` unchanged until QA accepts the repair.
+## Workshop repair contract for a future task
 
-## Completed QA evidence from supplied Astra/content handoff
+Do not open a workshop repair while #65 is `QA_ACTIVE`. When QA later releases workshop work, create one fresh branch from the then-current `qa/phase1-integration` and address the recorded #63 visual blockers:
 
-The supplied storehouse is already WIP-admitted on `main` and remains covered by strict GLB/runtime smokes.
+- roof/thatch value and material readability;
+- controlled roof-edge geometry without noisy fringe;
+- brighter/clearer bench, trestle and tool readability;
+- foundation/grounding that does not read as a dark rectangular slab;
+- retain 20k–45k production triangle target, normals + UV0, PlayCanvas isolated render evidence, and full foundation regression.
 
-The supplied workshop and adult-worker originals remain provenance/source material only. QA #59 established:
+Old #43/#48 ancestry must not be replayed wholesale.
 
-- normals-fixed workshop preview: PlayCanvas WebGL2 render PASS from multiple checked angles; 89,778 triangles; visually coherent in the captured QA views but above the current 20k–45k workshop production target;
-- normals-fixed worker preview: PlayCanvas WebGL2 render PASS from multiple checked angles; 14,106 triangles; the previously suspected severe projection failure was not reproduced in these checked views, but the candidate remains below the current 25k–50k production brief and has no rig/animations/LOD;
-- neither result changes canonical runtime admission;
-- `artGatePassed=false` remains unchanged.
+## Tree LOD future gate
+
+#55 evidence may be reused only as reference. When tree LOD becomes active, rebuild a fresh candidate from the current integration baseline and re-run current structural/runtime QA. Do not choose runtime distance thresholds until actual desktop-hardware evidence is available.
 
 ## Handoff contract
 
-A DEV handoff entering this queue should provide, where applicable:
+Every DEV handoff must provide:
 
-1. exact feature branch and head SHA;
-2. candidate/runtime paths and source/provenance paths;
-3. deterministic generation/export command if generated;
-4. triangle/vertex/material/texture/bounds data;
-5. strict structural checks and relevant unit tests;
-6. isolated PlayCanvas render evidence rather than only file-level validation;
-7. known limitations and explicit non-goals;
-8. no claim of admission or `artGatePassed=true` — those belong to QA.
+1. exact branch and head SHA;
+2. candidate/runtime paths and provenance/source identity;
+3. deterministic generation/export command where applicable;
+4. triangle/vertex/material/texture/bounds/file-size data;
+5. strict structural checks and relevant tests;
+6. isolated PlayCanvas render evidence;
+7. full current foundation regression when runtime files/routes change;
+8. known limitations and explicit non-goals;
+9. no claim of canonical admission and no `artGatePassed=true` claim.
 
-QA records the outcome in this queue and `docs/PROJECT_STATE.md`. Only QA moves accepted content into `qa/phase1-integration` and later to `main`.
+GitHub is the only coordination channel between DEV and QA. QA updates this file immediately after every disposition before releasing another DEV task.
