@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createWorkshopGeometry, workshopStats } from '../src/render/workshop.ts';
+import {
+  createWorkshopGeometry,
+  workshopStats,
+  WORKSHOP_UV_REPEAT_METRES,
+} from '../src/render/workshop.ts';
 
 function validateMeshData(data, label) {
   assert.equal(data.positions.length % 3, 0, label + ': position array must contain xyz triplets');
@@ -12,6 +16,13 @@ function validateMeshData(data, label) {
   for (const index of data.indices) {
     assert.ok(Number.isInteger(index) && index >= 0 && index < vertices, label + ': index outside vertex range');
   }
+}
+
+function positionKey(data, vertex) {
+  const offset = vertex * 3;
+  return [data.positions[offset], data.positions[offset + 1], data.positions[offset + 2]]
+    .map(value => value.toFixed(7))
+    .join(',');
 }
 
 test('procedural Boii workshop geometry stays finite, indexed and within the Phase 1 candidate budget', () => {
@@ -45,4 +56,41 @@ test('procedural workshop triangles are non-degenerate', () => {
       assert.ok(nx * nx + ny * ny + nz * nz > 1e-12, label + ': degenerate triangle at index ' + i / 3);
     }
   }
+});
+
+test('workshop UVs use physical repeat scale and explicit cylinder seam vertices', () => {
+  const { timber } = createWorkshopGeometry();
+  assert.equal(WORKSHOP_UV_REPEAT_METRES, 0.65);
+
+  let maxU = -Infinity;
+  let maxV = -Infinity;
+  for (let i = 0; i < timber.uvs.length; i += 2) {
+    maxU = Math.max(maxU, timber.uvs[i]);
+    maxV = Math.max(maxV, timber.uvs[i + 1]);
+  }
+  assert.ok(maxU > 3, 'long timber members should repeat the texture more than three times');
+  assert.ok(maxV > 3, 'long timber members should repeat the texture along their physical length');
+
+  const verticesByPosition = new Map();
+  for (let vertex = 0; vertex < timber.positions.length / 3; vertex++) {
+    const key = positionKey(timber, vertex);
+    const list = verticesByPosition.get(key) ?? [];
+    list.push(vertex);
+    verticesByPosition.set(key, list);
+  }
+
+  let seamPairs = 0;
+  for (const vertices of verticesByPosition.values()) {
+    if (vertices.length < 2) continue;
+    for (let i = 0; i < vertices.length; i++) {
+      for (let j = i + 1; j < vertices.length; j++) {
+        const a = vertices[i] * 2;
+        const b = vertices[j] * 2;
+        const sameV = Math.abs(timber.uvs[a + 1] - timber.uvs[b + 1]) < 1e-7;
+        const uDifference = Math.abs(timber.uvs[a] - timber.uvs[b]);
+        if (sameV && uDifference > 0.1) seamPairs++;
+      }
+    }
+  }
+  assert.ok(seamPairs >= 10, 'textured cylinders should expose duplicated seam vertices with distinct U values');
 });
