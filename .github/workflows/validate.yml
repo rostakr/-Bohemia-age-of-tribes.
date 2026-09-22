@@ -28,19 +28,10 @@ jobs:
         run: npm run smoke:webgpu
       - name: Phase 1 benchmark browser smoke
         run: npm run smoke:phase1
-      - name: Project-owned workshop isolated preview smoke
-        run: npm run smoke:workshop-project
       - name: Supplied storehouse admission smoke
         run: npm run smoke:supplied-storehouse
       - name: Supplied storehouse close-up smoke
         run: npm run smoke:supplied-storehouse-closeup
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: project-workshop-browser-evidence
-          path: artifacts/phase1/phase1-project-workshop-1920x1080.png
-          if-no-files-found: warn
-          retention-days: 7
       - uses: actions/upload-artifact@v4
         with:
           name: bohemia-static-build

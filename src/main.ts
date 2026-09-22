@@ -1,7 +1,7 @@
 import './style.css';
 import { CONFIG } from './config';
 import { CalibrationScene } from './render/calibration-scene';
-import { ADMITTED_MODELS, BenchmarkScene } from './render/benchmark-scene';
+import { BenchmarkScene } from './render/benchmark-scene';
 import type { ViewName } from './render/inspection-camera';
 import { createGameRuntime, type GameRuntime, type RuntimeSnapshot } from './render/runtime';
 import type { RuntimeScene } from './render/scene';
@@ -38,7 +38,6 @@ const parameters = new URLSearchParams(window.location.search);
 const debug = parameters.get('debug') === '1';
 const forceWebGL2 = parameters.get('renderer') === 'webgl2';
 const calibration = parameters.get('scene') === 'calibration';
-const projectWorkshop = parameters.get('workshop') === 'project';
 const runningLabel = calibration ? 'Foundation running' : 'Scene running';
 
 let runtime: GameRuntime | undefined;
@@ -49,10 +48,7 @@ let mountGeneration = 0;
 
 function createScene(): RuntimeScene {
   if (calibration) return new CalibrationScene();
-  const models = projectWorkshop
-    ? { ...ADMITTED_MODELS, workshop: 'buildings/boii_carpentry_shed_project.glb' }
-    : ADMITTED_MODELS;
-  const benchmark = projectWorkshop ? new BenchmarkScene(models) : new BenchmarkScene();
+  const benchmark = new BenchmarkScene();
   activeBenchmarkScene = benchmark;
   return benchmark;
 }
@@ -81,11 +77,7 @@ function updateDiagnostics(created: GameRuntime): void {
     : sample.deviceLost
       ? 'Graphics device lost — waiting for recovery'
       : `${sample.renderer.toUpperCase()} · ${sample.paused ? 'Simulation paused' : runningLabel}`;
-  if (debug) {
-    diagnostics.textContent = JSON.stringify(projectWorkshop
-      ? { ...sample, workshopPreview: 'project-owned-glb' }
-      : sample, null, 2);
-  }
+  if (debug) diagnostics.textContent = JSON.stringify(sample, null, 2);
 }
 
 function setSelectedView(selected: HTMLButtonElement): void {

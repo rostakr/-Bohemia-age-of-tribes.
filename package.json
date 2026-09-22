@@ -22,15 +22,11 @@
     "check:glb": "node scripts/check-glb.mjs",
     "prepare:glb-normals": "node scripts/add-glb-normals.mjs",
     "check:phase1-assets": "node --check scripts/check-glb.mjs && node --check scripts/add-glb-normals.mjs && node --check scripts/check-phase1-assets.mjs && node scripts/check-phase1-assets.mjs",
-    "validate": "npm run typecheck && npm test && npm run check:phase1-assets && npm run check:workshop-project && npm run build",
+    "validate": "npm run typecheck && npm test && npm run check:phase1-assets && npm run build",
     "generate:dwelling-lods": "node scripts/generate-dwelling-lods.mjs public/assets/buildings/boii_dwelling_rectangular.glb public/assets/buildings",
     "pretest": "npm run generate:dwelling-lods",
     "prebuild": "npm run generate:dwelling-lods",
-    "predev": "npm run generate:dwelling-lods",
-    "smoke:workshop-project": "node scripts/browser-workshop-project-smoke.mjs",
-    "generate:workshop-project": "node --experimental-strip-types scripts/export-workshop-project.mjs",
-    "check:workshop-project": "node scripts/check-glb.mjs public/assets/buildings/boii_carpentry_shed_project.glb --min-tris 20000 --max-tris 45000 --require-normals --require-uv0",
-    "prevalidate": "npm run generate:workshop-project"
+    "predev": "npm run generate:dwelling-lods"
   },
   "dependencies": {
     "playcanvas": "2.22.1"
