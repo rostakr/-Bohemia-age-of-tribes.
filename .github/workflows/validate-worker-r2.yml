@@ -5,6 +5,7 @@ on:
     paths:
       - 'assets/source/phase1/worker-r2-source.json'
       - 'scripts/build-worker-r2.mjs'
+      - 'scripts/compact-worker-r2.mjs'
       - 'scripts/check-worker-r2.mjs'
       - 'scripts/browser-worker-r2-smoke.mjs'
       - 'scripts/browser-worker-r2-closeup.mjs'
@@ -25,7 +26,15 @@ jobs:
       - run: npm ci
       - name: Build deterministic worker R2 from pinned licensed source
         run: node scripts/build-worker-r2.mjs
-      - name: Check R2 receipt and source identity
+      - name: Compact and verify byte-exact geometry and materials
+        run: node scripts/compact-worker-r2.mjs
+      - name: Verify deterministic rebuild and compaction
+        run: |
+          sha256sum public/assets/characters/boii_adult_worker_r2.glb > /tmp/worker-r2.sha256
+          node scripts/build-worker-r2.mjs
+          node scripts/compact-worker-r2.mjs
+          sha256sum --check /tmp/worker-r2.sha256
+      - name: Check compact R2 receipt and source identity
         run: node scripts/check-worker-r2.mjs
       - name: Strict-check worker R2 GLB
         run: node scripts/check-glb.mjs public/assets/characters/boii_adult_worker_r2.glb --min-tris 28212 --max-tris 28212 --require-normals --require-uv0
