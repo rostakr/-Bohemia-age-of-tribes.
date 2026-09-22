@@ -33,40 +33,25 @@ Updated: 2026-09-22
 
 ## Current QA_ACTIVE
 
-### #65 — supplied-source adult worker R2
+None. PR #65 has completed independent visual QA and is **ACCEPTED_IN_INTEGRATION**.
 
-- PR: #65
-- Branch: `phase1/worker-production-r2-current`
-- Authoritative current head: read directly from PR #65; do not duplicate its moving synchronization SHA here.
-- Base: `qa/phase1-integration`
-- Status: **QA_ACTIVE**
-- Canonical runtime/admission: unchanged pending QA decision.
+### #65 — supplied-source adult worker R2 — accepted
 
-Candidate evidence from code head `a45e2a09fd352734d3ba8bf9f881c17e07668f23`:
-- pinned licensed supplied source SHA-256 `0ca4d24829f89ad60815102b5d08a6bcdfb9c5d724653ac08306ffe04dfae1f2`;
-- R2 output 28,212 triangles / 56,424 vertices;
-- GLB 3,615,224 B, SHA-256 `c0e8144f07d84bfcd7b3e5118df59c1d589a65f23f512099ed75cb1881ba81b8`;
-- NORMAL 1/1, UV0 1/1, one material/image/texture, no skin/animations;
-- dedicated worker run `35729095078`: SUCCESS;
-- foundation run `35729095028`: SUCCESS;
-- RTS WebGL2 preview and neutral close-up: PASS;
-- artifact `10693924659`, digest `sha256:0d7654f5f760a88d2c1811a6c5017a9625feededf0de8baadbffd00115ca0103`.
+- Merge into `qa/phase1-integration`: `bc590ce1a565147bdefaef4b6116edc9deff5a42`.
+- QA reviewed synchronized head `405d8f41fa719c02385a77c2ce8547ac0994da75`.
+- Fresh synchronized-head CI: foundation run `35735867423` SUCCESS; worker R2 run `35735867400` SUCCESS.
+- Reviewed artifact: `worker-r2-candidate` id `10697212076`, digest `sha256:21325f11db60b26d667b98af31d7ca30389a54f16a936b1dc3dfb555872fd198`.
+- Visual QA: **PASS for Phase 1 integration**. Close-up silhouette/anatomy is materially coherent; clothing/material treatment is restrained and plausible for the current Late La Tène art target; normal RTS view remains readable and grounded. The previous #58 blocker classes are no longer admission blockers.
+- Provenance remains pinned/reproducible. Triangle splitting remains geometry normalization only, not a visual-detail claim.
+- This acceptance is **integration admission only**. It does not merge to `main`, does not make the worker canonical production runtime by itself, and does not set `artGatePassed=true`.
 
-QA decision criteria:
-1. human silhouette/anatomy at close-up;
-2. Late La Tène visual restraint and clothing/material coherence;
-3. normal RTS readability and grounding;
-4. no renderer/lifecycle/foundation regression;
-5. provenance remains pinned and reproducible;
-6. treat the deterministic triangle split only as geometry normalization — doubling triangles is **not** by itself evidence of improved visual detail;
-7. the 3.62 MB payload is a known optimization issue; if visual QA accepts the candidate, compaction may be a separate isolated follow-up without changing the reviewed silhouette/material.
-
-No new worker PR is authorized while #65 is `QA_ACTIVE`. QA must either accept it into integration, return one explicit repair contract, or explicitly supersede it.
+**Released follow-up:** lossless worker compaction is now authorized as the single next DEV task from the current `qa/phase1-integration` baseline. It must preserve the accepted #65 rendered silhouette, material/texture bytes and visual output; change storage/layout only; prove deterministic output and strict GLB/runtime equivalence; and return fresh isolated render + foundation regression evidence before any compacted asset replaces the accepted R2 bytes.
 
 ## Closed / parked items
 
 | PR | Status | Disposition |
 | ---: | --- | --- |
+| #65 | **ACCEPTED_IN_INTEGRATION** | Adult worker R2 visually accepted; merged at `bc590ce1a565147bdefaef4b6116edc9deff5a42`. Lossless compaction follow-up released; `artGatePassed=false`. |
 | #60 | **ACCEPTED_IN_INTEGRATION** | Compact storehouse accepted into `qa/phase1-integration`; keep as current storehouse implementation baseline. |
 | #64 | **SUPERSEDED** | Closed. It was merged concurrently, then cleanly reverted from integration by `fa14f26a8c6cde59745ba0b97d4bb42b1088a407`. Do not reactivate; #65 is authoritative worker candidate. |
 | #63 | **BLOCKED** | Closed QA evidence. Runtime CI passed, but visual QA found roof/thatch, roof-edge, interior readability and grounding/material blockers. Its accidental merge to `main` was reverted by `a845caafc1ccf6268facde48539c75520c0ba921`. |
