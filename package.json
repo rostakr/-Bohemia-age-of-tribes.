@@ -21,12 +21,15 @@
     "smoke:supplied-storehouse-closeup": "node scripts/browser-supplied-storehouse-closeup.mjs",
     "check:glb": "node scripts/check-glb.mjs",
     "prepare:glb-normals": "node scripts/add-glb-normals.mjs",
-    "check:phase1-assets": "node --check scripts/check-glb.mjs && node --check scripts/add-glb-normals.mjs && node --check scripts/check-phase1-assets.mjs && node scripts/check-phase1-assets.mjs",
-    "validate": "npm run typecheck && npm test && npm run check:phase1-assets && npm run build",
+    "check:phase1-assets": "node --check scripts/check-glb.mjs && node --check scripts/add-glb-normals.mjs && node --check scripts/check-storehouse-runtime.mjs && node --check scripts/check-phase1-assets.mjs && node scripts/check-phase1-assets.mjs",
+    "generate:storehouse": "node --experimental-strip-types scripts/export-storehouse.mjs",
+    "check:storehouse-glb": "node scripts/check-storehouse-runtime.mjs public/assets/buildings/boii_storehouse_small.glb --min-tris 15000 --max-tris 16000 --require-normals --require-uv0",
+    "validate": "npm run typecheck && npm test && npm run check:phase1-assets && npm run check:storehouse-glb && npm run build",
+    "prevalidate": "npm run generate:storehouse",
     "generate:dwelling-lods": "node scripts/generate-dwelling-lods.mjs public/assets/buildings/boii_dwelling_rectangular.glb public/assets/buildings",
     "pretest": "npm run generate:dwelling-lods",
-    "prebuild": "npm run generate:dwelling-lods",
-    "predev": "npm run generate:dwelling-lods"
+    "prebuild": "npm run generate:dwelling-lods && npm run generate:storehouse",
+    "predev": "npm run generate:dwelling-lods && npm run generate:storehouse"
   },
   "dependencies": {
     "playcanvas": "2.22.1"

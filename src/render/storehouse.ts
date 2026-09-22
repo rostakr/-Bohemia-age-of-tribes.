@@ -26,6 +26,10 @@ export interface ProceduralStorehouse {
 
 type V3 = [number, number, number];
 
+// Keep texel density stable across differently sized construction members. The same
+// physical repeat is also used by the offline GLB export, whose sampler is REPEAT.
+export const STOREHOUSE_UV_REPEAT_METRES = 0.65;
+
 function emptyMesh(): MeshData {
   return { positions: [], indices: [], uvs: [] };
 }
@@ -37,11 +41,13 @@ function addVertex(data: MeshData, p: V3, uv: [number, number] = [0, 0]): number
   return index;
 }
 
-function addQuad(data: MeshData, a: V3, b: V3, c: V3, d: V3): void {
+function addQuad(data: MeshData, a: V3, b: V3, c: V3, d: V3, uLength: number, vLength: number): void {
+  const u = uLength / STOREHOUSE_UV_REPEAT_METRES;
+  const v = vLength / STOREHOUSE_UV_REPEAT_METRES;
   const ia = addVertex(data, a, [0, 0]);
-  const ib = addVertex(data, b, [1, 0]);
-  const ic = addVertex(data, c, [1, 1]);
-  const id = addVertex(data, d, [0, 1]);
+  const ib = addVertex(data, b, [u, 0]);
+  const ic = addVertex(data, c, [u, v]);
+  const id = addVertex(data, d, [0, v]);
   data.indices.push(ia, ib, ic, ia, ic, id);
 }
 
@@ -64,12 +70,15 @@ function addOrientedBox(
   const p010 = corner(-1, 1, -1), p011 = corner(-1, 1, 1);
   const p100 = corner(1, -1, -1), p101 = corner(1, -1, 1);
   const p110 = corner(1, 1, -1), p111 = corner(1, 1, 1);
-  addQuad(data, p001, p101, p111, p011);
-  addQuad(data, p100, p000, p010, p110);
-  addQuad(data, p000, p001, p011, p010);
-  addQuad(data, p101, p100, p110, p111);
-  addQuad(data, p010, p011, p111, p110);
-  addQuad(data, p000, p100, p101, p001);
+  const xLength = halfX * 2, yLength = halfY * 2, zLength = halfZ * 2;
+  addQuad(data, p001, p101, p111, p011, xLength, yLength);
+  addQuad(data, p100, p000, p010, p110, xLength, yLength);
+  addQuad(data, p000, p001, p011, p010, zLength, yLength);
+  addQuad(data, p101, p100, p110, p111, zLength, yLength);
+  // On horizontal/local-XZ faces U follows Z and V follows X. For roof planes this
+  // means U follows the ridge and V follows the slope, matching the intended straw flow.
+  addQuad(data, p010, p011, p111, p110, zLength, xLength);
+  addQuad(data, p000, p100, p101, p001, xLength, zLength);
 }
 
 function normalize(v: V3): V3 {
@@ -87,22 +96,28 @@ function cross(a: V3, b: V3): V3 {
 }
 
 function addCylinder(data: MeshData, a: V3, b: V3, radius: number, sections = 8): void {
-  const axis = normalize([b[0] - a[0], b[1] - a[1], b[2] - a[2]]);
+  const axisVector: V3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+  const length = Math.hypot(axisVector[0], axisVector[1], axisVector[2]);
+  const axis = normalize(axisVector);
   const reference: V3 = Math.abs(axis[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0];
   const u = normalize(cross(axis, reference));
   const v = normalize(cross(axis, u));
   const ringA: number[] = [];
   const ringB: number[] = [];
-  for (let i = 0; i < sections; i++) {
-    const angle = i / sections * Math.PI * 2;
+  // Duplicate the seam vertex at U=1 instead of connecting the final U<1 vertex back
+  // to U=0. This prevents the last cylinder strip from interpolating across the atlas.
+  for (let i = 0; i <= sections; i++) {
+    const around = i / sections;
+    const angle = around * Math.PI * 2;
     const ox = (u[0] * Math.cos(angle) + v[0] * Math.sin(angle)) * radius;
     const oy = (u[1] * Math.cos(angle) + v[1] * Math.sin(angle)) * radius;
     const oz = (u[2] * Math.cos(angle) + v[2] * Math.sin(angle)) * radius;
-    ringA.push(addVertex(data, [a[0] + ox, a[1] + oy, a[2] + oz], [i / sections, 0]));
-    ringB.push(addVertex(data, [b[0] + ox, b[1] + oy, b[2] + oz], [i / sections, 1]));
+    const along = length / STOREHOUSE_UV_REPEAT_METRES;
+    ringA.push(addVertex(data, [a[0] + ox, a[1] + oy, a[2] + oz], [around, 0]));
+    ringB.push(addVertex(data, [b[0] + ox, b[1] + oy, b[2] + oz], [around, along]));
   }
   for (let i = 0; i < sections; i++) {
-    const next = (i + 1) % sections;
+    const next = i + 1;
     data.indices.push(ringA[i]!, ringB[i]!, ringB[next]!, ringA[i]!, ringB[next]!, ringA[next]!);
   }
 }

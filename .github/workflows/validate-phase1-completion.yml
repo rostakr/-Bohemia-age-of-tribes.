@@ -1,0 +1,42 @@
+name: Validate Phase 1 completion candidate
+on:
+  pull_request:
+    paths:
+      - 'src/render/workshop-repair.ts'
+      - 'src/render/benchmark-scene.ts'
+      - 'src/main.ts'
+      - 'scripts/export-workshop-project.mjs'
+      - 'scripts/browser-workshop-project-smoke.mjs'
+      - '.github/workflows/validate-phase1-completion.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: node scripts/build-worker-r2.mjs && node scripts/compact-worker-r2.mjs && node scripts/check-worker-r2.mjs
+      - run: node --experimental-strip-types scripts/export-workshop-project.mjs
+      - run: node scripts/check-glb.mjs public/assets/buildings/boii_carpentry_shed_project.glb --min-tris 20000 --max-tris 45000 --require-normals --require-uv0
+      - run: npm run validate
+      - run: node scripts/browser-workshop-project-smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase1-completion-evidence
+          path: |
+            artifacts/phase1/phase1-completion-*.png
+            artifacts/phase1/phase1-project-workshop-1920x1080.png
+            assets/source/phase1/workshop-project-glb-receipt.json
+            artifacts/phase1/worker-r2-receipt.json
+            public/assets/buildings/boii_carpentry_shed_project.glb
+            public/assets/characters/boii_adult_worker_r2.glb
+          if-no-files-found: error
+          retention-days: 14
