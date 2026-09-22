@@ -75,6 +75,25 @@ The Astra/content handoff also supplied workshop and adult-worker GLBs. Their us
 
 ## Asset gate rules
 
+### Workshop repair candidate — 2026-09-22
+
+- Asset: `boii_carpentry_shed_project`, Boii Late La Tène craft shelter, QA candidate.
+- Source: project-owned `src/render/workshop-repair.ts`, derived narrowly from the
+  prior project workshop; no third-party geometry. Existing texture provenance is
+  recorded in `assets/source/phase1/materials/`; project noncommercial usage applies.
+- Export: `node --experimental-strip-types scripts/export-workshop-project.mjs`.
+- Generated path: `public/assets/buildings/boii_carpentry_shed_project.glb`.
+- Receipt: `assets/source/phase1/workshop-project-glb-receipt.json` (generated in CI).
+- GLB: 1,333,468 bytes; SHA-256 `70663eedfbd2c3f54a039e5d0764c86af3bddcc6fe93bda8d1b32e720116283d`.
+- Geometry: 22,540 triangles / 25,649 vertices; five material primitives with NORMAL
+  and UV0. Metres, Y-up, ground origin; bounds 5.24 × 3.57 × 3.414 m.
+- Textures: two embedded 512² JPEG base-color maps (existing oak/thatch derivatives).
+  No external dependencies or decoder. Scalar roughness/metalness, no normal maps.
+- Repair: warm darker roof, short controlled eave strands, shallow irregular earth
+  patch, lighter worn bench/trestle tops, brighter iron tools. Default workshop stays
+  unchanged while `?candidate=phase1` combines this candidate with the compact worker.
+- LOD: none. Historical/visual/hardware acceptance remains pending; not production admission.
+
 For every future production candidate record:
 
 1. source/provider/acquisition route where useful for provenance and reproducibility; project-owner-supplied assets require no further licence review;
