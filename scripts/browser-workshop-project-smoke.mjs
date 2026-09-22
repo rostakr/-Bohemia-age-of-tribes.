@@ -159,7 +159,14 @@ try {
   }
   if (!healthyState) throw new Error(`Timed out waiting for project-workshop preview: ${JSON.stringify(state)}`);
 
-  await sleep(500);
+  // Move to the dedicated craft-site inspection camera before capturing evidence.
+  await evaluate(cdp, `(() => {
+    const button = document.querySelector('[data-view="craft"]');
+    if (!button) throw new Error('Craft inspection view button not found');
+    button.click();
+    return true;
+  })()`);
+  await sleep(1800);
   const finalState = await evaluate(cdp, stateExpression);
   const diagnostics = finalState?.diagnostics;
   if (
