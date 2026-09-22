@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "asset": "boii_adult_worker_r2",
+  "project": "BOHEMIA: AGE OF TRIBES",
+  "purpose": "Phase 1 production-art worker candidate derived from the visually coherent supplied worker rather than the rejected procedural #58 mesh",
+  "source": {
+    "repository": "rostakr/-Bohemia-age-of-tribes.",
+    "commit": "9adb3c74bd2c4da77a17f02a9ff7eba3a8156f07",
+    "path": "public/assets/characters/boii_adult_worker.glb",
+    "sha256": "0ca4d24829f89ad60815102b5d08a6bcdfb9c5d724653ac08306ffe04dfae1f2",
+    "bytes": 1639680,
+    "triangles": 14106,
+    "vertices": 9805,
+    "texture": "one embedded 1024x1024 base-color texture",
+    "normalized_dimensions_xyz_m": [0.698, 1.72, 0.386],
+    "skeleton": false,
+    "animations": 0
+  },
+  "rights": {
+    "status": "cleared_for_this_project",
+    "scope": "noncommercial personal-use project",
+    "statement": "Project owner confirms the supplied asset is licensed for this project. Exact provider/licence identifier metadata may be archived separately and is not a technical admission blocker."
+  },
+  "r2_transform": {
+    "method": "deterministically split every source triangle into two triangles along its longest edge; preserve source silhouette, UV interpolation, material and embedded texture; generate smooth normals from the source topology",
+    "expected_triangles": 28212,
+    "rig_required_for_milestone": false,
+    "visual_intent": "preserve the supplied worker appearance that QA previously found coherent, while satisfying the documented 25k-50k Phase 1 production geometry target"
+  },
+  "admission": {
+    "canonical_runtime_changed": false,
+    "admitted_models_changed": false,
+    "art_gate_passed": false,
+    "requires_independent_visual_historical_qa": true
+  }
+}
