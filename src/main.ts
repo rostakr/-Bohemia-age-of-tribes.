@@ -1,7 +1,7 @@
 import './style.css';
 import { CONFIG } from './config';
 import { CalibrationScene } from './render/calibration-scene';
-import { ADMITTED_MODELS, BenchmarkScene } from './render/benchmark-scene';
+import { ADMITTED_MODELS, BenchmarkScene, PROJECT_WORKSHOP_PATH } from './render/benchmark-scene';
 import type { ViewName } from './render/inspection-camera';
 import { createGameRuntime, type GameRuntime, type RuntimeSnapshot } from './render/runtime';
 import type { RuntimeScene } from './render/scene';
@@ -41,6 +41,8 @@ const forceWebGL2 = parameters.get('renderer') === 'webgl2';
 const calibration = parameters.get('scene') === 'calibration';
 const workerR2Closeup = parameters.get('scene') === 'worker-r2-preview';
 const workerR2Benchmark = parameters.get('worker') === 'r2';
+const completionCandidate = parameters.get('candidate') === 'phase1';
+const workshopPreview = completionCandidate || parameters.get('workshop') === 'project';
 const runningLabel = calibration
   ? 'Foundation running'
   : workerR2Closeup
@@ -56,9 +58,11 @@ let mountGeneration = 0;
 function createScene(): RuntimeScene {
   if (calibration) return new CalibrationScene();
   if (workerR2Closeup) return new WorkerR2PreviewScene();
-  const benchmark = new BenchmarkScene(workerR2Benchmark
-    ? { ...ADMITTED_MODELS, inhabitant: WORKER_R2_PATH }
-    : ADMITTED_MODELS);
+  const benchmark = new BenchmarkScene({
+    ...ADMITTED_MODELS,
+    ...(workerR2Benchmark || completionCandidate ? { inhabitant: WORKER_R2_PATH } : {}),
+    ...(workshopPreview ? { workshop: PROJECT_WORKSHOP_PATH } : {}),
+  });
   activeBenchmarkScene = benchmark;
   return benchmark;
 }
