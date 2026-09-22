@@ -5,7 +5,6 @@ on:
     paths:
       - 'assets/source/phase1/worker-r2-source.json'
       - 'scripts/build-worker-r2.mjs'
-      - 'scripts/compact-worker-r2.mjs'
       - 'scripts/check-worker-r2.mjs'
       - 'scripts/browser-worker-r2-smoke.mjs'
       - 'scripts/browser-worker-r2-closeup.mjs'
@@ -26,8 +25,6 @@ jobs:
       - run: npm ci
       - name: Build deterministic worker R2 from pinned licensed source
         run: node scripts/build-worker-r2.mjs
-      - name: Compact worker R2 without changing referenced payload bytes
-        run: node scripts/compact-worker-r2.mjs
       - name: Check R2 receipt and source identity
         run: node scripts/check-worker-r2.mjs
       - name: Strict-check worker R2 GLB
