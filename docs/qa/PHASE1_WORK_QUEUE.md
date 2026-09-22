@@ -25,8 +25,8 @@ Updated: 2026-09-22
 
 ## Current baselines
 
-- `main`: corrective head `a845caafc1ccf6268facde48539c75520c0ba921`; this reverts the accidental merge of blocked QA preview PR #63 and restores the production tree that existed at `c24efeacd556a979df9b67824ac9ae2d6f2ade3d`.
-- `qa/phase1-integration`: corrective head `fa14f26a8c6cde59745ba0b97d4bb42b1088a407` before this queue update; this reverts superseded worker PR #64 while preserving its history.
+- `main`: corrective lineage includes `a845caafc1ccf6268facde48539c75520c0ba921`, which reverted the accidental merge of blocked QA preview PR #63 and restored the production tree that existed at `c24efeacd556a979df9b67824ac9ae2d6f2ade3d`.
+- `qa/phase1-integration`: corrective lineage includes `fa14f26a8c6cde59745ba0b97d4bb42b1088a407`, which reverted superseded worker PR #64 while preserving its history. The branch head may advance with queue-only coordination commits; always read the branch itself rather than copying a head SHA from this document.
 - Compact storehouse PR #60 remains accepted in integration through merge `e3d5a8af4758cac6683024b4c237bf14f14bbd2f`.
 - Phase: `PHASE_1_CONTENT_ART_GATE`.
 - Art gate: **OPEN — `artGatePassed=false`**.
@@ -37,7 +37,7 @@ Updated: 2026-09-22
 
 - PR: #65
 - Branch: `phase1/worker-production-r2-current`
-- Synced head after the #64 revert: `16d42772b736fc7c936f062e3fef089b086060bd`
+- Authoritative current head: read directly from PR #65; do not duplicate its moving synchronization SHA here.
 - Base: `qa/phase1-integration`
 - Status: **QA_ACTIVE**
 - Canonical runtime/admission: unchanged pending QA decision.
@@ -95,7 +95,7 @@ Old #43/#48 ancestry must not be replayed wholesale.
 
 Every DEV handoff must provide:
 
-1. exact branch and head SHA;
+1. exact branch and head SHA in the PR handoff itself;
 2. candidate/runtime paths and provenance/source identity;
 3. deterministic generation/export command where applicable;
 4. triangle/vertex/material/texture/bounds/file-size data;
@@ -105,4 +105,4 @@ Every DEV handoff must provide:
 8. known limitations and explicit non-goals;
 9. no claim of canonical admission and no `artGatePassed=true` claim.
 
-GitHub is the only coordination channel between DEV and QA. QA updates this file immediately after every disposition before releasing another DEV task.
+GitHub is the only coordination channel between DEV and QA. QA updates this file immediately after every disposition before releasing another DEV task. Moving branch-head SHAs belong in the corresponding PR, not in this queue, so queue-only edits cannot make the active candidate appear stale.
