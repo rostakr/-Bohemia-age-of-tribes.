@@ -3,6 +3,14 @@ import { createHash } from 'node:crypto';
 
 const assetPath = 'public/assets/characters/boii_adult_worker_r2.glb';
 const receiptPath = 'artifacts/phase1/worker-r2-receipt.json';
+const EXPECTED_TRIANGLES = 28_212;
+
+const COMPONENT_BYTES = new Map([
+  [5120, 1], [5121, 1], [5122, 2], [5123, 2], [5125, 4], [5126, 4],
+]);
+const TYPE_WIDTH = new Map([
+  ['SCALAR', 1], ['VEC2', 2], ['VEC3', 3], ['VEC4', 4], ['MAT2', 4], ['MAT3', 9], ['MAT4', 16],
+]);
 
 function sha256(buffer) {
   return createHash('sha256').update(buffer).digest('hex');
@@ -49,84 +57,168 @@ function encodeGlb(json, binary) {
   return Buffer.concat([header, jsonHeader, jsonChunk, binHeader, paddedBinary]);
 }
 
+function packedAccessor(json, binary, accessorIndex) {
+  const accessor = json.accessors?.[accessorIndex];
+  if (!accessor || accessor.sparse || accessor.bufferView === undefined) throw new Error(`Unsupported accessor ${accessorIndex}`);
+  const view = json.bufferViews?.[accessor.bufferView];
+  if (!view || view.buffer !== 0) throw new Error(`Unsupported bufferView for accessor ${accessorIndex}`);
+  const width = TYPE_WIDTH.get(accessor.type);
+  const componentBytes = COMPONENT_BYTES.get(accessor.componentType);
+  if (!width || !componentBytes) throw new Error(`Unsupported accessor format ${accessorIndex}`);
+  const itemBytes = width * componentBytes;
+  const stride = view.byteStride ?? itemBytes;
+  if (stride < itemBytes) throw new Error(`Invalid byteStride for accessor ${accessorIndex}`);
+  const start = (view.byteOffset ?? 0) + (accessor.byteOffset ?? 0);
+  const output = Buffer.alloc(accessor.count * itemBytes);
+  for (let i = 0; i < accessor.count; i++) {
+    const sourceStart = start + i * stride;
+    const sourceEnd = sourceStart + itemBytes;
+    if (sourceEnd > binary.length) throw new Error(`Accessor ${accessorIndex} exceeds BIN chunk`);
+    binary.copy(output, i * itemBytes, sourceStart, sourceEnd);
+  }
+  return { accessor, bytes: output, itemBytes };
+}
+
+function readIndices(accessorData) {
+  const { accessor, bytes } = accessorData;
+  if (accessor.type !== 'SCALAR') throw new Error('Indices accessor must be SCALAR');
+  const indices = new Array(accessor.count);
+  for (let i = 0; i < accessor.count; i++) {
+    const offset = i * accessorData.itemBytes;
+    if (accessor.componentType === 5121) indices[i] = bytes.readUInt8(offset);
+    else if (accessor.componentType === 5123) indices[i] = bytes.readUInt16LE(offset);
+    else if (accessor.componentType === 5125) indices[i] = bytes.readUInt32LE(offset);
+    else throw new Error(`Unsupported index component type ${accessor.componentType}`);
+  }
+  return indices;
+}
+
+function encodeUint16(values) {
+  if (values.some(value => value < 0 || value > 65_535 || !Number.isInteger(value))) {
+    throw new Error('Deduplicated worker indices exceed uint16 range');
+  }
+  const buffer = Buffer.alloc(values.length * 2);
+  for (let i = 0; i < values.length; i++) buffer.writeUInt16LE(values[i], i * 2);
+  return buffer;
+}
+
 const original = readFileSync(assetPath);
 const { json: sourceJson, binary } = parseGlb(original);
 const json = JSON.parse(JSON.stringify(sourceJson));
+if ((json.meshes?.length ?? 0) !== 1 || (json.meshes[0]?.primitives?.length ?? 0) !== 1) {
+  throw new Error('Worker R2 compactor expects exactly one mesh primitive');
+}
+const primitive = json.meshes[0].primitives[0];
+if ((primitive.mode ?? 4) !== 4) throw new Error('Worker R2 primitive must use TRIANGLES');
+const positionIndex = primitive.attributes?.POSITION;
+const normalIndex = primitive.attributes?.NORMAL;
+const uvIndex = primitive.attributes?.TEXCOORD_0;
+if ([positionIndex, normalIndex, uvIndex, primitive.indices].some(value => value === undefined)) {
+  throw new Error('Worker R2 primitive must provide POSITION/NORMAL/TEXCOORD_0/indices');
+}
 
-const usedAccessors = new Set();
-for (const mesh of json.meshes ?? []) {
-  for (const primitive of mesh.primitives ?? []) {
-    if (primitive.indices !== undefined) usedAccessors.add(primitive.indices);
-    for (const accessorIndex of Object.values(primitive.attributes ?? {})) usedAccessors.add(accessorIndex);
-    for (const target of primitive.targets ?? []) {
-      for (const accessorIndex of Object.values(target)) usedAccessors.add(accessorIndex);
-    }
+const position = packedAccessor(json, binary, positionIndex);
+const normal = packedAccessor(json, binary, normalIndex);
+const uv = packedAccessor(json, binary, uvIndex);
+const index = packedAccessor(json, binary, primitive.indices);
+if (position.accessor.componentType !== 5126 || position.accessor.type !== 'VEC3') throw new Error('POSITION must be float VEC3');
+if (normal.accessor.componentType !== 5126 || normal.accessor.type !== 'VEC3') throw new Error('NORMAL must be float VEC3');
+if (uv.accessor.componentType !== 5126 || uv.accessor.type !== 'VEC2') throw new Error('UV0 must be float VEC2');
+if (position.accessor.count !== normal.accessor.count || position.accessor.count !== uv.accessor.count) {
+  throw new Error('Worker R2 attribute counts differ');
+}
+const sourceIndices = readIndices(index);
+if (sourceIndices.length / 3 !== EXPECTED_TRIANGLES) throw new Error(`Expected ${EXPECTED_TRIANGLES} triangles`);
+
+const uniqueByTuple = new Map();
+const positionParts = [];
+const normalParts = [];
+const uvParts = [];
+const remappedIndices = [];
+for (const oldVertex of sourceIndices) {
+  if (!Number.isInteger(oldVertex) || oldVertex < 0 || oldVertex >= position.accessor.count) {
+    throw new Error(`Worker R2 index out of range: ${oldVertex}`);
   }
+  const p = position.bytes.subarray(oldVertex * position.itemBytes, (oldVertex + 1) * position.itemBytes);
+  const n = normal.bytes.subarray(oldVertex * normal.itemBytes, (oldVertex + 1) * normal.itemBytes);
+  const t = uv.bytes.subarray(oldVertex * uv.itemBytes, (oldVertex + 1) * uv.itemBytes);
+  const key = `${p.toString('hex')}:${n.toString('hex')}:${t.toString('hex')}`;
+  let newVertex = uniqueByTuple.get(key);
+  if (newVertex === undefined) {
+    newVertex = uniqueByTuple.size;
+    if (newVertex > 65_535) throw new Error('Worker R2 unique vertex count exceeds uint16');
+    uniqueByTuple.set(key, newVertex);
+    positionParts.push(Buffer.from(p));
+    normalParts.push(Buffer.from(n));
+    uvParts.push(Buffer.from(t));
+  }
+  remappedIndices.push(newVertex);
 }
-if (usedAccessors.size === 0) throw new Error('No mesh accessors referenced by worker R2');
+const uniqueVertices = uniqueByTuple.size;
+if (uniqueVertices >= position.accessor.count) throw new Error('Vertex deduplication produced no reduction');
 
-const accessorOrder = [...usedAccessors].sort((a, b) => a - b);
-const accessorMap = new Map(accessorOrder.map((oldIndex, newIndex) => [oldIndex, newIndex]));
-const newAccessors = accessorOrder.map(oldIndex => ({ ...json.accessors[oldIndex] }));
+const positionBytes = Buffer.concat(positionParts);
+const normalBytes = Buffer.concat(normalParts);
+const uvBytes = Buffer.concat(uvParts);
+const indexBytes = encodeUint16(remappedIndices);
 
-const usedBufferViews = new Set();
-for (const accessor of newAccessors) {
-  if (accessor.bufferView === undefined) throw new Error('Sparse/implicit accessors are not supported by compactor');
-  usedBufferViews.add(accessor.bufferView);
-}
-for (const image of json.images ?? []) {
-  if (image.bufferView !== undefined) usedBufferViews.add(image.bufferView);
-}
-
-const bufferViewOrder = [...usedBufferViews].sort((a, b) => a - b);
-const bufferViewMap = new Map(bufferViewOrder.map((oldIndex, newIndex) => [oldIndex, newIndex]));
 const parts = [];
-const newBufferViews = [];
+const bufferViews = [];
 let byteLength = 0;
-for (const oldIndex of bufferViewOrder) {
-  const oldView = json.bufferViews?.[oldIndex];
-  if (!oldView || oldView.buffer !== 0) throw new Error(`Unsupported bufferView ${oldIndex}`);
+function append(bytes, extra = {}) {
   const padding = pad4(byteLength);
   if (padding) {
     parts.push(Buffer.alloc(padding));
     byteLength += padding;
   }
-  const start = oldView.byteOffset ?? 0;
-  const end = start + oldView.byteLength;
-  if (start < 0 || end > binary.length) throw new Error(`bufferView ${oldIndex} exceeds BIN chunk`);
-  const bytes = Buffer.from(binary.subarray(start, end));
-  const next = { ...oldView, buffer: 0, byteOffset: byteLength, byteLength: bytes.length };
-  newBufferViews.push(next);
+  const bufferView = { buffer: 0, byteOffset: byteLength, byteLength: bytes.length, ...extra };
+  const index = bufferViews.push(bufferView) - 1;
   parts.push(bytes);
   byteLength += bytes.length;
+  return index;
 }
 
-for (const accessor of newAccessors) {
-  accessor.bufferView = bufferViewMap.get(accessor.bufferView);
-  if (accessor.bufferView === undefined) throw new Error('Failed to remap accessor bufferView');
-}
+const positionView = append(positionBytes, { target: 34962 });
+const normalView = append(normalBytes, { target: 34962 });
+const uvView = append(uvBytes, { target: 34962 });
+const indexView = append(indexBytes, { target: 34963 });
+
+const imageViewMap = new Map();
 for (const image of json.images ?? []) {
-  if (image.bufferView !== undefined) {
-    const mapped = bufferViewMap.get(image.bufferView);
-    if (mapped === undefined) throw new Error('Failed to remap embedded image bufferView');
-    image.bufferView = mapped;
+  if (image.bufferView === undefined) continue;
+  const oldViewIndex = image.bufferView;
+  let mapped = imageViewMap.get(oldViewIndex);
+  if (mapped === undefined) {
+    const oldView = sourceJson.bufferViews?.[oldViewIndex];
+    if (!oldView || oldView.buffer !== 0) throw new Error(`Unsupported image bufferView ${oldViewIndex}`);
+    const start = oldView.byteOffset ?? 0;
+    const end = start + oldView.byteLength;
+    if (end > binary.length) throw new Error(`Image bufferView ${oldViewIndex} exceeds BIN chunk`);
+    mapped = append(Buffer.from(binary.subarray(start, end)));
+    imageViewMap.set(oldViewIndex, mapped);
   }
-}
-for (const mesh of json.meshes ?? []) {
-  for (const primitive of mesh.primitives ?? []) {
-    if (primitive.indices !== undefined) primitive.indices = accessorMap.get(primitive.indices);
-    for (const [semantic, oldIndex] of Object.entries(primitive.attributes ?? {})) {
-      primitive.attributes[semantic] = accessorMap.get(oldIndex);
-    }
-    for (const target of primitive.targets ?? []) {
-      for (const [semantic, oldIndex] of Object.entries(target)) target[semantic] = accessorMap.get(oldIndex);
-    }
-  }
+  image.bufferView = mapped;
 }
 
-json.accessors = newAccessors;
-json.bufferViews = newBufferViews;
-json.asset = { ...(json.asset ?? {}), generator: 'BOHEMIA worker R2 deterministic compact packer' };
+json.accessors = [
+  {
+    bufferView: positionView,
+    componentType: 5126,
+    count: uniqueVertices,
+    type: 'VEC3',
+    ...(position.accessor.min ? { min: position.accessor.min } : {}),
+    ...(position.accessor.max ? { max: position.accessor.max } : {}),
+  },
+  { bufferView: normalView, componentType: 5126, count: uniqueVertices, type: 'VEC3' },
+  { bufferView: uvView, componentType: 5126, count: uniqueVertices, type: 'VEC2' },
+  { bufferView: indexView, componentType: 5123, count: remappedIndices.length, type: 'SCALAR' },
+];
+json.bufferViews = bufferViews;
+primitive.attributes = { POSITION: 0, NORMAL: 1, TEXCOORD_0: 2 };
+primitive.indices = 3;
+primitive.mode = 4;
+json.asset = { ...(json.asset ?? {}), generator: 'BOHEMIA worker R2 deterministic compact+dedupe packer' };
+
 const compactBinary = Buffer.concat(parts);
 const compact = encodeGlb(json, compactBinary);
 writeFileSync(assetPath, compact);
@@ -134,13 +226,17 @@ writeFileSync(assetPath, compact);
 const receipt = JSON.parse(readFileSync(receiptPath, 'utf8'));
 receipt.output.bytes = compact.length;
 receipt.output.sha256 = sha256(compact);
+receipt.output.vertices = uniqueVertices;
 receipt.transform = {
   ...(receipt.transform ?? {}),
   compacted: true,
-  compaction_method: 'retain only bufferViews referenced by final mesh accessors and embedded images; no vertex/index/UV/normal/image bytes modified',
+  compaction_method: 'deduplicate only bit-identical POSITION+NORMAL+UV tuples; repack final geometry plus embedded image; triangle and referenced attribute values unchanged',
   precompact_bytes: original.length,
   compact_bytes: compact.length,
   bytes_removed: original.length - compact.length,
+  precompact_vertices: position.accessor.count,
+  compact_vertices: uniqueVertices,
+  vertices_removed: position.accessor.count - uniqueVertices,
 };
 writeFileSync(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`);
 
@@ -149,6 +245,10 @@ console.log(JSON.stringify({
   beforeBytes: original.length,
   afterBytes: compact.length,
   bytesRemoved: original.length - compact.length,
+  beforeVertices: position.accessor.count,
+  afterVertices: uniqueVertices,
+  verticesRemoved: position.accessor.count - uniqueVertices,
+  triangles: remappedIndices.length / 3,
   sha256: receipt.output.sha256,
   accessors: json.accessors.length,
   bufferViews: json.bufferViews.length,
