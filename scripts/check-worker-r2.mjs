@@ -16,11 +16,16 @@ assert.equal(receipt.source.sha256, '0ca4d24829f89ad60815102b5d08a6bcdfb9c5d7246
 assert.equal(receipt.source.bytes, 1_639_680);
 assert.equal(receipt.source.triangles, 14_106);
 assert.equal(receipt.output.triangles, 28_212);
-assert.ok(receipt.output.vertices >= 50_000 && receipt.output.vertices <= 60_000, `unexpected R2 vertex count ${receipt.output.vertices}`);
+assert.ok(receipt.output.vertices >= 9_805 && receipt.output.vertices < 56_424, `unexpected compact R2 vertex count ${receipt.output.vertices}`);
 assert.equal(receipt.output.sha256, digest);
 assert.equal(receipt.output.bytes, asset.length);
 assert.equal(receipt.output.animations, 0);
 assert.equal(receipt.output.skins, 0);
+assert.equal(receipt.transform.compacted, true);
+assert.equal(receipt.transform.precompact_vertices, 56_424);
+assert.equal(receipt.transform.compact_vertices, receipt.output.vertices);
+assert.ok(receipt.transform.vertices_removed > 0);
+assert.ok(receipt.transform.bytes_removed > 0);
 assert.equal(receipt.admission.canonical_runtime_changed, false);
 assert.equal(receipt.admission.art_gate_passed, false);
 assert.equal(sourceRecord.rights.status, 'cleared_for_this_project');
@@ -35,6 +40,7 @@ console.log(JSON.stringify({
   sourceTriangles: receipt.source.triangles,
   outputTriangles: receipt.output.triangles,
   outputVertices: receipt.output.vertices,
+  verticesRemoved: receipt.transform.vertices_removed,
   materials: receipt.output.materials,
   textures: receipt.output.textures,
   images: receipt.output.images,
