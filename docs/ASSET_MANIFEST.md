@@ -1,110 +1,122 @@
 # Asset Manifest
 
-This is the current authoritative Phase 1 asset-state summary. The exact pre-storehouse-admission long-form manifest is preserved byte-for-byte at `docs/archive/ASSET_MANIFEST_PRE_TEXTURED_STOREHOUSE.md`. Detailed generator/provider/source notes remain in the source receipts under `assets/source/phase1/` and in Git history.
+This is the authoritative current Phase 1 asset-state summary after final QA acceptance on 2026-09-22. Earlier long-form states remain preserved in `docs/archive/` and Git history.
 
 ## Project-owner supplied asset rights policy
 
-All current and future files supplied by the project owner are considered cleared for use in this project. Licence investigation, licence-text archival, provider-rights verification and licence-based QA/release blocking are not required for those files. Source/provider metadata may still be retained where useful for technical provenance and reproducibility. Historical, visual, technical, structural and performance QA remain fully applicable.
+All files supplied by the project owner are considered cleared for this project. Source/provider metadata is retained where useful for provenance and reproducibility; technical, structural, historical, visual and performance QA remain applicable.
 
-## Runtime engine / foundation
+## Runtime foundation
 
-| Asset | Source / license | Runtime role | State |
-| --- | --- | --- | --- |
-| PlayCanvas 2.22.1 | npm `playcanvas`, MIT; notice in `public/PLAYCANVAS-LICENSE.txt` | Sole 3D/gameplay engine | Pinned and integrated |
-| Calibration floor + 1.8 m marker | Original project code | Phase 0 renderer/scale diagnostics | Verified |
-| Terrain / stream / meadow | Original project code + admitted Poly Haven CC0 terrain maps | Phase 1 environment benchmark | Integrated; art polish/hardware QA still open |
+| Asset | Runtime role | State |
+| --- | --- | --- |
+| PlayCanvas 2.22.1 | Sole 3D/gameplay engine | Pinned / accepted |
+| Fixed-step simulation foundation | Engine-independent simulation timing | Preserved / accepted |
+| Central asset resolver + lifecycle | Runtime loading/mount/unmount | Preserved / accepted |
+| WebGPU preferred / WebGL2 fallback | Renderer policy | Regression PASS; actual desktop hardware benchmark deferred |
+| Terrain / stream / meadow | Phase 1 environment benchmark | Accepted Phase 1 baseline; later polish allowed |
 
-## Admitted Phase 1 runtime assets / candidates
+## Accepted Phase 1 benchmark
 
-| Asset | Source / rights | Runtime form | Geometry / scale | Materials / textures | Admission state |
-| --- | --- | --- | --- | --- | --- |
-| Rectangular Boii dwelling | Original project concept converted through Microsoft TRELLIS.2 official free Hugging Face route; exact receipt in `assets/source/phase1/dwelling-receipt.json` | Source LOD0 GLB plus deterministic generated LOD1/LOD2 | LOD0 99,298 tris; LOD1 53,538 tris active in benchmark; LOD2 31,286 tris | Two embedded WebP material images preserved byte-for-byte by LOD generator | WIP runtime candidate; LOD1 visually reviewed at RTS distance; final historical/art + hardware thresholds open; `artGatePassed=false` |
-| **Small Boii storehouse** | Original project geometry `src/render/storehouse.ts`; reproducible export `scripts/export-storehouse.mjs`; project-owned generated material sources under `assets/source/phase1/materials/` | **`public/assets/buildings/boii_storehouse_small.glb`** | 15,910 vertices; 15,550 tris; bounds ~3.856 × 3.376 × 3.795 m; no LOD; file 9,933,356 bytes | Five materials. Timber/thatch/daub use three embedded PNG base colors; wattle/earth use factors. Geometry normals + UV0 present on all five primitives. No normal/roughness maps. | **Admitted as `project-owned-glb` WIP candidate.** Strict GLB intake + full runtime QA passed in run `35408681042`; evidence artifact `10573840636`. Final compression/PBR/LOD/historical/art/hardware acceptance open; `artGatePassed=false`. |
-| Boii carpentry/workshop shelter | Original project code `src/render/workshop.ts`; internal project work | Procedural PlayCanvas mesh | 22,876 vertices; 22,480 tris; ~5.24 × 3.607 × 3.675 m | Project-owned procedural materials | WIP candidate `procedural-project-owned`; production GLB slot remains null; final art/historical/hardware acceptance open |
-| Mature central-European deciduous tree | Original project code `src/render/tree.ts`; internal project work | Shared procedural mesh, 32 runtime instances | 8,980 vertices; 15,980 tris candidate mesh; ~11.107 × 13.290 × 11.403 m | Vertex-coloured summer foliage + bark material | WIP composition candidate; production GLB/LOD/botanical/hardware acceptance open |
-| Generic Boii adult inhabitant readability prototype | Original project code `src/render/inhabitant.ts`; internal project work | One shared procedural mesh cloned to five static entities | 910 vertices; 1,404 tris; ~1.717 m high | One vertex-coloured non-metallic material | Readability prototype only, not production character. Production GLB/atlas/rig/art acceptance remains open |
+Final accepted candidate commit: `853d802e0512f4c89f068eb54f64337cf2a23195`  
+Integration merge: `9d4c9fb642a2952efb279c0461378e5527891099`  
+Accepted tree: `1fde280d7a8b61f3a1c87299b400fedc532c3b60`  
+Canonical benchmark selector: `?candidate=phase1`
+
+| Asset | Runtime form | Geometry / scale | Materials / textures | Phase 1 state |
+| --- | --- | --- | --- | --- |
+| Rectangular Boii dwelling | `buildings/boii_dwelling_rectangular_lod1.glb` | LOD1 53,538 tris; source LOD0 99,298; LOD2 candidate 31,286 | Two embedded material images retained by deterministic LOD pipeline | **ACCEPTED PHASE 1** |
+| Small Boii storehouse | `buildings/boii_storehouse_small.glb` plus allowlisted runtime JPEGs | 15,550 tris / 17,810 vertices | Five material primitives; NORMAL + UV0; three deterministic 512² JPEG base-colour derivatives | **ACCEPTED PHASE 1** via #60 lineage |
+| Repaired Boii carpentry/workshop shelter | generated `buildings/boii_carpentry_shed_project.glb` | 22,540 tris / 25,649 vertices; 5.24 × 3.57 × 3.414 m | Five material primitives, NORMAL + UV0; two embedded 512² JPEG base colours; scalar roughness/metalness | **ACCEPTED PHASE 1** via #71 |
+| Boii adult worker R2 compact | generated `characters/boii_adult_worker_r2.glb` | 28,212 tris / 20,725 vertices; target height ~1.72 m | One material/image/texture; NORMAL + UV0; visually equivalent compact payload | **ACCEPTED PHASE 1** via #65/#68/#71; static/unrigged accepted limitation |
+| Mature central-European deciduous tree | shared procedural mesh, 32 instances | 15,980 tris per shared candidate mesh | Project-owned procedural bark/foliage treatment | **ACCEPTED PHASE 1 composition**; runtime LOD thresholds deferred |
+| Meadow / grass composition | procedural instanced/clumped scene content | benchmark composition | Current project materials | **ACCEPTED PHASE 1 composition**; later density/repetition polish allowed |
+
+## Storehouse accepted payload
+
+The compact storehouse implementation accepted into the final integration lineage has:
+
+- GLB: **761,892 bytes**;
+- GLB SHA-256: `f05ba7e6828269d360534749e5043f93b29bf30aa22b788d9b585c2eaaeeae68`;
+- 15,550 triangles / 17,810 vertices / five primitives;
+- NORMAL and UV0 on 5/5 primitives;
+- three deterministic runtime 512² JPEGs, 324,129 bytes total;
+- complete GLB + runtime texture payload: 1,086,021 bytes;
+- dedicated current-baseline QA and later final-candidate foundation regressions passed.
+
+Known limitation: no full production normal/roughness texture set and no production LOD. `BLOCKS_PHASE_2=NO`.
+
+## Repaired workshop accepted payload
+
+- generator: `node --experimental-strip-types scripts/export-workshop-project.mjs`;
+- generated path: `public/assets/buildings/boii_carpentry_shed_project.glb`;
+- output: **1,333,468 bytes**;
+- SHA-256: `70663eedfbd2c3f54a039e5d0764c86af3bddcc6fe93bda8d1b32e720116283d`;
+- 22,540 triangles / 25,649 vertices;
+- five primitives/materials with NORMAL and UV0;
+- two embedded 512² JPEG base-colour maps;
+- no external dependencies or decoder requirement;
+- visual blocker repairs: warmer/darker roof, controlled eave strands, lighter work surfaces, visible iron tools and shallow irregular earth grounding patch.
+
+Independent final QA accepts the workshop for the Phase 1 benchmark. It is not represented as final shipping art. Full PBR-map polish and later LOD work are `BLOCKS_PHASE_2=NO`.
+
+## Compact worker R2 accepted payload
+
+Accepted visual precursor #65 output:
+
+- 28,212 triangles / 56,424 vertices;
+- 3,615,224 bytes;
+- SHA-256 `c0e8144f07d84bfcd7b3e5118df59c1d589a65f23f512099ed75cb1881ba81b8`.
+
+Lossless compaction #68 / final #71 output:
+
+- 28,212 triangles unchanged;
+- 20,725 vertices after bit-identical tuple deduplication;
+- 2,106,832 bytes;
+- SHA-256 `f50f87146909e4a3c7fa18e4a82c636fe05e24f0879f35e6a181c281c4efa21e`;
+- one mesh / primitive / material / image / texture;
+- NORMAL 1/1, UV0 1/1;
+- 0 skins / 0 animations.
+
+The compactor verifies every triangle corner's raw POSITION/NORMAL/UV bytes in order, embedded image bytes and relevant scene/material metadata. Accepted and compact neutral close-up evidence is pixel-identical. Static/unrigged status is an explicit Phase 1 limitation with `BLOCKS_PHASE_2=NO`.
 
 ## Environment texture assets
 
 | Asset | Source / license | Maps | State |
 | --- | --- | --- | --- |
-| `grass_path_2` | Poly Haven, CC0 | 1K diffuse / normal GL / roughness | Integrated |
-| `forest_ground_04` | Poly Haven, CC0 | 1K diffuse / normal GL / roughness | Integrated |
-| `brown_mud_02` | Poly Haven, CC0 | 1K diffuse / normal GL / roughness | Integrated |
+| `grass_path_2` | Poly Haven, CC0 | 1K diffuse / normal GL / roughness | Integrated / accepted baseline |
+| `forest_ground_04` | Poly Haven, CC0 | 1K diffuse / normal GL / roughness | Integrated / accepted baseline |
+| `brown_mud_02` | Poly Haven, CC0 | 1K diffuse / normal GL / roughness | Integrated / accepted baseline |
 
-Exact terrain hashes and dimensions are recorded in `assets/source/phase1/terrain-receipt.json`.
+Exact terrain hashes and dimensions remain recorded in `assets/source/phase1/terrain-receipt.json`.
 
-## Storehouse admission evidence
+## Final evidence
 
-Current storehouse GLB structural result:
+Exact candidate `853d802e0512f4c89f068eb54f64337cf2a23195`:
 
-- file: `public/assets/buildings/boii_storehouse_small.glb`
-- size: **9,933,356 bytes**
-- triangles: **15,550**
-- vertices: **15,910**
-- primitives: **5**
-- materials: **5**
-- NORMAL: **5/5 primitives**
-- TEXCOORD_0: **5/5 primitives**
-- embedded images/textures: **3 / 3**
-- external dependencies: **0**
-- animations / skins: **0 / 0**
-- strict intake: **PASS**
-- runtime/load/render/remount/WebGPU/WebGL2/close-up QA: **PASS** in workflow `35408681042`
-- evidence artifact: `10573840636`, SHA-256 `eaee51e6987cf4e9d87c66c4d2865d846bf3a3e8753fba06881e6ff7dafb58e2`
+- foundation workflow `35769849049`: PASS;
+- completion workflow `35769849029`: PASS;
+- worker workflow `35769849012`: PASS;
+- completion artifact `10713746346`, digest `sha256:16152d8d000eb58eb7aae6627d6b87fa68e05258b9e98ae3becda4f9bcbd7224`;
+- candidate loaded and rendered through the real PlayCanvas WebGL2 runtime with the expected dwelling/storehouse/workshop/five workers/environment composition;
+- lifecycle/remount and software WebGPU regressions passed through the foundation workflow.
 
-Visual review supports WIP admission: scale and raised support geometry are plausible against inhabitants/buildings; roof orientation is correct; ground contact/shadow is stable; no obvious UV collapse, gross seam or projection corruption was visible in the benchmark and close-up evidence.
+`ACTUAL_DESKTOP_GPU_BENCHMARK: NOT_AVAILABLE_IN_THIS_ENVIRONMENT`. No CI software-renderer performance value is promoted as desktop-GPU evidence.
 
-Known limits: base-color-focused material pass, no normal/roughness maps, no storehouse LOD, no texture compression, and 9.93 MB is heavy for an object of this size. These remain Phase 1 art/performance work and do not justify `artGatePassed=true`.
+## Accepted later-phase limitations
 
-Detailed source/export/material evidence:
+| Limitation | BLOCKS_PHASE_2 |
+| --- | --- |
+| Storehouse production normal/roughness map set | NO |
+| Workshop production normal/roughness map set | NO |
+| Worker rig / animation | NO |
+| Tree LOD switching thresholds based on desktop hardware | NO |
+| Vegetation density/repetition polish | NO |
+| Actual desktop-GPU benchmark | NO |
 
-- `assets/source/phase1/storehouse-receipt.json`
-- `assets/source/phase1/storehouse-glb-receipt.json`
-- `assets/source/phase1/materials/weathered-oak-receipt.json`
-- `assets/source/phase1/materials/roof-and-daub-receipt.json`
+Do not choose final runtime LOD thresholds from software CI. Revisit those thresholds with real desktop hardware before later optimization/release gates.
 
-## Supplied workshop / worker — provenance only, not runtime admission
+## Asset gate result
 
-The Astra/content handoff also supplied workshop and adult-worker GLBs. Their usage rights are cleared by the project owner. They are **not admitted** to canonical runtime paths for technical/visual reasons only.
-
-- Supplied workshop: **89,778 tris**, above the current workshop target, and strict intake reports missing required `NORMAL`.
-- Supplied worker: **14,106 tris** is potentially efficient enough for RTS use, but strict intake reports missing required `NORMAL`; the previously reviewed textured preview was rejected for severe patchwork / mis-projected face, clothing and rear textures.
-- Original supplied files and intake metadata are retained under `assets/source/phase1/user-supplied/` for provenance and future reference.
-- Do not restore these files to `public/assets/...` or populate `ADMITTED_MODELS.workshop` / `ADMITTED_MODELS.inhabitant` without a new clean candidate and full structural + visual QA.
-
-## Asset gate rules
-
-### Workshop repair candidate — 2026-09-22
-
-- Asset: `boii_carpentry_shed_project`, Boii Late La Tène craft shelter, QA candidate.
-- Source: project-owned `src/render/workshop-repair.ts`, derived narrowly from the
-  prior project workshop; no third-party geometry. Existing texture provenance is
-  recorded in `assets/source/phase1/materials/`; project noncommercial usage applies.
-- Export: `node --experimental-strip-types scripts/export-workshop-project.mjs`.
-- Generated path: `public/assets/buildings/boii_carpentry_shed_project.glb`.
-- Receipt: `assets/source/phase1/workshop-project-glb-receipt.json` (generated in CI).
-- GLB: 1,333,468 bytes; SHA-256 `70663eedfbd2c3f54a039e5d0764c86af3bddcc6fe93bda8d1b32e720116283d`.
-- Geometry: 22,540 triangles / 25,649 vertices; five material primitives with NORMAL
-  and UV0. Metres, Y-up, ground origin; bounds 5.24 × 3.57 × 3.414 m.
-- Textures: two embedded 512² JPEG base-color maps (existing oak/thatch derivatives).
-  No external dependencies or decoder. Scalar roughness/metalness, no normal maps.
-- Repair: warm darker roof, short controlled eave strands, shallow irregular earth
-  patch, lighter worn bench/trestle tops, brighter iron tools. Default workshop stays
-  unchanged while `?candidate=phase1` combines this candidate with the compact worker.
-- LOD: none. Historical/visual/hardware acceptance remains pending; not production admission.
-
-For every future production candidate record:
-
-1. source/provider/acquisition route where useful for provenance and reproducibility; project-owner-supplied assets require no further licence review;
-2. runtime destination and source receipt;
-3. units, Y-up orientation, ground-centred pivot and dimensions;
-4. vertices/triangles per LOD;
-5. texture dimensions and exact map set;
-6. UV/NORMAL/tangent requirements as applicable;
-7. external dependencies and compression/decoder requirements;
-8. historical/regional fit;
-9. WebGL2/WebGPU/runtime/lifecycle evidence;
-10. actual-hardware performance before final LOD thresholds are selected.
-
-A generated/source asset is not final production art merely because it imports and renders. `artGatePassed=false` remains authoritative until the remaining Phase 1 art, historical and hardware gates are explicitly satisfied or waived.
+**PHASE 1 ASSET / ART GATE: PASS.**  
+`artGatePassed=true` for the accepted Phase 1 milestone benchmark. This means the content foundation is sufficient for Phase 2 RTS interaction work; it does not freeze later material, animation, vegetation or performance improvements.
