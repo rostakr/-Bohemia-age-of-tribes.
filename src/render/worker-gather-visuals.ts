@@ -4,6 +4,7 @@ import type { GatherCoordinator } from '../core/gather-coordinator';
 
 interface WorkerVisual {
   root: Entity;
+  roleMarker: Entity;
   cargo: Entity;
   depositPulse: Entity;
   previousCargo: number;
@@ -13,6 +14,7 @@ interface WorkerVisual {
 /** Phase 4 presentation. Reads authoritative gather/economy snapshots only. */
 export class WorkerGatherVisuals {
   private readonly visuals = new Map<EntityId, WorkerVisual>();
+  private readonly roleMaterial: StandardMaterial;
   private readonly cargoMaterial: StandardMaterial;
   private readonly pulseMaterial: StandardMaterial;
   private previousStockpile = 0;
@@ -21,6 +23,7 @@ export class WorkerGatherVisuals {
     unitEntities: ReadonlyMap<EntityId, Entity>,
     private readonly coordinator: GatherCoordinator,
   ) {
+    this.roleMaterial = material(new Color(0.54, 0.66, 0.35), 0.02);
     this.cargoMaterial = material(new Color(0.34, 0.16, 0.055), 0.05);
     this.pulseMaterial = material(new Color(0.95, 0.72, 0.18), 0.1);
     this.previousStockpile = coordinator.metrics().woodStockpile;
@@ -29,6 +32,15 @@ export class WorkerGatherVisuals {
       const root = new Entity(`Worker ${id} gather readability`);
       root.setLocalPosition(0, 1.18, 0);
       worker.addChild(root);
+
+      // A restrained ground marker keeps the accepted static worker readable at the
+      // normal RTS camera without pretending the unrigged model has new animation.
+      const roleMarker = new Entity(`Worker ${id} role marker`);
+      roleMarker.addComponent('render', { type: 'cylinder' });
+      roleMarker.render!.material = this.roleMaterial;
+      roleMarker.setLocalScale(0.62, 0.025, 0.62);
+      roleMarker.setLocalPosition(0, -1.1, 0);
+      root.addChild(roleMarker);
 
       const cargo = new Entity(`Worker ${id} authoritative wood cargo`);
       root.addChild(cargo);
@@ -51,7 +63,7 @@ export class WorkerGatherVisuals {
       depositPulse.enabled = false;
       root.addChild(depositPulse);
 
-      this.visuals.set(id, { root, cargo, depositPulse, previousCargo: 0, pulseSeconds: 0 });
+      this.visuals.set(id, { root, roleMarker, cargo, depositPulse, previousCargo: 0, pulseSeconds: 0 });
     }
   }
 
