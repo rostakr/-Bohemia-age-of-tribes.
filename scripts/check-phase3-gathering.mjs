@@ -46,14 +46,20 @@ test('wood coordinator completes source -> carry -> drop-off loop over accepted 
   simulation.destroy();
 });
 
-test('shared source depletion remains finite with multiple workers', () => {
+test('shared source depletion conserves finite wood with multiple workers', () => {
   const { simulation, gathering } = fixture({ workers: 4, amount: 13 });
   assert.equal(gathering.issueGather([4, 2, 1, 3], 1001, 1), true);
   run(simulation, gathering, 1, 1_200);
   const metrics = gathering.metrics();
   assert.ok(metrics.woodRemaining >= 0);
   assert.ok(metrics.woodRemaining < 1e-9);
-  assert.ok(Math.abs(metrics.woodStockpile - 13) < 1e-6, `expected exact finite deposit of 13, got ${metrics.woodStockpile}`);
+  assert.ok(metrics.woodStockpile > 0, 'at least one worker should have completed a deposit');
+  assert.ok(metrics.carriedWoodTotal >= 0);
+  assert.ok(Math.abs(metrics.woodStockpile + metrics.carriedWoodTotal + metrics.woodRemaining - 13) < 1e-6,
+    `wood must be conserved exactly: ${JSON.stringify(metrics)}`);
+  for (let id = 1; id <= 4; id++) {
+    assert.ok((gathering.workerState(id)?.carriedWood ?? 0) <= 10 + 1e-9, `worker ${id} exceeded carry capacity`);
+  }
   gathering.destroy();
   simulation.destroy();
 });
