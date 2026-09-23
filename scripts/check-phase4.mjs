@@ -83,6 +83,23 @@ test('multiple workers share a finite wood node without duplicating resources', 
   f.coordinator.destroy(); f.loop.destroy(); f.economy.destroy(); f.simulation.destroy();
 });
 
+test('coordinator reacquires a gather route after tracked movement stops outside interaction range', () => {
+  const f = fixture({ amount: 4, capacity: 2, rate: 12 });
+  assert.equal(f.coordinator.issueGather([1], 1001, 1), true);
+
+  // Simulate the movement authority replacing/losing the coordinator-owned
+  // approach route while the gather order itself remains active. Once that
+  // route settles away from the tree, the coordinator must notice there is no
+  // live movement route and deterministically reacquire the resource.
+  f.simulation.issueMove([1], { x: 20, z: 20 }, 1);
+  step(f, 1, 700);
+
+  const metrics = f.coordinator.metrics();
+  assert.ok(metrics.woodStockpile >= 2, `expected recovered gather loop to deposit wood, got ${metrics.woodStockpile}`);
+  assert.ok(metrics.woodRemaining < 4, 'recovered gather loop should extract from the finite source');
+  f.coordinator.destroy(); f.loop.destroy(); f.economy.destroy(); f.simulation.destroy();
+});
+
 test('blocked storehouse center resolves to a reachable nearby drop-off point', () => {
   const storehouse = { x: 18, z: 18 };
   const navigation = new NavigationGrid({

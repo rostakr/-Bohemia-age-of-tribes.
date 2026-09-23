@@ -95,6 +95,7 @@ export class GatherCoordinator {
 
   fixedUpdate(dtSeconds: number, tick: number): void {
     const movement = this.simulation.renderState(1);
+    const movementById = new Map(movement.map(state => [state.id, state]));
     const positions = new Map<EntityId, WorldPoint>();
     for (const state of movement) {
       const position = { x: state.x, z: state.z };
@@ -108,7 +109,8 @@ export class GatherCoordinator {
       const worker = this.gatherLoop.state(id);
       const targetId = this.activeTargets.get(id);
       const position = positions.get(id);
-      if (!worker || targetId === undefined || !position) {
+      const movementState = movementById.get(id);
+      if (!worker || targetId === undefined || !position || !movementState) {
         this.clearWorker(id);
         continue;
       }
@@ -124,7 +126,10 @@ export class GatherCoordinator {
           } else {
             this.clearWorker(id);
           }
-        } else if (this.routePhases.get(id) !== 'to-dropoff') {
+        } else if (this.routePhases.get(id) !== 'to-dropoff' || !movementState.moving) {
+          // A route can finish just outside interaction range after local
+          // avoidance/repath. Do not leave the worker latched to a route that
+          // no longer exists; deterministically request the drop-off again.
           this.routeToDropoff(id, tick + 1);
         }
         continue;
@@ -136,7 +141,13 @@ export class GatherCoordinator {
           else this.clearWorker(id);
           continue;
         }
-        if (distance(position, node.position) > this.gatherRange && this.routePhases.get(id) !== 'to-resource') {
+        const inRange = distance(position, node.position) <= this.gatherRange;
+        if (inRange) {
+          if (this.routePhases.get(id) === 'to-resource') this.routePhases.delete(id);
+        } else if (this.routePhases.get(id) !== 'to-resource' || !movementState.moving) {
+          // Route bookkeeping must describe an actually active movement route.
+          // If movement has stopped outside the gather radius, reacquire a
+          // reachable interaction point instead of leaving gathering stalled.
           this.routeToResource(id, node, tick + 1);
         }
         continue;
