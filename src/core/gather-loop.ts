@@ -33,7 +33,10 @@ export class GatherLoop {
     status: 'idle' | 'gathering' | 'returning';
   }>();
 
-  constructor(private readonly economy: ResourceEconomy, spawns: readonly GatherWorkerSpawn[]) {
+  private readonly economy: ResourceEconomy;
+
+  constructor(economy: ResourceEconomy, spawns: readonly GatherWorkerSpawn[]) {
+    this.economy = economy;
     for (const spawn of spawns) {
       if (this.workers.has(spawn.id)) throw new Error(`Duplicate gather worker id ${spawn.id}`);
       this.workers.set(spawn.id, {
