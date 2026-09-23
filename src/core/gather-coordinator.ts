@@ -166,9 +166,9 @@ export class GatherCoordinator {
   }
 
   private routeToResource(id: EntityId, node: ResourceNodeState, tick: number): boolean {
-    const destination = this.approachPoint(id, node.position, Math.max(0.9, this.gatherRange * 0.72));
+    const destination = this.interactionPoint(id, node.position, this.gatherRange);
     if (!destination) {
-      this.lastGatherFailure = `No reachable approach for resource ${node.id}`;
+      this.lastGatherFailure = `No reachable approach inside gather range for resource ${node.id}`;
       this.routePhases.delete(id);
       return false;
     }
@@ -178,7 +178,7 @@ export class GatherCoordinator {
   }
 
   private routeToDropoff(id: EntityId, tick: number): boolean {
-    const destination = this.approachPoint(id, this.dropoff, Math.max(1.1, this.dropoffRange * 0.72));
+    const destination = this.interactionPoint(id, this.dropoff, this.dropoffRange);
     if (!destination) {
       this.lastGatherFailure = `No reachable storehouse approach for worker ${id}`;
       this.routePhases.delete(id);
@@ -189,24 +189,35 @@ export class GatherCoordinator {
     return true;
   }
 
-  private approachPoint(id: EntityId, target: WorldPoint, radius: number): WorldPoint | null {
+  /**
+   * Resolve a deterministic navigation endpoint that is guaranteed to remain
+   * inside the actual gameplay interaction radius after grid quantization.
+   * Runtime navigation uses 2 m cells while the production gather radius is
+   * only 1.6 m, so accepting any nearby resolved cell can strand a worker just
+   * outside harvesting range.
+   */
+  private interactionPoint(id: EntityId, target: WorldPoint, interactionRange: number): WorldPoint | null {
     const state = this.simulation.renderState(1).find(unit => unit.id === id);
     if (!state) return null;
     const component = this.navigation.componentAt({ x: state.x, z: state.z });
     if (component === null) return null;
 
     const base = Math.atan2(state.z - target.z, state.x - target.x);
-    const side = ((id * 0.7548776662466927) % 1 - 0.5) * 1.4;
+    const side = ((id * 0.7548776662466927) % 1 - 0.5) * 1.2;
+    const radius = interactionRange * 0.62;
     for (let attempt = 0; attempt < 8; attempt++) {
       const angle = base + side + attempt * Math.PI * 0.25;
       const candidate = {
         x: target.x + Math.cos(angle) * radius,
         z: target.z + Math.sin(angle) * radius,
       };
-      const resolved = this.navigation.resolveNearestReachable(candidate, 4, component);
-      if (resolved) return resolved;
+      const resolved = this.navigation.resolveNearestReachable(candidate, 1, component);
+      if (resolved && distance(resolved, target) <= interactionRange + 1e-6) return resolved;
     }
-    return this.navigation.resolveNearestReachable(target, 5, component);
+
+    const direct = this.navigation.resolveNearestReachable(target, 2, component);
+    if (direct && distance(direct, target) <= interactionRange + 1e-6) return direct;
+    return null;
   }
 
   private clearWorker(id: EntityId): void {
