@@ -83,14 +83,37 @@ test('multiple workers share a finite wood node without duplicating resources', 
   f.coordinator.destroy(); f.loop.destroy(); f.economy.destroy(); f.simulation.destroy();
 });
 
+test('blocked storehouse center resolves to a reachable nearby drop-off point', () => {
+  const storehouse = { x: 18, z: 18 };
+  const navigation = new NavigationGrid({
+    minX: 0, maxX: 26, minZ: 0, maxZ: 26, cellSize: 1,
+    isBlocked: (x, z) => Math.hypot(x - storehouse.x, z - storehouse.z) <= 3.5,
+  });
+  const spawn = { id: 1, owner: 1, position: { x: 2, z: 2 }, speed: 12 };
+  const simulation = new RtsSimulation(navigation, [spawn], 1, 4);
+  const economy = new ResourceEconomy([{ id: 1001, resource: 'wood', position: { x: 8, z: 4 }, amount: 2 }]);
+  const loop = new GatherLoop(economy, [{ id: 1, owner: 1, position: spawn.position, carryCapacity: 2, gatherRatePerSecond: 12 }]);
+  const coordinator = new GatherCoordinator(navigation, simulation, economy, loop, storehouse, 1);
+  assert.equal(coordinator.issueGather([1], 1001, 1), true);
+  for (let tick = 1; tick <= 600; tick++) {
+    simulation.fixedUpdate(DT, tick);
+    coordinator.fixedUpdate(DT, tick);
+  }
+  assert.ok(coordinator.metrics().woodStockpile > 0, 'worker should deposit even when storehouse center itself is blocked');
+  coordinator.destroy(); loop.destroy(); economy.destroy(); simulation.destroy();
+});
+
 test('coordinator rejects missing and non-wood gather targets', () => {
   const f = fixture();
   assert.equal(f.coordinator.issueGather([1], 9999, 1), false);
-  f.economy.destroy();
+  f.coordinator.destroy(); f.loop.destroy(); f.economy.destroy(); f.simulation.destroy();
+
+  const navigation = new NavigationGrid({ minX: 0, maxX: 20, minZ: 0, maxZ: 20, cellSize: 1, isBlocked: () => false });
+  const simulation = new RtsSimulation(navigation, [{ id: 1, owner: 1, position: { x: 2, z: 2 } }], 1, 4);
   const economy = new ResourceEconomy([{ id: 2001, resource: 'stone', position: { x: 8, z: 8 }, amount: 10 }]);
   const loop = new GatherLoop(economy, [{ id: 1, owner: 1, position: { x: 2, z: 2 } }]);
-  const coordinator = new GatherCoordinator(f.navigation, f.simulation, economy, loop, { x: 2, z: 2 }, 1);
+  const coordinator = new GatherCoordinator(navigation, simulation, economy, loop, { x: 2, z: 2 }, 1);
   assert.equal(coordinator.issueGather([1], 2001, 1), false);
   assert.match(coordinator.metrics().lastGatherFailure, /Invalid wood resource/);
-  coordinator.destroy(); loop.destroy(); economy.destroy(); f.simulation.destroy();
+  coordinator.destroy(); loop.destroy(); economy.destroy(); simulation.destroy();
 });
