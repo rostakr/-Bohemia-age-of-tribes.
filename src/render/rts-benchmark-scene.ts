@@ -1,6 +1,11 @@
 import { Entity, type Application } from 'playcanvas';
 import type { EntityId } from '../core/contracts';
-import { RtsSimulation, type UnitSpawn } from '../core/rts-simulation';
+import {
+  RtsSimulation,
+  type DropoffSpawn,
+  type ResourceNodeSpawn,
+  type UnitSpawn,
+} from '../core/rts-simulation';
 import { BenchmarkScene, type BenchmarkModels } from './benchmark-scene';
 import { type ViewName } from './inspection-camera';
 import { landscape } from './landscape';
@@ -11,6 +16,7 @@ import type { RuntimeScene, SceneDiagnostics } from './scene';
 export class RtsBenchmarkScene implements RuntimeScene {
   private readonly base: BenchmarkScene;
   private readonly unitEntities = new Map<EntityId, Entity>();
+  private readonly resourceEntities = new Map<EntityId, Entity>();
   private simulation: RtsSimulation | undefined;
   private controller: RtsController | undefined;
   private tick = 0;
@@ -20,6 +26,7 @@ export class RtsBenchmarkScene implements RuntimeScene {
     models: BenchmarkModels,
     private readonly canvas: HTMLCanvasElement,
     private readonly debugUnitCount = 5,
+    private readonly gatheringEnabled = false,
   ) {
     this.base = new BenchmarkScene(models);
   }
@@ -35,7 +42,7 @@ export class RtsBenchmarkScene implements RuntimeScene {
     const initialEntities: Entity[] = [];
     for (let index = 1; index <= 5; index++) {
       const entity = app.root.findByName(`Inhabitant ${index}`) as Entity | null;
-      if (!entity) throw new Error(`Phase 2 requires accepted worker entity Inhabitant ${index}`);
+      if (!entity) throw new Error(`RTS benchmark requires accepted worker entity Inhabitant ${index}`);
       initialEntities.push(entity);
     }
 
@@ -59,12 +66,56 @@ export class RtsBenchmarkScene implements RuntimeScene {
       this.unitEntities.set(id, entity);
       return { id, owner: 1, position: { x: position.x, z: position.z } };
     });
-    this.simulation = new RtsSimulation(navigation, spawns, 1, 4);
+
+    const resources: ResourceNodeSpawn[] = [];
+    const dropoffs: DropoffSpawn[] = [];
+    if (this.gatheringEnabled) {
+      const storehouse = app.root.findByName('Boii storehouse') as Entity | null;
+      if (!storehouse) throw new Error('Phase 3 gathering requires the accepted Boii storehouse');
+      const storehousePosition = storehouse.getPosition();
+      dropoffs.push({ id: 2001, owner: 1, position: { x: storehousePosition.x, z: storehousePosition.z }, radius: 2 });
+
+      const trees: Entity[] = [];
+      for (let index = 1; index <= 32; index++) {
+        const tree = app.root.findByName(`Procedural deciduous tree ${index}`) as Entity | null;
+        if (tree) trees.push(tree);
+      }
+      if (trees.length === 0) {
+        for (let index = 0; index < 45; index++) {
+          const tree = app.root.findByName(`Deciduous tree ${index}`) as Entity | null;
+          if (tree) trees.push(tree);
+        }
+      }
+      trees.sort((a, b) => {
+        const ap = a.getPosition();
+        const bp = b.getPosition();
+        return Math.hypot(ap.x - storehousePosition.x, ap.z - storehousePosition.z) -
+          Math.hypot(bp.x - storehousePosition.x, bp.z - storehousePosition.z) || a.name.localeCompare(b.name);
+      });
+      if (trees.length === 0) throw new Error('Phase 3 gathering requires at least one benchmark tree');
+      for (const [index, tree] of trees.slice(0, 8).entries()) {
+        const position = tree.getPosition();
+        const id = 1001 + index;
+        this.resourceEntities.set(id, tree);
+        resources.push({ id, type: 'wood', position: { x: position.x, z: position.z }, amount: 100, interactionRadius: 1.5 });
+      }
+    }
+
+    this.simulation = new RtsSimulation(navigation, spawns, 1, 4, resources, dropoffs);
     for (const state of this.simulation.renderState(1)) {
       const entity = this.unitEntities.get(state.id)!;
       entity.setPosition(state.x, landscape.heightAt(state.x, state.z), state.z);
     }
-    this.controller = new RtsController(camera, this.canvas, landscape, navigation, this.simulation, this.unitEntities, () => this.tick);
+    this.controller = new RtsController(
+      camera,
+      this.canvas,
+      landscape,
+      navigation,
+      this.simulation,
+      this.unitEntities,
+      () => this.tick,
+      this.resourceEntities,
+    );
   }
 
   setView(view: ViewName): void { this.base.setView(view); }
@@ -93,7 +144,7 @@ export class RtsBenchmarkScene implements RuntimeScene {
     const metrics = this.simulation?.metrics();
     return {
       ...base,
-      milestone: 'phase-2',
+      milestone: this.gatheringEnabled ? 'phase-3' : 'phase-2',
       artGatePassed: true,
       activeUnits: metrics?.activeUnits ?? 0,
       selectedUnits: this.controller?.selectedCount ?? 0,
@@ -102,6 +153,12 @@ export class RtsBenchmarkScene implements RuntimeScene {
       rtsSimulationMs: Number((metrics?.simulationTimeMs ?? 0).toFixed(3)),
       pathFailure: metrics?.lastPathFailure ?? '',
       phase2DebugUnits: this.debugUnitCount,
+      resourceNodes: metrics?.resourceNodes ?? 0,
+      woodRemaining: Number((metrics?.woodRemaining ?? 0).toFixed(3)),
+      woodStockpile: Number((metrics?.woodStockpile ?? 0).toFixed(3)),
+      gatheringUnits: metrics?.gatheringUnits ?? 0,
+      carriedWoodTotal: Number((metrics?.carriedWoodTotal ?? 0).toFixed(3)),
+      phase3Gathering: this.gatheringEnabled,
     };
   }
 
@@ -112,6 +169,7 @@ export class RtsBenchmarkScene implements RuntimeScene {
     this.controller = undefined;
     this.simulation?.destroy();
     this.simulation = undefined;
+    this.resourceEntities.clear();
     this.unitEntities.clear();
     this.base.destroy();
   }
