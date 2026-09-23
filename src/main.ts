@@ -72,7 +72,7 @@ function createScene(): RuntimeScene {
     ...(workshopPreview ? { workshop: PROJECT_WORKSHOP_PATH } : {}),
   };
   const benchmark = phase2Interaction
-    ? new RtsBenchmarkScene(models, canvas, phase2DebugUnits, phase3Gathering)
+    ? new RtsBenchmarkScene(models, canvas, phase2DebugUnits, phase3Gathering, phase3Gathering && debug)
     : new BenchmarkScene(models);
   activeBenchmarkScene = benchmark;
   return benchmark;
