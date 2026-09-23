@@ -46,6 +46,9 @@ jobs:
         run: npm run validate
       - name: Phase 2 interaction regression
         run: npm run smoke:phase2
+      # The Phase 3 smoke uses the existing ?phase3=1&debug=1 QA-fast route so
+      # SwiftShader can complete a real gather -> carry -> deposit cycle while
+      # production/non-debug simulation constants remain unchanged.
       - name: Phase 3 wood gathering smoke
         run: npm run smoke:phase3
       - uses: actions/upload-artifact@v4
