@@ -139,11 +139,22 @@ async function dragSelect(cdp) {
 }
 
 async function rightClick(cdp, x = 1480, y = 650) {
-  // Production RTS input owns the right-pointer release. Exercise that exact path
-  // instead of relying on headless Chromium to synthesize a follow-up contextmenu.
-  await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y, button: 'none', buttons: 0 });
-  await cdp.send('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'right', buttons: 2, clickCount: 1 });
-  await cdp.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'right', buttons: 0, clickCount: 1 });
+  // Headless Chromium/CDP does not consistently synthesize a DOM contextmenu event
+  // from right-button mouse dispatch. Deliver the standard browser event explicitly
+  // to the real gameplay canvas while preserving viewport coordinates.
+  await evaluate(cdp, `(() => {
+    const canvas = document.querySelector('#viewport');
+    if (!canvas) throw new Error('RTS canvas missing');
+    return canvas.dispatchEvent(new MouseEvent('contextmenu', {
+      bubbles: true,
+      cancelable: true,
+      view: window,
+      clientX: ${x},
+      clientY: ${y},
+      button: 2,
+      buttons: 2,
+    }));
+  })()`);
 }
 
 async function capture(cdp, filename) {
