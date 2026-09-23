@@ -124,7 +124,8 @@ export class RtsSimulation {
   private applyCommand(command: Command): void {
     if (command.player !== this.localPlayer || command.queue) return;
     if (command.order.type === 'gather') {
-      const destination = this.gatherDestinations.get(command.order.target);
+      const gatherTarget = command.order.target;
+      const destination = this.gatherDestinations.get(gatherTarget);
       if (!destination) return;
       const owned = command.units
         .map(id => this.units.get(id))
@@ -137,7 +138,7 @@ export class RtsSimulation {
         unit.orderVersion++;
         unit.path = [];
         unit.waypoint = 0;
-        this.gatherTargets.set(unit.id, command.order.target);
+        this.gatherTargets.set(unit.id, gatherTarget);
         const slot = slots[index];
         if (slot) this.pendingPaths.push({ unitId: unit.id, destination: slot, orderVersion: unit.orderVersion });
       });
