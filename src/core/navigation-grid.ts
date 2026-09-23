@@ -1,4 +1,4 @@
-import type { WorldPoint } from './contracts';
+import type { WorldPoint } from './contracts.ts';
 
 export interface NavigationGridOptions {
   minX: number;
