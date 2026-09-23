@@ -12,9 +12,23 @@ test('bounded A* uses explicit crossing and does not cross blocked water', () =>
     minX: 0, maxX: 10, minZ: 0, maxZ: 10, cellSize: 1,
     isBlocked: (x, z) => x === 5 && z !== 6,
   });
-  const result = grid.findPath({ x: 1, z: 1 }, { x: 9, z: 1 });
+  const start = { x: 1, z: 1 };
+  const result = grid.findPath(start, { x: 9, z: 1 });
   assert.ok(result, 'route should exist through the explicit crossing');
-  assert.ok(result.path.some(point => point.x === 5 && point.z === 6), 'route must use the only passable crossing');
+  assert.equal(grid.isPassable({ x: 5, z: 5 }), false);
+  assert.equal(grid.isPassable({ x: 5, z: 6 }), true);
+  const crossingZ = [];
+  let previous = start;
+  for (const point of result.path) {
+    if (previous.x === 5 && point.x === 5) {
+      crossingZ.push(previous.z, point.z);
+    } else if ((previous.x - 5) * (point.x - 5) <= 0 && previous.x !== point.x) {
+      const t = (5 - previous.x) / (point.x - previous.x);
+      if (t >= 0 && t <= 1) crossingZ.push(previous.z + (point.z - previous.z) * t);
+    }
+    previous = point;
+  }
+  assert.ok(crossingZ.some(z => Math.abs(z - 6) < 1e-6), `route must cross the barrier at the explicit ford, observed ${crossingZ.join(', ')}`);
   assert.ok(result.visited < 200, 'search must remain bounded for this small route');
 });
 
