@@ -7,7 +7,7 @@ interface WorkerVisual {
   roleMarker: Entity;
   cargo: Entity;
   depositPulse: Entity;
-  previousCargo: number;
+  previousDepositSequence: number;
   pulseSeconds: number;
 }
 
@@ -17,7 +17,6 @@ export class WorkerGatherVisuals {
   private readonly roleMaterial: StandardMaterial;
   private readonly cargoMaterial: StandardMaterial;
   private readonly pulseMaterial: StandardMaterial;
-  private previousStockpile = 0;
 
   constructor(
     unitEntities: ReadonlyMap<EntityId, Entity>,
@@ -26,7 +25,6 @@ export class WorkerGatherVisuals {
     this.roleMaterial = material(new Color(0.54, 0.66, 0.35), 0.02);
     this.cargoMaterial = material(new Color(0.34, 0.16, 0.055), 0.05);
     this.pulseMaterial = material(new Color(0.95, 0.72, 0.18), 0.1);
-    this.previousStockpile = coordinator.metrics().woodStockpile;
 
     for (const [id, worker] of unitEntities) {
       const root = new Entity(`Worker ${id} gather readability`);
@@ -63,13 +61,16 @@ export class WorkerGatherVisuals {
       depositPulse.enabled = false;
       root.addChild(depositPulse);
 
-      this.visuals.set(id, { root, roleMarker, cargo, depositPulse, previousCargo: 0, pulseSeconds: 0 });
+      const initialDepositSequence = coordinator.workerState(id)?.depositSequence ?? 0;
+      this.visuals.set(id, {
+        root, roleMarker, cargo, depositPulse,
+        previousDepositSequence: initialDepositSequence,
+        pulseSeconds: 0,
+      });
     }
   }
 
   update(dtSeconds: number): void {
-    const stockpile = this.coordinator.metrics().woodStockpile;
-    const economyAdvanced = stockpile > this.previousStockpile + 1e-6;
     const current = new Map(
       [...this.visuals.keys()].map(id => [id, this.coordinator.workerState(id)] as const),
     );
@@ -78,10 +79,14 @@ export class WorkerGatherVisuals {
       const state = current.get(id);
       const cargoAmount = state?.carrying === 'wood' ? state.carriedAmount : 0;
       visual.cargo.enabled = cargoAmount > 1e-6;
-      if (economyAdvanced && visual.previousCargo > 1e-6 && cargoAmount < visual.previousCargo - 1e-6) {
-        visual.pulseSeconds = 0.7;
-      }
-      visual.previousCargo = cargoAmount;
+
+      // Presentation reacts to the worker's authoritative deposit receipt, not to
+      // a renderer-side inference from cargo/stockpile deltas. Command replacement
+      // therefore cannot fabricate a deposit flash when carried cargo is preserved.
+      const depositSequence = state?.depositSequence ?? visual.previousDepositSequence;
+      if (depositSequence > visual.previousDepositSequence) visual.pulseSeconds = 0.7;
+      visual.previousDepositSequence = depositSequence;
+
       visual.pulseSeconds = Math.max(0, visual.pulseSeconds - Math.max(0, dtSeconds));
       visual.depositPulse.enabled = visual.pulseSeconds > 0;
       if (visual.depositPulse.enabled) {
@@ -90,7 +95,6 @@ export class WorkerGatherVisuals {
         visual.depositPulse.setLocalScale(scale, 0.035, scale);
       }
     }
-    this.previousStockpile = stockpile;
   }
 
   diagnostics(): { workerMarkers: number; workersShowingCargo: number; activeDepositPulses: number } {
