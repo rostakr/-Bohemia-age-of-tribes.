@@ -8,6 +8,8 @@ import { RtsController } from './rts-controller';
 import { createPhase2NavigationGrid } from './rts-navigation';
 import type { RuntimeScene, SceneDiagnostics } from './scene';
 
+export type RtsMilestone = 'phase-2' | 'phase-3';
+
 export class RtsBenchmarkScene implements RuntimeScene {
   private readonly base: BenchmarkScene;
   private readonly unitEntities = new Map<EntityId, Entity>();
@@ -20,6 +22,7 @@ export class RtsBenchmarkScene implements RuntimeScene {
     models: BenchmarkModels,
     private readonly canvas: HTMLCanvasElement,
     private readonly debugUnitCount = 5,
+    private readonly milestone: RtsMilestone = 'phase-2',
   ) {
     this.base = new BenchmarkScene(models);
   }
@@ -30,23 +33,26 @@ export class RtsBenchmarkScene implements RuntimeScene {
     if (this.destroyed) return;
 
     const camera = app.root.findByName('Benchmark inspection camera') as Entity | null;
-    if (!camera?.camera) throw new Error('Phase 2 benchmark camera was not created');
+    if (!camera?.camera) throw new Error('RTS benchmark camera was not created');
 
     const initialEntities: Entity[] = [];
     for (let index = 1; index <= 5; index++) {
       const entity = app.root.findByName(`Inhabitant ${index}`) as Entity | null;
-      if (!entity) throw new Error(`Phase 2 requires accepted worker entity Inhabitant ${index}`);
+      if (!entity) throw new Error(`RTS benchmark requires accepted worker entity Inhabitant ${index}`);
       initialEntities.push(entity);
     }
 
-    const count = Math.max(5, Math.min(40, Math.floor(this.debugUnitCount)));
+    const maxUnits = this.milestone === 'phase-3' ? 120 : 40;
+    const count = Math.max(5, Math.min(maxUnits, Math.floor(this.debugUnitCount)));
     const template = initialEntities[0]!;
     for (let index = 5; index < count; index++) {
       const clone = template.clone();
       clone.name = `Inhabitant ${index + 1}`;
-      const column = (index - 5) % 7;
-      const row = Math.floor((index - 5) / 7);
-      clone.setPosition(-28 + column * 2.2, landscape.heightAt(-28 + column * 2.2, 21 + row * 2.1), 21 + row * 2.1);
+      const column = (index - 5) % 10;
+      const row = Math.floor((index - 5) / 10);
+      const x = -30 + column * 1.85;
+      const z = 20 + row * 1.85;
+      clone.setPosition(x, landscape.heightAt(x, z), z);
       clone.setEulerAngles(0, index * 47 % 360, 0);
       template.parent?.addChild(clone);
       initialEntities.push(clone);
@@ -59,7 +65,10 @@ export class RtsBenchmarkScene implements RuntimeScene {
       this.unitEntities.set(id, entity);
       return { id, owner: 1, position: { x: position.x, z: position.z } };
     });
-    this.simulation = new RtsSimulation(navigation, spawns, 1, 4);
+    const pathBudget = this.milestone === 'phase-3'
+      ? Math.min(8, Math.max(4, Math.ceil(count / 20)))
+      : 4;
+    this.simulation = new RtsSimulation(navigation, spawns, 1, pathBudget);
     for (const state of this.simulation.renderState(1)) {
       const entity = this.unitEntities.get(state.id)!;
       entity.setPosition(state.x, landscape.heightAt(state.x, state.z), state.z);
@@ -93,15 +102,22 @@ export class RtsBenchmarkScene implements RuntimeScene {
     const metrics = this.simulation?.metrics();
     return {
       ...base,
-      milestone: 'phase-2',
+      milestone: this.milestone,
       artGatePassed: true,
       activeUnits: metrics?.activeUnits ?? 0,
+      movingUnits: metrics?.movingUnits ?? 0,
+      stalledUnits: metrics?.stalledUnits ?? 0,
       selectedUnits: this.controller?.selectedCount ?? 0,
       pendingPaths: metrics?.pendingPaths ?? 0,
+      maxObservedPathQueue: metrics?.maxObservedPathQueue ?? 0,
       pathsSolvedPerTick: metrics?.pathsSolvedThisTick ?? 0,
+      pathNodesVisitedPerTick: metrics?.pathNodesVisitedThisTick ?? 0,
+      repathsQueuedPerTick: metrics?.repathsQueuedThisTick ?? 0,
+      neighborChecksPerTick: metrics?.neighborChecksThisTick ?? 0,
       rtsSimulationMs: Number((metrics?.simulationTimeMs ?? 0).toFixed(3)),
       pathFailure: metrics?.lastPathFailure ?? '',
-      phase2DebugUnits: this.debugUnitCount,
+      phase2DebugUnits: this.milestone === 'phase-2' ? countOrDefault(this.debugUnitCount, 40) : 0,
+      phase3DebugUnits: this.milestone === 'phase-3' ? countOrDefault(this.debugUnitCount, 120) : 0,
     };
   }
 
@@ -115,4 +131,8 @@ export class RtsBenchmarkScene implements RuntimeScene {
     this.unitEntities.clear();
     this.base.destroy();
   }
+}
+
+function countOrDefault(value: number, max: number): number {
+  return Math.max(5, Math.min(max, Math.floor(value)));
 }

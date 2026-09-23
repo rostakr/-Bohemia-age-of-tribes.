@@ -44,15 +44,24 @@ const workerR2Closeup = parameters.get('scene') === 'worker-r2-preview';
 const workerR2Benchmark = parameters.get('worker') === 'r2';
 const completionCandidate = parameters.get('candidate') === 'phase1';
 const phase2Interaction = parameters.get('phase2') === '1';
+const phase3Movement = parameters.get('phase3') === '1';
+const rtsInteraction = phase2Interaction || phase3Movement;
+const requestedUnits = Number(parameters.get('units'));
 const phase2DebugUnits = debug && parameters.get('units') === '40' ? 40 : 5;
-const workshopPreview = completionCandidate || phase2Interaction || parameters.get('workshop') === 'project';
+const phase3DebugUnits = debug && Number.isFinite(requestedUnits)
+  ? Math.max(5, Math.min(120, Math.floor(requestedUnits)))
+  : 5;
+const rtsDebugUnits = phase3Movement ? phase3DebugUnits : phase2DebugUnits;
+const workshopPreview = completionCandidate || rtsInteraction || parameters.get('workshop') === 'project';
 const runningLabel = calibration
   ? 'Foundation running'
   : workerR2Closeup
     ? 'Worker R2 preview running'
-    : phase2Interaction
-      ? 'RTS foundation running'
-      : 'Scene running';
+    : phase3Movement
+      ? 'Scalable movement running'
+      : phase2Interaction
+        ? 'RTS foundation running'
+        : 'Scene running';
 
 let runtime: GameRuntime | undefined;
 let activeBenchmarkScene: BenchmarkScene | RtsBenchmarkScene | undefined;
@@ -65,11 +74,11 @@ function createScene(): RuntimeScene {
   if (workerR2Closeup) return new WorkerR2PreviewScene();
   const models = {
     ...ADMITTED_MODELS,
-    ...(workerR2Benchmark || completionCandidate || phase2Interaction ? { inhabitant: WORKER_R2_PATH } : {}),
+    ...(workerR2Benchmark || completionCandidate || rtsInteraction ? { inhabitant: WORKER_R2_PATH } : {}),
     ...(workshopPreview ? { workshop: PROJECT_WORKSHOP_PATH } : {}),
   };
-  const benchmark = phase2Interaction
-    ? new RtsBenchmarkScene(models, canvas, phase2DebugUnits)
+  const benchmark = rtsInteraction
+    ? new RtsBenchmarkScene(models, canvas, rtsDebugUnits, phase3Movement ? 'phase-3' : 'phase-2')
     : new BenchmarkScene(models);
   activeBenchmarkScene = benchmark;
   return benchmark;
@@ -111,9 +120,11 @@ function resetHostUi(): void {
     ? 'Starting the renderer…'
     : workerR2Closeup
       ? 'Preparing the worker R2 preview…'
-      : phase2Interaction
-        ? 'Preparing RTS interaction…'
-        : 'Preparing the landscape…';
+      : phase3Movement
+        ? 'Preparing scalable movement…'
+        : phase2Interaction
+          ? 'Preparing RTS interaction…'
+          : 'Preparing the landscape…';
   pauseButton.disabled = true;
   pauseButton.textContent = 'Pause simulation';
   pauseButton.setAttribute('aria-pressed', 'false');

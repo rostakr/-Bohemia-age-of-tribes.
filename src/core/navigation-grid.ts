@@ -18,12 +18,15 @@ export interface PathResult {
   path: readonly WorldPoint[];
   resolvedDestination: WorldPoint;
   visited: number;
+  rawCells: number;
 }
 
 class MinHeap {
   private readonly items: { index: number; priority: number }[] = [];
 
   get size(): number { return this.items.length; }
+
+  clear(): void { this.items.length = 0; }
 
   push(index: number, priority: number): void {
     const item = { index, priority };
@@ -63,7 +66,15 @@ export class NavigationGrid {
   readonly width: number;
   readonly height: number;
   readonly options: NavigationGridOptions;
+  readonly componentCount: number;
   private readonly passable: Uint8Array;
+  private readonly components: Int32Array;
+  private readonly gScore: Float64Array;
+  private readonly cameFrom: Int32Array;
+  private readonly seenGeneration: Uint32Array;
+  private readonly closedGeneration: Uint32Array;
+  private readonly open = new MinHeap();
+  private generation = 0;
 
   constructor(options: NavigationGridOptions) {
     this.options = options;
@@ -71,18 +82,67 @@ export class NavigationGrid {
     this.width = Math.floor((options.maxX - options.minX) / options.cellSize) + 1;
     this.height = Math.floor((options.maxZ - options.minZ) / options.cellSize) + 1;
     if (this.width < 2 || this.height < 2) throw new Error('Navigation grid is too small');
-    this.passable = new Uint8Array(this.width * this.height);
+
+    const count = this.width * this.height;
+    this.passable = new Uint8Array(count);
     for (let z = 0; z < this.height; z++) {
       for (let x = 0; x < this.width; x++) {
         const world = this.cellToWorld({ x, z });
         this.passable[this.index(x, z)] = options.isBlocked(world.x, world.z) ? 0 : 1;
       }
     }
+
+    this.components = new Int32Array(count);
+    this.components.fill(-1);
+    this.componentCount = this.buildComponents();
+    this.gScore = new Float64Array(count);
+    this.cameFrom = new Int32Array(count);
+    this.seenGeneration = new Uint32Array(count);
+    this.closedGeneration = new Uint32Array(count);
   }
 
   private index(x: number, z: number): number { return z * this.width + x; }
   private fromIndex(index: number): GridCell { return { x: index % this.width, z: Math.floor(index / this.width) }; }
   private inside(x: number, z: number): boolean { return x >= 0 && z >= 0 && x < this.width && z < this.height; }
+
+  private buildComponents(): number {
+    const stack: number[] = [];
+    let component = 0;
+    for (let start = 0; start < this.passable.length; start++) {
+      if (this.passable[start] === 0 || this.components[start] !== -1) continue;
+      this.components[start] = component;
+      stack.push(start);
+      while (stack.length > 0) {
+        const currentIndex = stack.pop()!;
+        const current = this.fromIndex(currentIndex);
+        const neighbours = [
+          { x: current.x + 1, z: current.z },
+          { x: current.x - 1, z: current.z },
+          { x: current.x, z: current.z + 1 },
+          { x: current.x, z: current.z - 1 },
+        ];
+        for (const next of neighbours) {
+          if (!this.inside(next.x, next.z)) continue;
+          const nextIndex = this.index(next.x, next.z);
+          if (this.passable[nextIndex] === 0 || this.components[nextIndex] !== -1) continue;
+          this.components[nextIndex] = component;
+          stack.push(nextIndex);
+        }
+      }
+      component++;
+    }
+    return component;
+  }
+
+  private nextGeneration(): number {
+    if (this.generation >= 0xffff_fffe) {
+      this.seenGeneration.fill(0);
+      this.closedGeneration.fill(0);
+      this.generation = 0;
+    }
+    this.generation++;
+    return this.generation;
+  }
 
   worldToCell(point: WorldPoint): GridCell | null {
     const x = Math.round((point.x - this.options.minX) / this.options.cellSize);
@@ -106,10 +166,22 @@ export class NavigationGrid {
     return cell !== null && this.isPassableCell(cell);
   }
 
-  resolveNearestReachable(point: WorldPoint, maxRadiusCells = 6): WorldPoint | null {
+  componentAt(point: WorldPoint): number | null {
+    const cell = this.worldToCell(point);
+    if (!cell || !this.isPassableCell(cell)) return null;
+    const component = this.components[this.index(cell.x, cell.z)]!;
+    return component >= 0 ? component : null;
+  }
+
+  resolveNearestReachable(point: WorldPoint, maxRadiusCells = 6, requiredComponent?: number): WorldPoint | null {
     const origin = this.worldToCell(point);
     if (!origin) return null;
-    if (this.isPassableCell(origin)) return this.cellToWorld(origin);
+    const acceptable = (cell: GridCell): boolean => {
+      if (!this.isPassableCell(cell)) return false;
+      return requiredComponent === undefined || this.components[this.index(cell.x, cell.z)] === requiredComponent;
+    };
+    if (acceptable(origin)) return this.cellToWorld(origin);
+
     for (let radius = 1; radius <= maxRadiusCells; radius++) {
       const candidates: GridCell[] = [];
       for (let dx = -radius; dx <= radius; dx++) {
@@ -125,35 +197,94 @@ export class NavigationGrid {
         const bd = (b.x - origin.x) ** 2 + (b.z - origin.z) ** 2;
         return ad - bd || a.z - b.z || a.x - b.x;
       });
-      for (const candidate of candidates) if (this.isPassableCell(candidate)) return this.cellToWorld(candidate);
+      for (const candidate of candidates) if (acceptable(candidate)) return this.cellToWorld(candidate);
     }
     return null;
   }
 
+  isPassableSegment(start: WorldPoint, end: WorldPoint): boolean {
+    const startCell = this.worldToCell(start);
+    const endCell = this.worldToCell(end);
+    if (!startCell || !endCell) return false;
+    return this.hasLineOfSight(startCell, endCell);
+  }
+
+  private hasLineOfSight(start: GridCell, end: GridCell): boolean {
+    let x = start.x;
+    let z = start.z;
+    const dx = Math.abs(end.x - start.x);
+    const dz = Math.abs(end.z - start.z);
+    const sx = start.x < end.x ? 1 : -1;
+    const sz = start.z < end.z ? 1 : -1;
+    let error = dx - dz;
+    if (!this.isPassableCell({ x, z })) return false;
+
+    while (x !== end.x || z !== end.z) {
+      const previousX = x;
+      const previousZ = z;
+      const doubled = error * 2;
+      if (doubled > -dz) {
+        error -= dz;
+        x += sx;
+      }
+      if (doubled < dx) {
+        error += dx;
+        z += sz;
+      }
+      if (!this.isPassableCell({ x, z })) return false;
+      if (x !== previousX && z !== previousZ) {
+        if (!this.isPassableCell({ x, z: previousZ }) || !this.isPassableCell({ x: previousX, z })) return false;
+      }
+    }
+    return true;
+  }
+
+  private simplifyPath(cells: readonly GridCell[]): GridCell[] {
+    if (cells.length <= 2) return [...cells];
+    const result: GridCell[] = [cells[0]!];
+    let anchor = 0;
+    while (anchor < cells.length - 1) {
+      let next = anchor + 1;
+      for (let candidate = cells.length - 1; candidate > anchor + 1; candidate--) {
+        if (this.hasLineOfSight(cells[anchor]!, cells[candidate]!)) {
+          next = candidate;
+          break;
+        }
+      }
+      result.push(cells[next]!);
+      anchor = next;
+    }
+    return result;
+  }
+
   findPath(start: WorldPoint, destination: WorldPoint, maxVisited = 8_000): PathResult | null {
     const startResolved = this.resolveNearestReachable(start, 3);
-    const destinationResolved = this.resolveNearestReachable(destination, 8);
-    if (!startResolved || !destinationResolved) return null;
+    if (!startResolved) return null;
+    const startComponent = this.componentAt(startResolved);
+    if (startComponent === null) return null;
+    const destinationResolved = this.resolveNearestReachable(destination, 8, startComponent);
+    if (!destinationResolved) return null;
+
     const startCell = this.worldToCell(startResolved)!;
     const goalCell = this.worldToCell(destinationResolved)!;
     const startIndex = this.index(startCell.x, startCell.z);
     const goalIndex = this.index(goalCell.x, goalCell.z);
-    if (startIndex === goalIndex) return { path: [destinationResolved], resolvedDestination: destinationResolved, visited: 0 };
+    if (startIndex === goalIndex) {
+      return { path: [destinationResolved], resolvedDestination: destinationResolved, visited: 0, rawCells: 1 };
+    }
 
-    const count = this.width * this.height;
-    const g = new Float64Array(count);
-    g.fill(Number.POSITIVE_INFINITY);
-    const cameFrom = new Int32Array(count);
-    cameFrom.fill(-1);
-    const closed = new Uint8Array(count);
-    const open = new MinHeap();
+    const generation = this.nextGeneration();
+    this.open.clear();
+    this.seenGeneration[startIndex] = generation;
+    this.gScore[startIndex] = 0;
+    this.cameFrom[startIndex] = -1;
+
     const heuristic = (cell: GridCell): number => {
       const dx = Math.abs(cell.x - goalCell.x);
       const dz = Math.abs(cell.z - goalCell.z);
       return Math.max(dx, dz) + (Math.SQRT2 - 1) * Math.min(dx, dz);
     };
-    g[startIndex] = 0;
-    open.push(startIndex, heuristic(startCell));
+    this.open.push(startIndex, heuristic(startCell));
     let visited = 0;
 
     const directions = [
@@ -163,13 +294,14 @@ export class NavigationGrid {
       { x: -1, z: 1, cost: Math.SQRT2 }, { x: -1, z: -1, cost: Math.SQRT2 },
     ] as const;
 
-    while (open.size > 0 && visited < maxVisited) {
-      const currentIndex = open.pop()!;
-      if (closed[currentIndex]) continue;
-      closed[currentIndex] = 1;
+    while (this.open.size > 0 && visited < maxVisited) {
+      const currentIndex = this.open.pop()!;
+      if (this.closedGeneration[currentIndex] === generation) continue;
+      this.closedGeneration[currentIndex] = generation;
       visited++;
       if (currentIndex === goalIndex) break;
       const current = this.fromIndex(currentIndex);
+
       for (const direction of directions) {
         const next = { x: current.x + direction.x, z: current.z + direction.z };
         if (!this.isPassableCell(next)) continue;
@@ -178,38 +310,33 @@ export class NavigationGrid {
               !this.isPassableCell({ x: current.x, z: current.z + direction.z })) continue;
         }
         const nextIndex = this.index(next.x, next.z);
-        if (closed[nextIndex]) continue;
-        const tentative = g[currentIndex]! + direction.cost;
-        if (tentative >= g[nextIndex]!) continue;
-        cameFrom[nextIndex] = currentIndex;
-        g[nextIndex] = tentative;
-        open.push(nextIndex, tentative + heuristic(next));
+        if (this.closedGeneration[nextIndex] === generation) continue;
+        const currentScore = this.gScore[currentIndex]!;
+        const tentative = currentScore + direction.cost;
+        const seen = this.seenGeneration[nextIndex] === generation;
+        if (seen && tentative >= this.gScore[nextIndex]!) continue;
+        this.seenGeneration[nextIndex] = generation;
+        this.cameFrom[nextIndex] = currentIndex;
+        this.gScore[nextIndex] = tentative;
+        this.open.push(nextIndex, tentative + heuristic(next));
       }
     }
 
-    if (cameFrom[goalIndex] === -1) return null;
+    if (this.seenGeneration[goalIndex] !== generation || this.cameFrom[goalIndex] === -1) return null;
     const reversed: GridCell[] = [goalCell];
     let cursor = goalIndex;
     while (cursor !== startIndex) {
-      cursor = cameFrom[cursor]!;
+      cursor = this.cameFrom[cursor]!;
       if (cursor < 0) return null;
       reversed.push(this.fromIndex(cursor));
     }
     reversed.reverse();
-
-    const compact: GridCell[] = [];
-    let lastDx = Number.NaN;
-    let lastDz = Number.NaN;
-    for (let i = 1; i < reversed.length; i++) {
-      const previous = reversed[i - 1]!;
-      const current = reversed[i]!;
-      const dx = Math.sign(current.x - previous.x);
-      const dz = Math.sign(current.z - previous.z);
-      if (i > 1 && (dx !== lastDx || dz !== lastDz)) compact.push(previous);
-      lastDx = dx;
-      lastDz = dz;
-    }
-    compact.push(goalCell);
-    return { path: compact.map(cell => this.cellToWorld(cell)), resolvedDestination: destinationResolved, visited };
+    const simplified = this.simplifyPath(reversed);
+    return {
+      path: simplified.slice(1).map(cell => this.cellToWorld(cell)),
+      resolvedDestination: destinationResolved,
+      visited,
+      rawCells: reversed.length,
+    };
   }
 }

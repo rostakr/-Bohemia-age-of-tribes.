@@ -1,0 +1,51 @@
+name: Validate Phase 3 scalable movement
+on:
+  pull_request:
+    branches:
+      - qa/phase3-integration
+    paths:
+      - 'src/core/navigation-grid.ts'
+      - 'src/core/rts-simulation.ts'
+      - 'src/render/rts-benchmark-scene.ts'
+      - 'src/render/rts-controller.ts'
+      - 'src/render/rts-navigation.ts'
+      - 'src/main.ts'
+      - 'scripts/check-phase2.mjs'
+      - 'scripts/check-phase3.mjs'
+      - 'scripts/browser-phase2-smoke.mjs'
+      - 'scripts/browser-phase3-smoke.mjs'
+      - 'docs/PHASE_3_TASK.md'
+      - 'package.json'
+      - '.github/workflows/validate-phase3-movement.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  phase3-movement:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Rebuild accepted Phase 1 worker/workshop inputs
+        run: |
+          node scripts/build-worker-r2.mjs
+          node scripts/compact-worker-r2.mjs
+          node --experimental-strip-types scripts/export-workshop-project.mjs
+      - name: Full repository validation
+        run: npm run validate
+      - name: Phase 2 regression smoke
+        run: npm run smoke:phase2
+      - name: Phase 3 scalable movement WebGL2 smoke
+        run: npm run smoke:phase3
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase3-scalable-movement-evidence
+          path: artifacts/phase3/phase3-80-unit-webgl2.png
+          if-no-files-found: error
+          retention-days: 14
