@@ -88,6 +88,30 @@ export class RtsBenchmarkScene implements RuntimeScene {
       const storehouse = app.root.findByName('Boii storehouse') as Entity | null;
       if (!storehouse) throw new Error('Phase 4 requires the accepted Boii storehouse drop-off');
       const storehousePosition = storehouse.getPosition();
+      const firstSpawn = spawns[0];
+      if (!firstSpawn) throw new Error('Phase 4 requires at least one local worker');
+      const localComponent = navigation.componentAt(firstSpawn.position);
+      if (localComponent === null) throw new Error('Phase 4 local worker has no reachable navigation component');
+
+      // The accepted storehouse center is intentionally blocked in navigation
+      // (4.4 m footprint). Map gameplay deposit to a deterministic reachable
+      // apron point on the worker-facing side instead of making the building
+      // itself walkable or inflating the production deposit radius.
+      let dropoffDx = firstSpawn.position.x - storehousePosition.x;
+      let dropoffDz = firstSpawn.position.z - storehousePosition.z;
+      let dropoffLength = Math.hypot(dropoffDx, dropoffDz);
+      if (dropoffLength < 1e-6) {
+        dropoffDx = -1;
+        dropoffDz = 0;
+        dropoffLength = 1;
+      }
+      const requestedDropoff = {
+        x: storehousePosition.x + dropoffDx / dropoffLength * 6,
+        z: storehousePosition.z + dropoffDz / dropoffLength * 6,
+      };
+      const dropoff = navigation.resolveNearestReachable(requestedDropoff, 4, localComponent);
+      if (!dropoff) throw new Error('Phase 4 storehouse has no reachable drop-off apron');
+
       const trees = this.findResourceTrees(app)
         .sort((a, b) => {
           const ap = a.getPosition(); const bp = b.getPosition();
@@ -116,7 +140,7 @@ export class RtsBenchmarkScene implements RuntimeScene {
         this.simulation,
         this.economy,
         this.gatherLoop,
-        { x: storehousePosition.x, z: storehousePosition.z },
+        dropoff,
         1,
       );
     }
