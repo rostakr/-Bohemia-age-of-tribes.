@@ -1,4 +1,4 @@
-import type { Command, EntityId, PlayerId, WorldPoint } from './contracts.ts';
+import type { Command, EntityId, PlayerId, ResourceId, WorldPoint } from './contracts.ts';
 import { NavigationGrid } from './navigation-grid.ts';
 
 export interface UnitSpawn {
@@ -9,13 +9,46 @@ export interface UnitSpawn {
   radius?: number;
 }
 
+export interface ResourceNodeSpawn {
+  id: EntityId;
+  type: ResourceId;
+  position: WorldPoint;
+  amount: number;
+  interactionRadius?: number;
+}
+
+export interface DropoffSpawn {
+  id: EntityId;
+  owner: PlayerId;
+  position: WorldPoint;
+  radius?: number;
+}
+
+export interface GatherConfig {
+  carryCapacity: number;
+  woodPerSecond: number;
+}
+
 export interface UnitRenderState {
   id: EntityId;
   owner: PlayerId;
   x: number;
   z: number;
   moving: boolean;
+  carriedWood: number;
+  task: UnitTask;
 }
+
+export interface ResourceRenderState {
+  id: EntityId;
+  type: ResourceId;
+  x: number;
+  z: number;
+  remaining: number;
+}
+
+type UnitTask = 'idle' | 'move' | 'to-resource' | 'gathering' | 'to-dropoff';
+type PathPurpose = 'move' | 'to-resource' | 'to-dropoff';
 
 interface UnitState {
   id: EntityId;
@@ -29,12 +62,31 @@ interface UnitState {
   path: readonly WorldPoint[];
   waypoint: number;
   orderVersion: number;
+  task: UnitTask;
+  gatherTargetId: EntityId | null;
+  carriedWood: number;
+}
+
+interface ResourceNodeState {
+  id: EntityId;
+  type: ResourceId;
+  position: WorldPoint;
+  remaining: number;
+  interactionRadius: number;
+}
+
+interface DropoffState {
+  id: EntityId;
+  owner: PlayerId;
+  position: WorldPoint;
+  radius: number;
 }
 
 interface PendingPath {
   unitId: EntityId;
   destination: WorldPoint;
   orderVersion: number;
+  purpose: PathPurpose;
 }
 
 export interface RtsSimulationMetrics {
@@ -43,13 +95,27 @@ export interface RtsSimulationMetrics {
   pathsSolvedThisTick: number;
   simulationTimeMs: number;
   lastPathFailure: string;
+  resourceNodes: number;
+  woodRemaining: number;
+  woodStockpile: number;
+  gatheringUnits: number;
+  carriedWoodTotal: number;
 }
+
+const DEFAULT_GATHER_CONFIG: GatherConfig = {
+  carryCapacity: 10,
+  woodPerSecond: 2,
+};
 
 export class RtsSimulation {
   private readonly navigation: NavigationGrid;
   private readonly localPlayer: PlayerId;
   private readonly maxPathsPerTick: number;
+  private readonly gatherConfig: GatherConfig;
   private readonly units = new Map<EntityId, UnitState>();
+  private readonly resources = new Map<EntityId, ResourceNodeState>();
+  private readonly dropoffs = new Map<EntityId, DropoffState>();
+  private readonly playerWood = new Map<PlayerId, number>();
   private readonly commands: Command[] = [];
   private pendingPaths: PendingPath[] = [];
   private sequence = 0;
@@ -62,10 +128,21 @@ export class RtsSimulation {
     spawns: readonly UnitSpawn[],
     localPlayer: PlayerId = 1,
     maxPathsPerTick = 4,
+    resourceSpawns: readonly ResourceNodeSpawn[] = [],
+    dropoffSpawns: readonly DropoffSpawn[] = [],
+    gatherConfig: Partial<GatherConfig> = {},
   ) {
     this.navigation = navigation;
     this.localPlayer = localPlayer;
     this.maxPathsPerTick = maxPathsPerTick;
+    this.gatherConfig = {
+      carryCapacity: gatherConfig.carryCapacity ?? DEFAULT_GATHER_CONFIG.carryCapacity,
+      woodPerSecond: gatherConfig.woodPerSecond ?? DEFAULT_GATHER_CONFIG.woodPerSecond,
+    };
+    if (!(this.gatherConfig.carryCapacity > 0) || !(this.gatherConfig.woodPerSecond > 0)) {
+      throw new Error('Gather configuration must use positive capacity and rate');
+    }
+
     for (const spawn of spawns) {
       if (this.units.has(spawn.id)) throw new Error(`Duplicate unit id ${spawn.id}`);
       const resolved = navigation.resolveNearestReachable(spawn.position, 8);
@@ -82,8 +159,34 @@ export class RtsSimulation {
         path: [],
         waypoint: 0,
         orderVersion: 0,
+        task: 'idle',
+        gatherTargetId: null,
+        carriedWood: 0,
       });
     }
+
+    for (const spawn of resourceSpawns) {
+      if (this.resources.has(spawn.id) || this.units.has(spawn.id)) throw new Error(`Duplicate resource id ${spawn.id}`);
+      if (!Number.isFinite(spawn.amount) || spawn.amount < 0) throw new Error(`Invalid resource amount for ${spawn.id}`);
+      this.resources.set(spawn.id, {
+        id: spawn.id,
+        type: spawn.type,
+        position: { x: spawn.position.x, z: spawn.position.z },
+        remaining: spawn.amount,
+        interactionRadius: spawn.interactionRadius ?? 1.5,
+      });
+    }
+
+    for (const spawn of dropoffSpawns) {
+      if (this.dropoffs.has(spawn.id) || this.units.has(spawn.id) || this.resources.has(spawn.id)) throw new Error(`Duplicate dropoff id ${spawn.id}`);
+      this.dropoffs.set(spawn.id, {
+        id: spawn.id,
+        owner: spawn.owner,
+        position: { x: spawn.position.x, z: spawn.position.z },
+        radius: spawn.radius ?? 2,
+      });
+    }
+    this.playerWood.set(localPlayer, 0);
   }
 
   get unitIds(): readonly EntityId[] { return [...this.units.keys()].sort((a, b) => a - b); }
@@ -104,28 +207,89 @@ export class RtsSimulation {
     });
   }
 
-  private applyCommand(command: Command): void {
-    if (command.player !== this.localPlayer || command.order.type !== 'move' || command.queue) return;
-    const owned = command.units
+  issueGather(units: readonly EntityId[], target: EntityId, executeAtTick: number): void {
+    this.queueCommand({
+      executeAtTick,
+      sequence: ++this.sequence,
+      player: this.localPlayer,
+      units: [...units].sort((a, b) => a - b),
+      queue: false,
+      order: { type: 'gather', target },
+    });
+  }
+
+  issueStop(units: readonly EntityId[], executeAtTick: number): void {
+    this.queueCommand({
+      executeAtTick,
+      sequence: ++this.sequence,
+      player: this.localPlayer,
+      units: [...units].sort((a, b) => a - b),
+      queue: false,
+      order: { type: 'stop' },
+    });
+  }
+
+  private ownedUnits(command: Command): UnitState[] {
+    return command.units
       .map(id => this.units.get(id))
       .filter((unit): unit is UnitState => Boolean(unit && unit.owner === command.player))
       .sort((a, b) => a.id - b.id);
+  }
+
+  private replaceUnitOrder(unit: UnitState): void {
+    unit.orderVersion++;
+    unit.path = [];
+    unit.waypoint = 0;
+    this.pendingPaths = this.pendingPaths.filter(request => request.unitId !== unit.id);
+  }
+
+  private applyCommand(command: Command): void {
+    if (command.player !== this.localPlayer || command.queue) return;
+    const owned = this.ownedUnits(command);
     if (owned.length === 0) return;
 
+    if (command.order.type === 'stop') {
+      for (const unit of owned) {
+        this.replaceUnitOrder(unit);
+        unit.task = 'idle';
+        unit.gatherTargetId = null;
+      }
+      return;
+    }
+
+    if (command.order.type === 'gather') {
+      const resource = this.resources.get(command.order.target);
+      if (!resource || resource.type !== 'wood' || resource.remaining <= 0) {
+        this.lastPathFailure = `Invalid gather target ${command.order.target}`;
+        return;
+      }
+      if (!this.dropoffFor(command.player)) {
+        this.lastPathFailure = `No dropoff for player ${command.player}`;
+        return;
+      }
+      for (const unit of owned) {
+        this.replaceUnitOrder(unit);
+        unit.gatherTargetId = resource.id;
+        if (unit.carriedWood >= this.gatherConfig.carryCapacity - 1e-6) this.routeToDropoff(unit);
+        else this.routeToResource(unit, resource);
+      }
+      return;
+    }
+
+    if (command.order.type !== 'move') return;
     const slots = this.assignDestinationSlots(owned.length, command.order.destination);
-    const replacing = new Set(owned.map(unit => unit.id));
-    this.pendingPaths = this.pendingPaths.filter(request => !replacing.has(request.unitId));
     for (let index = 0; index < owned.length; index++) {
       const unit = owned[index]!;
       const destination = slots[index];
-      unit.orderVersion++;
-      unit.path = [];
-      unit.waypoint = 0;
+      this.replaceUnitOrder(unit);
+      unit.task = 'move';
+      unit.gatherTargetId = null;
       if (!destination) {
+        unit.task = 'idle';
         this.lastPathFailure = `No reachable destination slot for unit ${unit.id}`;
         continue;
       }
-      this.pendingPaths.push({ unitId: unit.id, destination, orderVersion: unit.orderVersion });
+      this.pendingPaths.push({ unitId: unit.id, destination, orderVersion: unit.orderVersion, purpose: 'move' });
     }
   }
 
@@ -157,18 +321,75 @@ export class RtsSimulation {
     return result;
   }
 
+  private approachPoint(unit: UnitState, target: WorldPoint, radius: number): WorldPoint | null {
+    let dx = unit.x - target.x;
+    let dz = unit.z - target.z;
+    let length = Math.hypot(dx, dz);
+    if (length < 1e-5) {
+      const angle = unit.id * 2.399963229728653;
+      dx = Math.cos(angle);
+      dz = Math.sin(angle);
+      length = 1;
+    }
+    const desired = Math.max(radius + unit.radius, 0.75);
+    const point = { x: target.x + dx / length * desired, z: target.z + dz / length * desired };
+    return this.navigation.resolveNearestReachable(point, 5);
+  }
+
+  private routeToResource(unit: UnitState, resource: ResourceNodeState): void {
+    if (resource.remaining <= 1e-6) {
+      if (unit.carriedWood > 1e-6) this.routeToDropoff(unit);
+      else {
+        unit.task = 'idle';
+        unit.gatherTargetId = null;
+      }
+      return;
+    }
+    const destination = this.approachPoint(unit, resource.position, resource.interactionRadius);
+    if (!destination) {
+      unit.task = 'idle';
+      this.lastPathFailure = `No reachable gather approach for resource ${resource.id}`;
+      return;
+    }
+    unit.task = 'to-resource';
+    this.pendingPaths.push({ unitId: unit.id, destination, orderVersion: unit.orderVersion, purpose: 'to-resource' });
+  }
+
+  private dropoffFor(owner: PlayerId): DropoffState | undefined {
+    return [...this.dropoffs.values()].filter(dropoff => dropoff.owner === owner).sort((a, b) => a.id - b.id)[0];
+  }
+
+  private routeToDropoff(unit: UnitState): void {
+    const dropoff = this.dropoffFor(unit.owner);
+    if (!dropoff) {
+      unit.task = 'idle';
+      this.lastPathFailure = `No dropoff for player ${unit.owner}`;
+      return;
+    }
+    const destination = this.approachPoint(unit, dropoff.position, dropoff.radius);
+    if (!destination) {
+      unit.task = 'idle';
+      this.lastPathFailure = `No reachable dropoff approach for player ${unit.owner}`;
+      return;
+    }
+    unit.task = 'to-dropoff';
+    this.pendingPaths.push({ unitId: unit.id, destination, orderVersion: unit.orderVersion, purpose: 'to-dropoff' });
+  }
+
   fixedUpdate(dtSeconds: number, tick: number): void {
     const started = globalThis.performance?.now?.() ?? Date.now();
     this.pathsSolvedThisTick = 0;
     while (this.commands.length > 0 && this.commands[0]!.executeAtTick <= tick) this.applyCommand(this.commands.shift()!);
     this.solvePendingPaths();
 
+    const sortedUnits = [...this.units.values()].sort((a, b) => a.id - b.id);
     const buckets = this.buildSpatialBuckets();
-    for (const unit of [...this.units.values()].sort((a, b) => a.id - b.id)) {
+    for (const unit of sortedUnits) {
       unit.previousX = unit.x;
       unit.previousZ = unit.z;
       this.advanceUnit(unit, dtSeconds, buckets);
     }
+    for (const unit of sortedUnits) if (unit.task === 'gathering') this.gather(unit, dtSeconds);
     this.simulationTimeMs = (globalThis.performance?.now?.() ?? Date.now()) - started;
   }
 
@@ -176,12 +397,13 @@ export class RtsSimulation {
     for (let solved = 0; solved < this.maxPathsPerTick && this.pendingPaths.length > 0; solved++) {
       const request = this.pendingPaths.shift()!;
       const unit = this.units.get(request.unitId);
-      if (!unit || unit.orderVersion !== request.orderVersion) continue;
+      if (!unit || unit.orderVersion !== request.orderVersion || unit.task !== request.purpose) continue;
       const result = this.navigation.findPath({ x: unit.x, z: unit.z }, request.destination);
       this.pathsSolvedThisTick++;
       if (!result) {
         unit.path = [];
         unit.waypoint = 0;
+        unit.task = 'idle';
         this.lastPathFailure = `No path for unit ${unit.id}`;
         continue;
       }
@@ -203,6 +425,40 @@ export class RtsSimulation {
     return buckets;
   }
 
+  private finishPath(unit: UnitState): void {
+    unit.path = [];
+    unit.waypoint = 0;
+    if (unit.task === 'move') {
+      unit.task = 'idle';
+      return;
+    }
+    if (unit.task === 'to-resource') {
+      const resource = unit.gatherTargetId === null ? undefined : this.resources.get(unit.gatherTargetId);
+      if (!resource || resource.type !== 'wood' || resource.remaining <= 1e-6) {
+        if (unit.carriedWood > 1e-6) this.routeToDropoff(unit);
+        else {
+          unit.task = 'idle';
+          unit.gatherTargetId = null;
+        }
+        return;
+      }
+      unit.task = 'gathering';
+      return;
+    }
+    if (unit.task === 'to-dropoff') {
+      if (unit.carriedWood > 0) {
+        this.playerWood.set(unit.owner, (this.playerWood.get(unit.owner) ?? 0) + unit.carriedWood);
+        unit.carriedWood = 0;
+      }
+      const resource = unit.gatherTargetId === null ? undefined : this.resources.get(unit.gatherTargetId);
+      if (resource && resource.type === 'wood' && resource.remaining > 1e-6) this.routeToResource(unit, resource);
+      else {
+        unit.task = 'idle';
+        unit.gatherTargetId = null;
+      }
+    }
+  }
+
   private advanceUnit(unit: UnitState, dt: number, buckets: Map<string, UnitState[]>): void {
     const target = unit.path[unit.waypoint];
     if (!target) return;
@@ -215,8 +471,7 @@ export class RtsSimulation {
       unit.z = target.z;
       unit.waypoint++;
       if (unit.waypoint >= unit.path.length) {
-        unit.path = [];
-        unit.waypoint = 0;
+        this.finishPath(unit);
         return;
       }
       const next = unit.path[unit.waypoint]!;
@@ -261,6 +516,27 @@ export class RtsSimulation {
     unit.z = next.z;
   }
 
+  private gather(unit: UnitState, dtSeconds: number): void {
+    const resource = unit.gatherTargetId === null ? undefined : this.resources.get(unit.gatherTargetId);
+    if (!resource || resource.type !== 'wood' || resource.remaining <= 1e-6) {
+      if (unit.carriedWood > 1e-6) this.routeToDropoff(unit);
+      else {
+        unit.task = 'idle';
+        unit.gatherTargetId = null;
+      }
+      return;
+    }
+    const capacityLeft = this.gatherConfig.carryCapacity - unit.carriedWood;
+    if (capacityLeft <= 1e-6) {
+      this.routeToDropoff(unit);
+      return;
+    }
+    const extracted = Math.min(this.gatherConfig.woodPerSecond * dtSeconds, capacityLeft, resource.remaining);
+    resource.remaining = Math.max(0, resource.remaining - extracted);
+    unit.carriedWood += extracted;
+    if (unit.carriedWood >= this.gatherConfig.carryCapacity - 1e-6 || resource.remaining <= 1e-6) this.routeToDropoff(unit);
+  }
+
   renderState(alpha: number): readonly UnitRenderState[] {
     const blend = Math.max(0, Math.min(1, alpha));
     return [...this.units.values()].sort((a, b) => a.id - b.id).map(unit => ({
@@ -269,16 +545,34 @@ export class RtsSimulation {
       x: unit.previousX + (unit.x - unit.previousX) * blend,
       z: unit.previousZ + (unit.z - unit.previousZ) * blend,
       moving: unit.path.length > 0 || this.pendingPaths.some(request => request.unitId === unit.id),
+      carriedWood: unit.carriedWood,
+      task: unit.task,
+    }));
+  }
+
+  resourceState(): readonly ResourceRenderState[] {
+    return [...this.resources.values()].sort((a, b) => a.id - b.id).map(resource => ({
+      id: resource.id,
+      type: resource.type,
+      x: resource.position.x,
+      z: resource.position.z,
+      remaining: resource.remaining,
     }));
   }
 
   metrics(): RtsSimulationMetrics {
+    const units = [...this.units.values()];
     return {
       activeUnits: this.units.size,
       pendingPaths: this.pendingPaths.length,
       pathsSolvedThisTick: this.pathsSolvedThisTick,
       simulationTimeMs: this.simulationTimeMs,
       lastPathFailure: this.lastPathFailure,
+      resourceNodes: this.resources.size,
+      woodRemaining: [...this.resources.values()].filter(resource => resource.type === 'wood').reduce((sum, resource) => sum + resource.remaining, 0),
+      woodStockpile: this.playerWood.get(this.localPlayer) ?? 0,
+      gatheringUnits: units.filter(unit => unit.task === 'gathering' || unit.task === 'to-resource' || unit.task === 'to-dropoff').length,
+      carriedWoodTotal: units.reduce((sum, unit) => sum + unit.carriedWood, 0),
     };
   }
 
@@ -286,5 +580,8 @@ export class RtsSimulation {
     this.commands.length = 0;
     this.pendingPaths.length = 0;
     this.units.clear();
+    this.resources.clear();
+    this.dropoffs.clear();
+    this.playerWood.clear();
   }
 }
