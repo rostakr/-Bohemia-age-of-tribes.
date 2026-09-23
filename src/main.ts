@@ -44,7 +44,8 @@ const workerR2Closeup = parameters.get('scene') === 'worker-r2-preview';
 const workerR2Benchmark = parameters.get('worker') === 'r2';
 const completionCandidate = parameters.get('candidate') === 'phase1';
 const phase2Interaction = parameters.get('phase2') === '1';
-const phase3Movement = parameters.get('phase3') === '1';
+const phase3Gathering = parameters.get('gather') === '1' || parameters.get('phase3') === 'gather';
+const phase3Movement = parameters.get('phase3') === '1' || phase3Gathering;
 const rtsInteraction = phase2Interaction || phase3Movement;
 const requestedUnits = Number(parameters.get('units'));
 const phase2DebugUnits = debug && parameters.get('units') === '40' ? 40 : 5;
@@ -57,11 +58,13 @@ const runningLabel = calibration
   ? 'Foundation running'
   : workerR2Closeup
     ? 'Worker R2 preview running'
-    : phase3Movement
-      ? 'Scalable movement running'
-      : phase2Interaction
-        ? 'RTS foundation running'
-        : 'Scene running';
+    : phase3Gathering
+      ? 'Wood gathering slice running'
+      : phase3Movement
+        ? 'Scalable movement running'
+        : phase2Interaction
+          ? 'RTS foundation running'
+          : 'Scene running';
 
 let runtime: GameRuntime | undefined;
 let activeBenchmarkScene: BenchmarkScene | RtsBenchmarkScene | undefined;
@@ -78,7 +81,7 @@ function createScene(): RuntimeScene {
     ...(workshopPreview ? { workshop: PROJECT_WORKSHOP_PATH } : {}),
   };
   const benchmark = rtsInteraction
-    ? new RtsBenchmarkScene(models, canvas, rtsDebugUnits, phase3Movement ? 'phase-3' : 'phase-2')
+    ? new RtsBenchmarkScene(models, canvas, rtsDebugUnits, phase3Movement ? 'phase-3' : 'phase-2', phase3Gathering)
     : new BenchmarkScene(models);
   activeBenchmarkScene = benchmark;
   return benchmark;
@@ -120,11 +123,13 @@ function resetHostUi(): void {
     ? 'Starting the renderer…'
     : workerR2Closeup
       ? 'Preparing the worker R2 preview…'
-      : phase3Movement
-        ? 'Preparing scalable movement…'
-        : phase2Interaction
-          ? 'Preparing RTS interaction…'
-          : 'Preparing the landscape…';
+      : phase3Gathering
+        ? 'Preparing wood gathering slice…'
+        : phase3Movement
+          ? 'Preparing scalable movement…'
+          : phase2Interaction
+            ? 'Preparing RTS interaction…'
+            : 'Preparing the landscape…';
   pauseButton.disabled = true;
   pauseButton.textContent = 'Pause simulation';
   pauseButton.setAttribute('aria-pressed', 'false');
