@@ -5,37 +5,49 @@ Updated: 2026-09-23
 ## Current state
 
 - `PHASE_2_ENTRY_GATE: OPEN`
-- `QA_ACTIVE: P2-RTS-INTERACTION-FOUNDATION`
+- `ACCEPTED_IN_INTEGRATION: P2-RTS-INTERACTION-FOUNDATION`
+- `QA_ACTIVE: P2-GATHERING-ECONOMY-FOUNDATION`
 - integration branch: `qa/phase2-integration`
-- reviewed integration implementation SHA: `8916dcb35c68f3b976fda730bf73cd3e9a48d3ea`
-- integration commit records prior QA admission after exact-head CI/browser/regression/artifact review.
-- accepted Phase 1 content remains immutable for this task.
-- `artGatePassed=true` refers to the accepted Phase 1 art gate; it does not imply Phase 2 gameplay acceptance.
+- `artGatePassed=true` remains the accepted Phase 1 art disposition.
+- `main` is not a Phase 2 integration target.
 
-## P2-RTS-INTERACTION-FOUNDATION
+## P2-RTS-INTERACTION-FOUNDATION — ACCEPTED_IN_INTEGRATION
 
-Implementation is present on the Phase 2 integration lineage and now requires independent QA closure against `docs/PHASE_2_TASK.md`.
+PR #76 was independently QA-admitted before this queue file was created. This record reconciles that already-completed disposition rather than reopening it.
 
-Required QA gates:
+- exact reviewed DEV head: `8e6b0f5f00b18661811d1e5a4d984341de4a6f1e`;
+- accepted merge: `8916dcb35c68f3b976fda730bf73cd3e9a48d3ea`;
+- foundation run `35844829656`: **SUCCESS**;
+- compact storehouse run `35844829668`: **SUCCESS**;
+- worker R2 run `35844829657`: **SUCCESS**;
+- Phase 1 completion run `35844829718`: **SUCCESS**;
+- Phase 2 RTS run `35844829713`: **SUCCESS**;
+- evidence artifact `10742942507`, digest `sha256:134dda8d9b3cce0013bfe95a2e6c019197d5f8f6138f2289ff04e4de894b4f81`.
 
-1. camera: keyboard pan, viewport-only edge scroll, middle-drag pan, wheel zoom, rotation, terrain/bounds handling, input teardown on blur/visibility/destroy;
-2. selection: click, box, Shift add/remove, empty-ground deselect, HUD exclusion;
-3. MOVE: selected friendly units only, deterministic replacement of older MOVE, readable valid/invalid feedback;
-4. navigation: terrain-derived bounded A*, explicit river crossing, building/water blocking, no diagonal corner cutting, bounded nearest reachable resolution;
-5. group movement: deterministic distinct slots, bounded path queue, separation and stable settling;
-6. simulation/render boundary: stable simulation IDs, fixed-step ownership, interpolated render state, terrain-height following;
-7. instrumentation: active/selected units, pending paths, paths solved/tick, simulation time; normal five-worker and debug-only 40-worker cases;
-8. regression: typecheck/build, fixed-step tests, pause/resume, three remounts, resize, WebGL2, available WebGPU and asset loading.
+Independent QA recorded browser evidence for five- and forty-unit scenes, right-click `pointerup(button=2)`, bounded A*, explicit ford routing, nearest-reachable resolution, distinct group slots, deterministic MOVE replacement, bounded 40-unit path solving and post-merge controller verification.
 
-No economy, combat, construction, production, AI, fog, control groups, advanced formations, multiplayer, mobile controls or new culture may be admitted by this task.
+Non-blocking limitations remain: Worker R2 is static/unrigged; CI graphics are software/SwiftShader and are not desktop-GPU FPS evidence.
 
-## Current evidence
+## P2-GATHERING-ECONOMY-FOUNDATION — QA_ACTIVE
 
-- Phase 2 implementation is 32 commits ahead of the accepted Phase 1 integration baseline `9d4c9fb642a2952efb279c0461378e5527891099` and touches only the scoped RTS foundation/runtime/test files.
-- Current integration commit message explicitly records: `QA-admitted Phase 2 RTS interaction foundation after exact-head CI validation, browser smoke, regression checks, and artifact review. Main remains untouched.`
-- The queue-contract PR head `cac45640af9984bc66c99ceae261172123a8ac60` has foundation run `35846045684`: **SUCCESS**.
-- Independent queue closure still requires pinning the original Phase 2 exact-head workflow/artifact identifiers before this item is changed to `ACCEPTED_IN_INTEGRATION`.
+PR #77 has already been merged into the integration lineage at `7efc5a7fea2518575dbc16ece5476c182c462eb2`; acceptance must still be recorded independently rather than inferred from merge state.
 
-## Exit
+Reviewed candidate:
+- base: accepted RTS merge `8916dcb35c68f3b976fda730bf73cd3e9a48d3ea`;
+- exact DEV head: `0891563274d6b168cb026109e777c850271bbadf`;
+- scope: `src/core/resource-economy.ts`, `scripts/check-phase2-economy.mjs`, and package test wiring only;
+- Phase 2 RTS workflow `35845870309`: **SUCCESS**;
+- foundation workflow `35845870208`: **SUCCESS**;
+- compact storehouse workflow `35845870462`: **SUCCESS**.
 
-On independent QA PASS, record exact reviewed head SHA, CI run IDs and browser evidence, merge the QA closure into `qa/phase2-integration`, set this item to `ACCEPTED_IN_INTEGRATION`, and release the next task separately. Do not infer Phase 3 authorization.
+Current deterministic tests cover node depletion without negative quantities, exact gather transfer, per-player stockpile isolation, snapshot safety, atomic affordability/spend, invalid cost rejection, duplicate resource-node IDs and deterministic node ordering.
+
+### QA acceptance boundary
+
+This slice may be accepted only as an engine-independent economy primitive. It does **not** yet implement worker gather routing, harvesting animation, drop-off buildings, resource UI, construction, production, combat, AI or fog of war.
+
+Before closing this item, verify the merged integration lineage still passes the relevant foundation/RTS regression and record the exact post-merge evidence. Only then release one next Phase 2 task.
+
+## Phase boundary
+
+No Phase 3 authorization is implied by Phase 2 component acceptance. Advanced formations, combat, AI, fog of war, multiplayer and mobile controls remain outside the current gate.
