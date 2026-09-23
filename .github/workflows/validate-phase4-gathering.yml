@@ -1,0 +1,63 @@
+name: Validate Phase 4 wood gathering vertical slice
+on:
+  pull_request:
+    branches:
+      - qa/phase4-integration
+    paths:
+      - 'index.html'
+      - 'src/core/contracts.ts'
+      - 'src/core/navigation-grid.ts'
+      - 'src/core/rts-simulation.ts'
+      - 'src/core/resource-economy.ts'
+      - 'src/core/gather-loop.ts'
+      - 'src/core/gather-coordinator.ts'
+      - 'src/render/benchmark-scene.ts'
+      - 'src/render/inspection-camera.ts'
+      - 'src/render/rts-*.ts'
+      - 'src/main.ts'
+      - 'src/style.css'
+      - 'scripts/check-phase2*.mjs'
+      - 'scripts/check-phase3.mjs'
+      - 'scripts/check-phase4.mjs'
+      - 'scripts/browser-phase2-smoke.mjs'
+      - 'scripts/browser-phase3-smoke.mjs'
+      - 'scripts/browser-phase4-smoke.mjs'
+      - 'docs/PHASE_4_TASK.md'
+      - 'package.json'
+      - '.github/workflows/validate-phase4-gathering.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  phase4-gathering:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Rebuild accepted Phase 1 worker/workshop inputs
+        run: |
+          node scripts/build-worker-r2.mjs
+          node scripts/compact-worker-r2.mjs
+          node --experimental-strip-types scripts/export-workshop-project.mjs
+      - name: Full repository validation including Phase 4 core regressions
+        run: npm run validate
+      - name: Phase 2 RTS regression smoke
+        run: npm run smoke:phase2
+      - name: Phase 3 scalable movement regression smoke
+        run: npm run smoke:phase3
+      - name: Phase 4 wood gathering WebGL2 smoke
+        run: npm run smoke:phase4
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase4-wood-gathering-evidence
+          path: |
+            artifacts/phase4/phase4-gather-command-webgl2.png
+            artifacts/phase4/phase4-wood-deposited-webgl2.png
+          if-no-files-found: error
+          retention-days: 14

@@ -3,6 +3,7 @@ import { CONFIG } from './config';
 import { CalibrationScene } from './render/calibration-scene';
 import { ADMITTED_MODELS, BenchmarkScene, PROJECT_WORKSHOP_PATH } from './render/benchmark-scene';
 import type { ViewName } from './render/inspection-camera';
+import { RtsBenchmarkScene } from './render/rts-benchmark-scene';
 import { createGameRuntime, type GameRuntime, type RuntimeSnapshot } from './render/runtime';
 import type { RuntimeScene } from './render/scene';
 import { WorkerR2PreviewScene, WORKER_R2_PATH } from './render/worker-r2-preview-scene';
@@ -42,15 +43,31 @@ const calibration = parameters.get('scene') === 'calibration';
 const workerR2Closeup = parameters.get('scene') === 'worker-r2-preview';
 const workerR2Benchmark = parameters.get('worker') === 'r2';
 const completionCandidate = parameters.get('candidate') === 'phase1';
-const workshopPreview = completionCandidate || parameters.get('workshop') === 'project';
+const phase2Interaction = parameters.get('phase2') === '1';
+const phase3Movement = parameters.get('phase3') === '1';
+const phase4Gathering = parameters.get('phase4') === '1';
+const rtsInteraction = phase2Interaction || phase3Movement || phase4Gathering;
+const requestedUnits = Number(parameters.get('units'));
+const phase2DebugUnits = debug && parameters.get('units') === '40' ? 40 : 5;
+const scalableDebugUnits = debug && Number.isFinite(requestedUnits)
+  ? Math.max(5, Math.min(120, Math.floor(requestedUnits)))
+  : 5;
+const rtsDebugUnits = phase3Movement || phase4Gathering ? scalableDebugUnits : phase2DebugUnits;
+const workshopPreview = completionCandidate || rtsInteraction || parameters.get('workshop') === 'project';
 const runningLabel = calibration
   ? 'Foundation running'
   : workerR2Closeup
     ? 'Worker R2 preview running'
-    : 'Scene running';
+    : phase4Gathering
+      ? 'Wood gathering running'
+      : phase3Movement
+        ? 'Scalable movement running'
+        : phase2Interaction
+          ? 'RTS foundation running'
+          : 'Scene running';
 
 let runtime: GameRuntime | undefined;
-let activeBenchmarkScene: BenchmarkScene | undefined;
+let activeBenchmarkScene: BenchmarkScene | RtsBenchmarkScene | undefined;
 let hostEvents: AbortController | undefined;
 let diagnosticsTimer: ReturnType<typeof setInterval> | undefined;
 let mountGeneration = 0;
@@ -58,11 +75,15 @@ let mountGeneration = 0;
 function createScene(): RuntimeScene {
   if (calibration) return new CalibrationScene();
   if (workerR2Closeup) return new WorkerR2PreviewScene();
-  const benchmark = new BenchmarkScene({
+  const models = {
     ...ADMITTED_MODELS,
-    ...(workerR2Benchmark || completionCandidate ? { inhabitant: WORKER_R2_PATH } : {}),
+    ...(workerR2Benchmark || completionCandidate || rtsInteraction ? { inhabitant: WORKER_R2_PATH } : {}),
     ...(workshopPreview ? { workshop: PROJECT_WORKSHOP_PATH } : {}),
-  });
+  };
+  const milestone = phase4Gathering ? 'phase-4' : phase3Movement ? 'phase-3' : 'phase-2';
+  const benchmark = rtsInteraction
+    ? new RtsBenchmarkScene(models, canvas, rtsDebugUnits, milestone, phase4Gathering && debug)
+    : new BenchmarkScene(models);
   activeBenchmarkScene = benchmark;
   return benchmark;
 }
@@ -103,7 +124,13 @@ function resetHostUi(): void {
     ? 'Starting the renderer…'
     : workerR2Closeup
       ? 'Preparing the worker R2 preview…'
-      : 'Preparing the landscape…';
+      : phase4Gathering
+        ? 'Preparing wood gathering…'
+        : phase3Movement
+          ? 'Preparing scalable movement…'
+          : phase2Interaction
+            ? 'Preparing RTS interaction…'
+            : 'Preparing the landscape…';
   pauseButton.disabled = true;
   pauseButton.textContent = 'Pause simulation';
   pauseButton.setAttribute('aria-pressed', 'false');

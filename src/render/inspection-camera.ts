@@ -8,7 +8,7 @@ export const VIEWS = {
 } as const;
 export type ViewName = keyof typeof VIEWS;
 
-/** Phase 1 art-inspection controller. Selection/edge-scroll are later gameplay work. */
+/** RTS-ready benchmark camera. Gameplay owns left/right pointer input; camera owns middle drag and keyboard/edge motion. */
 export class InspectionCamera {
   private readonly events = new AbortController();
   private readonly keys = new Set<string>();
@@ -22,91 +22,145 @@ export class InspectionCamera {
   private targetYaw = 34;
   private pitch = 43;
   private targetPitch = 43;
-  private pointer: { id: number; x: number; y: number; pan: boolean } | undefined;
+  private pointerInside = false;
+  private pointerX = 0;
+  private pointerY = 0;
+  private middleDrag: { id: number; x: number; y: number } | undefined;
+  private focused = true;
   private readonly look = new Vec3();
 
   constructor(private readonly camera: Entity, private readonly canvas: HTMLCanvasElement, private readonly terrain: TerrainSurface) {
     const options = { signal: this.events.signal };
-    canvas.addEventListener('contextmenu', event => event.preventDefault(), options);
-    canvas.addEventListener('pointerdown', event => {
-      if (event.button > 2) return;
-      event.preventDefault();
-      this.pointer = { id: event.pointerId, x: event.clientX, y: event.clientY, pan: event.button === 1 || event.shiftKey };
-      canvas.setPointerCapture(event.pointerId);
+    canvas.addEventListener('pointerenter', event => {
+      this.pointerInside = true;
+      this.pointerX = event.clientX;
+      this.pointerY = event.clientY;
+    }, options);
+    canvas.addEventListener('pointerleave', event => {
+      this.pointerX = event.clientX;
+      this.pointerY = event.clientY;
+      if (!this.middleDrag) this.pointerInside = false;
     }, options);
     canvas.addEventListener('pointermove', event => {
-      const pointer = this.pointer;
-      if (!pointer || pointer.id !== event.pointerId) return;
-      const dx = event.clientX - pointer.x, dy = event.clientY - pointer.y;
-      if (pointer.pan) {
-        const radians = this.yaw * Math.PI / 180;
-        const scale = this.distance * 0.0015;
-        this.targetX += (-dx * Math.cos(radians) - dy * Math.sin(radians)) * scale;
-        this.targetZ += (dx * Math.sin(radians) - dy * Math.cos(radians)) * scale;
-      } else {
-        this.targetYaw -= dx * 0.22;
-        this.targetPitch = Math.max(28, Math.min(72, this.targetPitch + dy * 0.16));
-      }
-      pointer.x = event.clientX;
-      pointer.y = event.clientY;
+      this.pointerX = event.clientX;
+      this.pointerY = event.clientY;
+      if (!this.middleDrag || this.middleDrag.id !== event.pointerId) return;
+      const dx = event.clientX - this.middleDrag.x;
+      const dy = event.clientY - this.middleDrag.y;
+      const radians = this.yaw * Math.PI / 180;
+      const scale = this.distance * 0.00155;
+      this.targetX += (-dx * Math.cos(radians) - dy * Math.sin(radians)) * scale;
+      this.targetZ += (dx * Math.sin(radians) - dy * Math.cos(radians)) * scale;
+      this.middleDrag.x = event.clientX;
+      this.middleDrag.y = event.clientY;
     }, options);
-    const release = () => { this.pointer = undefined; };
+    canvas.addEventListener('pointerdown', event => {
+      if (event.button !== 1) return;
+      event.preventDefault();
+      this.middleDrag = { id: event.pointerId, x: event.clientX, y: event.clientY };
+      canvas.setPointerCapture(event.pointerId);
+    }, options);
+    const release = (event?: PointerEvent) => {
+      if (event && this.middleDrag && event.pointerId !== this.middleDrag.id) return;
+      if (this.middleDrag && canvas.hasPointerCapture(this.middleDrag.id)) canvas.releasePointerCapture(this.middleDrag.id);
+      this.middleDrag = undefined;
+    };
     canvas.addEventListener('pointerup', release, options);
     canvas.addEventListener('pointercancel', release, options);
-    canvas.addEventListener('lostpointercapture', release, options);
+    canvas.addEventListener('lostpointercapture', () => { this.middleDrag = undefined; }, options);
     canvas.addEventListener('wheel', event => {
+      if (!this.pointerInside) return;
       event.preventDefault();
       const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1);
-      this.targetDistance = Math.max(18, Math.min(125, this.targetDistance * Math.exp(Math.max(-0.35, Math.min(0.35, delta * 0.001)))));
+      this.targetDistance = Math.max(18, Math.min(120,
+        this.targetDistance * Math.exp(Math.max(-0.35, Math.min(0.35, delta * 0.001)))));
     }, { ...options, passive: false });
     window.addEventListener('keydown', event => {
-      if ((event.target as HTMLElement)?.closest('button,input,textarea,select')) return;
+      const target = event.target as HTMLElement | null;
+      if (target?.closest('button,input,textarea,select,[data-rts-ui]')) return;
       if (['KeyW','KeyA','KeyS','KeyD','KeyQ','KeyE','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.code)) {
-        event.preventDefault(); this.keys.add(event.code);
+        event.preventDefault();
+        this.keys.add(event.code);
       }
       if (event.code === 'Digit1' || event.code === 'Home') this.setView('settlement');
       if (event.code === 'Digit2') this.setView('craft');
       if (event.code === 'Digit3') this.setView('river');
     }, options);
     window.addEventListener('keyup', event => this.keys.delete(event.code), options);
-    window.addEventListener('blur', () => { this.keys.clear(); release(); }, options);
-    document.addEventListener('visibilitychange', () => { this.keys.clear(); release(); }, options);
+    window.addEventListener('blur', () => {
+      this.focused = false;
+      this.keys.clear();
+      release();
+    }, options);
+    window.addEventListener('focus', () => { this.focused = true; }, options);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        this.keys.clear();
+        release();
+      }
+    }, options);
     this.update(1);
   }
 
   setView(name: ViewName): void {
     const view = VIEWS[name];
-    this.targetX = view.x; this.targetZ = view.z;
-    this.targetDistance = view.distance; this.targetPitch = view.pitch;
+    this.targetX = view.x;
+    this.targetZ = view.z;
+    this.targetDistance = view.distance;
+    this.targetPitch = view.pitch;
     this.targetYaw += ((view.yaw - this.targetYaw) % 360 + 540) % 360 - 180;
   }
 
+  private edgeVector(): { right: number; forward: number } {
+    if (!this.pointerInside || !this.focused || document.hidden || this.middleDrag) return { right: 0, forward: 0 };
+    const rect = this.canvas.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return { right: 0, forward: 0 };
+    const x = this.pointerX - rect.left;
+    const y = this.pointerY - rect.top;
+    if (x < 0 || y < 0 || x > rect.width || y > rect.height) return { right: 0, forward: 0 };
+    const edge = 14;
+    return {
+      right: x <= edge ? -1 : x >= rect.width - edge ? 1 : 0,
+      forward: y <= edge ? 1 : y >= rect.height - edge ? -1 : 0,
+    };
+  }
+
   update(dt: number): void {
-    const pressed = (a: string, b: string) => Number(this.keys.has(a) || this.keys.has(b));
-    const right = pressed('KeyD', 'ArrowRight') - pressed('KeyA', 'ArrowLeft');
-    const forward = pressed('KeyW', 'ArrowUp') - pressed('KeyS', 'ArrowDown');
-    const speed = this.distance * 0.35 * dt / Math.max(1, Math.hypot(right, forward));
+    const pressed = (positive: string, negative: string) => Number(this.keys.has(positive)) - Number(this.keys.has(negative));
+    const edge = this.edgeVector();
+    let right = Math.max(-1, Math.min(1, pressed('KeyD', 'KeyA') + pressed('ArrowRight', 'ArrowLeft') + edge.right));
+    let forward = Math.max(-1, Math.min(1, pressed('KeyW', 'KeyS') + pressed('ArrowUp', 'ArrowDown') + edge.forward));
+    const magnitude = Math.hypot(right, forward);
+    if (magnitude > 1) { right /= magnitude; forward /= magnitude; }
+    const speed = this.distance * 0.36 * dt;
     const yaw = this.yaw * Math.PI / 180;
     this.targetX += (right * Math.cos(yaw) - forward * Math.sin(yaw)) * speed;
     this.targetZ += (-right * Math.sin(yaw) - forward * Math.cos(yaw)) * speed;
-    this.targetYaw += (Number(this.keys.has('KeyQ')) - Number(this.keys.has('KeyE'))) * dt * 50;
-    this.targetX = Math.max(-65, Math.min(65, this.targetX));
-    this.targetZ = Math.max(-65, Math.min(65, this.targetZ));
-    const blend = 1 - Math.exp(-8 * dt);
-    this.x += (this.targetX - this.x) * blend; this.z += (this.targetZ - this.z) * blend;
+    this.targetYaw += (Number(this.keys.has('KeyQ')) - Number(this.keys.has('KeyE'))) * dt * 52;
+    this.targetX = Math.max(-92, Math.min(92, this.targetX));
+    this.targetZ = Math.max(-92, Math.min(92, this.targetZ));
+
+    const blend = 1 - Math.exp(-8 * Math.max(0, dt));
+    this.x += (this.targetX - this.x) * blend;
+    this.z += (this.targetZ - this.z) * blend;
     this.distance += (this.targetDistance - this.distance) * blend;
-    this.yaw += (this.targetYaw - this.yaw) * blend; this.pitch += (this.targetPitch - this.pitch) * blend;
-    const azimuth = this.yaw * Math.PI / 180, elevation = this.pitch * Math.PI / 180;
+    this.yaw += (this.targetYaw - this.yaw) * blend;
+    this.pitch += (this.targetPitch - this.pitch) * blend;
+    const azimuth = this.yaw * Math.PI / 180;
+    const elevation = this.pitch * Math.PI / 180;
     this.look.set(this.x, this.terrain.heightAt(this.x, this.z) + 1, this.z);
     const px = this.x + Math.sin(azimuth) * Math.cos(elevation) * this.distance;
     const pz = this.z + Math.cos(azimuth) * Math.cos(elevation) * this.distance;
-    const py = Math.max(this.look.y + Math.sin(elevation) * this.distance, this.terrain.heightAt(px, pz) + 3);
+    const py = Math.max(this.look.y + Math.sin(elevation) * this.distance, this.terrain.heightAt(px, pz) + 3.5);
     this.camera.setPosition(px, py, pz);
     this.camera.lookAt(this.look);
   }
 
   destroy(): void {
-    if (this.pointer && this.canvas.hasPointerCapture(this.pointer.id)) this.canvas.releasePointerCapture(this.pointer.id);
-    this.events.abort(); this.keys.clear(); this.pointer = undefined;
+    if (this.middleDrag && this.canvas.hasPointerCapture(this.middleDrag.id)) this.canvas.releasePointerCapture(this.middleDrag.id);
+    this.events.abort();
+    this.keys.clear();
+    this.middleDrag = undefined;
+    this.pointerInside = false;
   }
 }
