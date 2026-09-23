@@ -314,17 +314,12 @@ export class WoodGatheringCoordinator {
 }
 
 function approachPoint(from: WorldPoint, target: WorldPoint, distance: number, id: EntityId): WorldPoint {
-  let dx = from.x - target.x;
-  let dz = from.z - target.z;
-  let length = Math.hypot(dx, dz);
-  if (length < 1e-6) {
-    const angle = id * 2.399963229728653;
-    dx = Math.cos(angle);
-    dz = Math.sin(angle);
-    length = 1;
-  }
+  let baseAngle = Math.atan2(from.z - target.z, from.x - target.x);
+  if (!Number.isFinite(baseAngle)) baseAngle = 0;
+  const slotPhase = ((id * 0.6180339887498949) % 1) - 0.5;
+  const angle = baseAngle + slotPhase * 1.1;
   return {
-    x: target.x + dx / length * distance,
-    z: target.z + dz / length * distance,
+    x: target.x + Math.cos(angle) * distance,
+    z: target.z + Math.sin(angle) * distance,
   };
 }
