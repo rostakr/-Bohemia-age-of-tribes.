@@ -2,9 +2,9 @@
 
 ```json
 {
-  "schema_version": 4,
+  "schema_version": 5,
   "project": "BOHEMIA: AGE OF TRIBES",
-  "updated": "2026-09-22",
+  "updated": "2026-09-23",
   "engine": "playcanvas@2.22.1",
   "phase_0_status": "COMPLETE_ACCEPTED",
   "phase_0_5_status": "COMPLETE_VERIFIED",
@@ -12,9 +12,13 @@
   "phase_1_authorized": true,
   "phase_1_status": "COMPLETE_QA_ACCEPTED",
   "art_gate_passed": true,
-  "phase_1_accepted_candidate_sha": "853d802e0512f4c89f068eb54f64337cf2a23195",
+  "phase_1_accepted_sha": "26546b893fa37df4f0c56934b8fabaac8d942218",
+  "phase_1_reviewed_candidate_sha": "853d802e0512f4c89f068eb54f64337cf2a23195",
   "phase_1_integration_merge_sha": "9d4c9fb642a2952efb279c0461378e5527891099",
-  "phase_1_accepted_tree_sha": "1fde280d7a8b61f3a1c87299b400fedc532c3b60",
+  "phase_1_reviewed_content_tree_sha": "1fde280d7a8b61f3a1c87299b400fedc532c3b60",
+  "phase_1_canonical_admission_tree_sha": "3b002d9c6801692c6b9561ebbbd103d8da5c6b78",
+  "phase_1_release_pr": 73,
+  "phase_1_release_evidence_pr": 74,
   "main_at_final_qa_start": "a845caafc1ccf6268facde48539c75520c0ba921",
   "canonical_phase_1_benchmark_query": "?candidate=phase1",
   "phase_2_entry_gate": "OPEN",
@@ -31,9 +35,11 @@
 **ART GATE: PASS — `artGatePassed=true`.**  
 **PHASE 2 ENTRY GATE: OPEN.**
 
-The exact content candidate independently reviewed and accepted is commit `853d802e0512f4c89f068eb54f64337cf2a23195` from PR #71. PR #71 was merged into `qa/phase1-integration` as `9d4c9fb642a2952efb279c0461378e5527891099`. The candidate and integration merge have the same Git tree, `1fde280d7a8b61f3a1c87299b400fedc532c3b60`; therefore the reviewed runtime/content bytes are unchanged by the merge commit.
+The single canonical accepted Phase 1 commit is `26546b893fa37df4f0c56934b8fabaac8d942218`, admitted to `main` by PR #73 after fresh current-head validation. The underlying complete content candidate independently reviewed in PR #71 is `853d802e0512f4c89f068eb54f64337cf2a23195`; it was merged into `qa/phase1-integration` as `9d4c9fb642a2952efb279c0461378e5527891099`. The PR #71 candidate and integration merge have the same Git tree, `1fde280d7a8b61f3a1c87299b400fedc532c3b60`, so the independently reviewed runtime/content bytes were unchanged by that integration merge.
 
-The accepted benchmark is the explicit Phase 1 composition selected by `?candidate=phase1`: dwelling LOD1, compact storehouse, repaired project workshop, five compact R2 workers, terrain, stream, paths, meadow and the current vegetation composition. This explicit route is the Phase 1 baseline; accepting it does not require rewriting the otherwise useful legacy/default QA route.
+The canonical admission head used for PR #73 was `78f0d12a30fcfcad460a6d8d757b87773df9b3c9`; the resulting `main` admission commit `26546b893fa37df4f0c56934b8fabaac8d942218` has the identical admitted tree `3b002d9c6801692c6b9561ebbbd103d8da5c6b78`. PR #74 subsequently added only the final release receipt/documentation.
+
+The accepted benchmark is the explicit Phase 1 composition selected by `?candidate=phase1`: dwelling LOD1, compact storehouse, repaired project workshop, five compact R2 workers, terrain, stream, paths, meadow and the current vegetation composition.
 
 ## Final validation evidence
 
@@ -42,12 +48,21 @@ Exact PR #71 head `853d802e0512f4c89f068eb54f64337cf2a23195`:
 - foundation workflow run `35769849049`: **SUCCESS**;
 - Phase 1 completion workflow run `35769849029`: **SUCCESS**;
 - worker R2 workflow run `35769849012`: **SUCCESS**;
-- foundation steps passed: `npm ci`, repository `npm run validate`, WebGL2 startup, interaction smoke, lifecycle/remount smoke, software WebGPU smoke, Phase 1 benchmark, storehouse admission and storehouse close-up;
-- completion workflow deterministically rebuilt the compact worker and repaired workshop, ran strict workshop GLB intake plus the repository validation suite, loaded the complete `?candidate=phase1` composition through PlayCanvas WebGL2 and captured settlement/river/craft evidence;
-- completion evidence artifact: `10713746346`, digest `sha256:16152d8d000eb58eb7aae6627d6b87fa68e05258b9e98ae3becda4f9bcbd7224`;
-- foundation Phase 1 browser evidence artifact: `10713692561`, digest `sha256:c1ed3ccf3e8a5c3746920091217f1c21d0f86f57dc6baee471a3cdec3a36e408`.
+- completion evidence artifact `10713746346`, digest `sha256:16152d8d000eb58eb7aae6627d6b87fa68e05258b9e98ae3becda4f9bcbd7224`;
+- foundation Phase 1 browser evidence artifact `10713692561`, digest `sha256:c1ed3ccf3e8a5c3746920091217f1c21d0f86f57dc6baee471a3cdec3a36e408`.
 
-No validation threshold was relaxed for this acceptance. The PlayCanvas runtime, fixed timestep, renderer fallback, lifecycle ownership and central asset resolver remain intact.
+Fresh conflict-resolved admission head `78f0d12a30fcfcad460a6d8d757b87773df9b3c9` before PR #73 merge:
+
+- foundation `35774232591`: **SUCCESS**;
+- Phase 1 completion candidate `35774232549`: **SUCCESS**;
+- worker R2 `35774232581`: **SUCCESS**;
+- compact storehouse `35774232567`: **SUCCESS**;
+- complete Phase 1 evidence artifact `10715133305`;
+- Phase 1 browser evidence artifact `10715453292`;
+- worker evidence artifact `10714869061`;
+- compact storehouse evidence artifact `10716035179`.
+
+Observed gates include `npm ci`, repository validation, deterministic worker generation/compaction, deterministic repaired-workshop export, strict GLB intake, production build, WebGL2 startup, interaction smoke, lifecycle/three-remount regression, software WebGPU regression, Phase 1 benchmark, full completion candidate, storehouse admission and storehouse close-up. No validation threshold was relaxed and no failing validation was removed.
 
 ## Independent visual QA
 
@@ -72,7 +87,7 @@ Settlement, river and craft evidence were reviewed at inspection and RTS-useful 
 
 ## Runtime / asset QA
 
-The exact completion candidate loads through the real PlayCanvas runtime in WebGL2 and reaches a healthy Phase 1 diagnostic state with three structures, five GLB worker candidates, 32 trees and the generated workshop. Required benchmark models/textures successfully resolve and load; a missing required candidate asset would fail candidate initialization/smoke rather than satisfy those assertions. The foundation suite also passes lifecycle remount, interaction, storehouse and software WebGPU regressions.
+The exact completion candidate loads through the real PlayCanvas runtime in WebGL2 and reaches a healthy Phase 1 diagnostic state with three structures, five GLB worker candidates, 32 trees and the generated workshop. Required benchmark models/textures successfully resolve and load; a missing required candidate asset would fail candidate initialization/smoke rather than satisfy those assertions. Foundation regression also passes lifecycle remount, interactions, storehouse and available software WebGPU paths.
 
 The WebGPU result is explicitly software/CI regression evidence, not desktop-GPU performance evidence. WebGL2 remains the required fallback path and passed.
 
@@ -98,12 +113,15 @@ There are **no unresolved Phase 1 blockers** carried into Phase 2.
 ## Phase 2 entry contract
 
 - `PHASE_2_ENTRY_GATE: OPEN`
-- `PHASE_1_ACCEPTED_SHA: 853d802e0512f4c89f068eb54f64337cf2a23195`
+- `PHASE_1_ACCEPTED_SHA: 26546b893fa37df4f0c56934b8fabaac8d942218`
+- `PHASE_1_REVIEWED_CANDIDATE_SHA: 853d802e0512f4c89f068eb54f64337cf2a23195`
 - `PHASE_1_INTEGRATION_SHA: 9d4c9fb642a2952efb279c0461378e5527891099`
 - `PHASE_2_BASE_BRANCH: phase2/phase1-accepted-base`
 - `PHASE_2_BASE_SHA: 9d4c9fb642a2952efb279c0461378e5527891099`
 - `PHASE_2_INTEGRATION_BRANCH: qa/phase2-integration`
 - `NEXT_TASK: P2-RTS-INTERACTION-FOUNDATION`
+
+The authoritative Phase 2 base branch and integration target both currently point to the clean accepted integration SHA `9d4c9fb642a2952efb279c0461378e5527891099`. Any separate Phase 2 development branch is outside this closure until explicitly admitted through the dedicated Phase 2 DEV/QA flow.
 
 Phase 2 implementation is deliberately not part of this closure.
 
