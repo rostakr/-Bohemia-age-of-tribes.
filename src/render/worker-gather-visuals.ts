@@ -10,14 +10,12 @@ interface WorkerVisual {
   pulseSeconds: number;
 }
 
-/**
- * Phase 4 presentation only. It reads authoritative GatherLoop snapshots through
- * GatherCoordinator and never writes simulation/economy state.
- */
+/** Phase 4 presentation. Reads authoritative gather/economy snapshots only. */
 export class WorkerGatherVisuals {
   private readonly visuals = new Map<EntityId, WorkerVisual>();
   private readonly cargoMaterial: StandardMaterial;
   private readonly pulseMaterial: StandardMaterial;
+  private previousStockpile = 0;
 
   constructor(
     unitEntities: ReadonlyMap<EntityId, Entity>,
@@ -25,13 +23,13 @@ export class WorkerGatherVisuals {
   ) {
     this.cargoMaterial = material(new Color(0.34, 0.16, 0.055), 0.05);
     this.pulseMaterial = material(new Color(0.95, 0.72, 0.18), 0.1);
+    this.previousStockpile = coordinator.metrics().woodStockpile;
 
     for (const [id, worker] of unitEntities) {
       const root = new Entity(`Worker ${id} gather readability`);
       root.setLocalPosition(0, 1.18, 0);
       worker.addChild(root);
 
-      // Three compact billets read as a carried wood bundle at normal RTS scale.
       const cargo = new Entity(`Worker ${id} authoritative wood cargo`);
       root.addChild(cargo);
       for (let index = -1; index <= 1; index++) {
@@ -45,8 +43,6 @@ export class WorkerGatherVisuals {
       }
       cargo.enabled = false;
 
-      // A short-lived 3D halo is triggered only by an authoritative cargo ->
-      // stockpile transition (cargo decreases while economy stockpile increases).
       const depositPulse = new Entity(`Worker ${id} deposit feedback`);
       depositPulse.addComponent('render', { type: 'cylinder' });
       depositPulse.render!.material = this.pulseMaterial;
@@ -60,19 +56,11 @@ export class WorkerGatherVisuals {
   }
 
   update(dtSeconds: number): void {
-    const stockpileBefore = this.coordinator.metrics().woodStockpile;
+    const stockpile = this.coordinator.metrics().woodStockpile;
+    const economyAdvanced = stockpile > this.previousStockpile + 1e-6;
     const current = new Map(
       [...this.visuals.keys()].map(id => [id, this.coordinator.workerState(id)] as const),
     );
-
-    // GatherCoordinator fixedUpdate has already committed economy changes before
-    // rendering reaches this method. A falling worker cargo amount therefore
-    // represents deposit only when the authoritative stockpile has increased.
-    const deposited = [...current.entries()].filter(([id, state]) => {
-      const visual = this.visuals.get(id)!;
-      return !!state && visual.previousCargo > 1e-6 && state.carriedAmount < visual.previousCargo - 1e-6;
-    });
-    const economyAdvanced = stockpileBefore > 0 && deposited.length > 0;
 
     for (const [id, visual] of this.visuals) {
       const state = current.get(id);
@@ -90,6 +78,7 @@ export class WorkerGatherVisuals {
         visual.depositPulse.setLocalScale(scale, 0.035, scale);
       }
     }
+    this.previousStockpile = stockpile;
   }
 
   destroy(): void {
