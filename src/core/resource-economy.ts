@@ -67,12 +67,8 @@ export class ResourceEconomy {
     return { player, resources: { ...resources } };
   }
 
-  /**
-   * Atomically extracts up to requestedAmount from a node and credits a player.
-   * Returns the exact transferred amount. Calls are deterministic for a fixed
-   * command order and never create negative node quantities.
-   */
-  gather(player: PlayerId, nodeId: EntityId, requestedAmount: number): number {
+  /** Removes resources from a node without crediting a stockpile (worker cargo). */
+  extract(nodeId: EntityId, requestedAmount: number): number {
     if (!Number.isFinite(requestedAmount) || requestedAmount <= 0) return 0;
     const node = this.nodes.get(nodeId);
     if (!node || node.depleted) return 0;
@@ -82,8 +78,25 @@ export class ResourceEconomy {
       node.amount = 0;
       node.depleted = true;
     }
+    return transferred;
+  }
+
+  credit(player: PlayerId, resource: ResourceId, amount: number): boolean {
+    if (!Number.isFinite(amount) || amount <= 0) return false;
     this.ensurePlayer(player);
-    this.stockpiles.get(player)![node.resource] += transferred;
+    this.stockpiles.get(player)![resource] += amount;
+    return true;
+  }
+
+  /**
+   * Convenience atomic transfer used by direct economy operations.
+   * Worker harvesting should use extract() and credit() around carried cargo.
+   */
+  gather(player: PlayerId, nodeId: EntityId, requestedAmount: number): number {
+    const node = this.nodes.get(nodeId);
+    if (!node) return 0;
+    const transferred = this.extract(nodeId, requestedAmount);
+    if (transferred > 0) this.credit(player, node.resource, transferred);
     return transferred;
   }
 
