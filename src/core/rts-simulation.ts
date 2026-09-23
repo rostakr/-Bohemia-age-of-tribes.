@@ -46,6 +46,9 @@ export interface RtsSimulationMetrics {
 }
 
 export class RtsSimulation {
+  private readonly navigation: NavigationGrid;
+  private readonly localPlayer: PlayerId;
+  private readonly maxPathsPerTick: number;
   private readonly units = new Map<EntityId, UnitState>();
   private readonly commands: Command[] = [];
   private pendingPaths: PendingPath[] = [];
@@ -55,11 +58,14 @@ export class RtsSimulation {
   private lastPathFailure = '';
 
   constructor(
-    private readonly navigation: NavigationGrid,
+    navigation: NavigationGrid,
     spawns: readonly UnitSpawn[],
-    private readonly localPlayer: PlayerId = 1,
-    private readonly maxPathsPerTick = 4,
+    localPlayer: PlayerId = 1,
+    maxPathsPerTick = 4,
   ) {
+    this.navigation = navigation;
+    this.localPlayer = localPlayer;
+    this.maxPathsPerTick = maxPathsPerTick;
     for (const spawn of spawns) {
       if (this.units.has(spawn.id)) throw new Error(`Duplicate unit id ${spawn.id}`);
       const resolved = navigation.resolveNearestReachable(spawn.position, 8);
