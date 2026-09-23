@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test scripts/check-core.mjs scripts/check-assets.mjs scripts/check-landscape.mjs scripts/check-storehouse.mjs scripts/check-workshop.mjs scripts/check-tree.mjs scripts/check-inhabitant.mjs scripts/check-dwelling-lods.mjs scripts/check-glb-tools.mjs scripts/check-phase2.mjs scripts/check-phase2-economy.mjs scripts/check-phase2-gather.mjs scripts/check-phase3.mjs",
+    "test": "node --experimental-strip-types --test scripts/check-core.mjs scripts/check-assets.mjs scripts/check-landscape.mjs scripts/check-storehouse.mjs scripts/check-workshop.mjs scripts/check-tree.mjs scripts/check-inhabitant.mjs scripts/check-dwelling-lods.mjs scripts/check-glb-tools.mjs scripts/check-phase2.mjs scripts/check-phase2-economy.mjs scripts/check-phase2-gather.mjs scripts/check-phase3.mjs scripts/check-phase4.mjs",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
     "smoke:webgl2": "node scripts/browser-smoke.mjs",
@@ -19,6 +19,7 @@
     "smoke:phase1": "node scripts/browser-phase1-smoke.mjs",
     "smoke:phase2": "node scripts/browser-phase2-smoke.mjs",
     "smoke:phase3": "node scripts/browser-phase3-smoke.mjs",
+    "smoke:phase4": "node scripts/browser-phase4-smoke.mjs",
     "smoke:supplied-storehouse": "node scripts/browser-supplied-storehouse-smoke.mjs",
     "smoke:supplied-storehouse-closeup": "node scripts/browser-supplied-storehouse-closeup.mjs",
     "check:glb": "node scripts/check-glb.mjs",

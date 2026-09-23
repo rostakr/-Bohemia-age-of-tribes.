@@ -1,4 +1,6 @@
 import { Vec3, type Entity } from 'playcanvas';
+import type { GatherCoordinator } from '../core/gather-coordinator';
+import type { GatherWorkerState } from '../core/gather-loop';
 import type { EntityId, TerrainSurface, WorldPoint } from '../core/contracts';
 import type { NavigationGrid } from '../core/navigation-grid';
 import type { RtsSimulation } from '../core/rts-simulation';
@@ -18,15 +20,23 @@ interface FeedbackMarker {
   expiresAt: number;
 }
 
+interface GatheringInteraction {
+  coordinator: GatherCoordinator;
+  resourceEntities: ReadonlyMap<EntityId, Entity>;
+}
+
 export class RtsController {
   private readonly events = new AbortController();
   private readonly selected = new Set<EntityId>();
   private readonly rings = new Map<EntityId, HTMLDivElement>();
+  private readonly resourceMarkers = new Map<EntityId, HTMLDivElement>();
   private readonly markers: FeedbackMarker[] = [];
   private readonly overlay: HTMLDivElement;
   private readonly dragBox: HTMLDivElement;
   private readonly countLabel: HTMLDivElement;
   private readonly feedback: HTMLDivElement;
+  private readonly stockpile: HTMLDivElement | undefined;
+  private readonly taskLabel: HTMLDivElement | undefined;
   private drag: DragState | undefined;
   private lastContextMoveAt = Number.NEGATIVE_INFINITY;
   private lastContextMoveX = Number.NaN;
@@ -43,6 +53,7 @@ export class RtsController {
     private readonly simulation: RtsSimulation,
     private readonly unitEntities: ReadonlyMap<EntityId, Entity>,
     private readonly currentTick: () => number,
+    private readonly gathering?: GatheringInteraction,
   ) {
     this.overlay = document.createElement('div');
     this.overlay.className = 'rts-overlay';
@@ -55,6 +66,27 @@ export class RtsController {
     this.feedback = document.createElement('div');
     this.feedback.className = 'rts-feedback';
     this.overlay.append(this.dragBox, this.countLabel, this.feedback);
+
+    if (gathering) {
+      this.stockpile = document.createElement('div');
+      this.stockpile.className = 'rts-stockpile';
+      this.stockpile.dataset.rtsUi = 'true';
+      this.taskLabel = document.createElement('div');
+      this.taskLabel.className = 'rts-task';
+      this.taskLabel.dataset.rtsUi = 'true';
+      this.taskLabel.hidden = true;
+      this.overlay.append(this.taskLabel, this.stockpile);
+      for (const id of [...gathering.resourceEntities.keys()].sort((a, b) => a - b)) {
+        const marker = document.createElement('div');
+        marker.className = 'rts-resource-node';
+        marker.dataset.rtsUi = 'true';
+        marker.dataset.resourceId = String(id);
+        marker.textContent = 'WOOD';
+        this.overlay.appendChild(marker);
+        this.resourceMarkers.set(id, marker);
+      }
+    }
+
     document.body.appendChild(this.overlay);
     this.syncCount();
 
@@ -116,6 +148,20 @@ export class RtsController {
       this.setFeedback('Select workers first', false);
       return;
     }
+
+    const resourceId = this.pickResource(clientX, clientY);
+    if (resourceId !== null && this.gathering) {
+      const state = this.gathering.coordinator.resourceState().find(resource => resource.id === resourceId);
+      const accepted = this.gathering.coordinator.issueGather([...this.selected], resourceId, this.currentTick() + 1);
+      if (accepted && state) {
+        this.addMarker(state.position, true);
+        this.setFeedback('Gather wood', true);
+      } else {
+        this.setFeedback('Wood source unavailable', false);
+      }
+      return;
+    }
+
     const ground = this.screenGround(clientX, clientY);
     if (!ground) {
       this.setFeedback('Invalid destination', false);
@@ -127,7 +173,8 @@ export class RtsController {
       this.setFeedback('Destination is unreachable', false);
       return;
     }
-    this.simulation.issueMove([...this.selected], resolved, this.currentTick() + 1);
+    if (this.gathering) this.gathering.coordinator.issueMove([...this.selected], resolved, this.currentTick() + 1);
+    else this.simulation.issueMove([...this.selected], resolved, this.currentTick() + 1);
     this.addMarker(resolved, true);
     this.setFeedback('Move', true);
   }
@@ -199,10 +246,24 @@ export class RtsController {
     return best?.id ?? null;
   }
 
-  private projectEntity(entity: Entity): { x: number; y: number } | null {
+  private pickResource(clientX: number, clientY: number): EntityId | null {
+    if (!this.gathering) return null;
+    const remaining = new Map(this.gathering.coordinator.resourceState().map(resource => [resource.id, resource.amount]));
+    let best: { id: EntityId; distance: number } | null = null;
+    for (const [id, entity] of this.gathering.resourceEntities) {
+      if ((remaining.get(id) ?? 0) <= 0) continue;
+      const screen = this.projectEntity(entity, 2.4);
+      if (!screen) continue;
+      const distance = Math.hypot(screen.x - clientX, screen.y - clientY);
+      if (distance <= 34 && (!best || distance < best.distance)) best = { id, distance };
+    }
+    return best?.id ?? null;
+  }
+
+  private projectEntity(entity: Entity, yOffset = 0.9): { x: number; y: number } | null {
     if (!entity.enabled || !this.cameraEntity.camera) return null;
     const position = entity.getPosition();
-    this.tempWorld.set(position.x, position.y + 0.9, position.z);
+    this.tempWorld.set(position.x, position.y + yOffset, position.z);
     this.cameraPosition.copy(this.cameraEntity.getPosition());
     const dx = this.tempWorld.x - this.cameraPosition.x;
     const dy = this.tempWorld.y - this.cameraPosition.y;
@@ -273,6 +334,42 @@ export class RtsController {
     this.countLabel.textContent = `${this.selected.size} selected`;
   }
 
+  private syncGatherTask(): void {
+    if (!this.gathering || !this.taskLabel) return;
+    const states = [...this.selected]
+      .sort((a, b) => a - b)
+      .map(id => this.gathering!.coordinator.workerState(id))
+      .filter((state): state is GatherWorkerState => state !== null);
+    if (states.length === 0) {
+      this.taskLabel.hidden = true;
+      this.taskLabel.textContent = '';
+      this.taskLabel.dataset.selected = '0';
+      this.taskLabel.dataset.gathering = '0';
+      this.taskLabel.dataset.returning = '0';
+      this.taskLabel.dataset.idle = '0';
+      this.taskLabel.dataset.cargo = '0.000';
+      return;
+    }
+
+    const gathering = states.filter(state => state.status === 'gathering').length;
+    const returning = states.filter(state => state.status === 'returning').length;
+    const idle = states.filter(state => state.status === 'idle').length;
+    const cargo = states.reduce((sum, state) => sum + (state.carrying === 'wood' ? state.carriedAmount : 0), 0);
+    if (states.length === 1) {
+      const state = states[0]!;
+      const task = state.status === 'gathering' ? 'Gather wood' : state.status === 'returning' ? 'Return wood' : 'Idle';
+      this.taskLabel.textContent = `${task} · cargo ${cargo.toFixed(1)}`;
+    } else {
+      this.taskLabel.textContent = `Tasks G ${gathering} · R ${returning} · I ${idle} · cargo ${cargo.toFixed(1)}`;
+    }
+    this.taskLabel.dataset.selected = String(states.length);
+    this.taskLabel.dataset.gathering = String(gathering);
+    this.taskLabel.dataset.returning = String(returning);
+    this.taskLabel.dataset.idle = String(idle);
+    this.taskLabel.dataset.cargo = cargo.toFixed(3);
+    this.taskLabel.hidden = false;
+  }
+
   private setFeedback(message: string, valid: boolean): void {
     this.feedback.textContent = message;
     this.feedback.dataset.valid = String(valid);
@@ -309,6 +406,25 @@ export class RtsController {
       ring.hidden = !projected;
       if (projected) ring.style.transform = `translate(${projected.x}px, ${projected.y + 10}px)`;
     }
+
+    if (this.gathering) {
+      const states = new Map(this.gathering.coordinator.resourceState().map(resource => [resource.id, resource]));
+      for (const [id, marker] of this.resourceMarkers) {
+        const entity = this.gathering.resourceEntities.get(id);
+        const resource = states.get(id);
+        const projected = entity ? this.projectEntity(entity, 2.4) : null;
+        marker.hidden = !projected || !resource || resource.amount <= 0;
+        marker.dataset.remaining = resource ? resource.amount.toFixed(1) : '0';
+        if (projected) marker.style.transform = `translate(${projected.x}px, ${projected.y}px)`;
+      }
+      if (this.stockpile) {
+        const metrics = this.gathering.coordinator.metrics();
+        this.stockpile.textContent = `Wood ${metrics.woodStockpile.toFixed(1)}`;
+        this.stockpile.dataset.wood = metrics.woodStockpile.toFixed(3);
+      }
+      this.syncGatherTask();
+    }
+
     const now = performance.now();
     for (let index = this.markers.length - 1; index >= 0; index--) {
       const marker = this.markers[index]!;
@@ -330,6 +446,7 @@ export class RtsController {
     this.events.abort();
     for (const marker of this.markers) marker.element.remove();
     this.markers.length = 0;
+    this.resourceMarkers.clear();
     this.rings.clear();
     this.selected.clear();
     this.overlay.remove();
