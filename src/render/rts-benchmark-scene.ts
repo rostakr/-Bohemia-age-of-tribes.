@@ -27,6 +27,7 @@ export class RtsBenchmarkScene implements RuntimeScene {
     private readonly canvas: HTMLCanvasElement,
     private readonly debugUnitCount = 5,
     private readonly gatheringEnabled = false,
+    private readonly gatheringQaFast = false,
   ) {
     this.base = new BenchmarkScene(models);
   }
@@ -64,7 +65,12 @@ export class RtsBenchmarkScene implements RuntimeScene {
       const position = entity.getPosition();
       const id = index + 1;
       this.unitEntities.set(id, entity);
-      return { id, owner: 1, position: { x: position.x, z: position.z } };
+      return {
+        id,
+        owner: 1,
+        position: { x: position.x, z: position.z },
+        ...(this.gatheringQaFast ? { speed: 30 } : {}),
+      };
     });
 
     const resources: ResourceNodeSpawn[] = [];
@@ -101,7 +107,10 @@ export class RtsBenchmarkScene implements RuntimeScene {
       }
     }
 
-    this.simulation = new RtsSimulation(navigation, spawns, 1, 4, resources, dropoffs);
+    const gatherConfig = this.gatheringQaFast
+      ? { carryCapacity: 2, woodPerSecond: 20 }
+      : { carryCapacity: 10, woodPerSecond: 2 };
+    this.simulation = new RtsSimulation(navigation, spawns, 1, 4, resources, dropoffs, gatherConfig);
     for (const state of this.simulation.renderState(1)) {
       const entity = this.unitEntities.get(state.id)!;
       entity.setPosition(state.x, landscape.heightAt(state.x, state.z), state.z);
@@ -159,6 +168,7 @@ export class RtsBenchmarkScene implements RuntimeScene {
       gatheringUnits: metrics?.gatheringUnits ?? 0,
       carriedWoodTotal: Number((metrics?.carriedWoodTotal ?? 0).toFixed(3)),
       phase3Gathering: this.gatheringEnabled,
+      phase3QaFast: this.gatheringQaFast,
     };
   }
 
