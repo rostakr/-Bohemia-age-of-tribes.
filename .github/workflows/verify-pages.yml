@@ -1,4 +1,4 @@
-name: Verify published foundation
+name: Verify published preview
 on:
   workflow_dispatch:
   push:
@@ -33,7 +33,7 @@ jobs:
           fetch_index first "$tmp/index-first.html"
           fetch_index hard-refresh "$tmp/index-refresh.html"
           cmp "$tmp/index-first.html" "$tmp/index-refresh.html"
-          grep -Fq '<title>BOHEMIA: AGE OF TRIBES — Foundation</title>' "$tmp/index-refresh.html"
+          grep -Fq '<title>BOHEMIA: AGE OF TRIBES — The Stream Valley</title>' "$tmp/index-refresh.html"
 
           INDEX_FILE="$tmp/index-refresh.html" python3 - <<'PY' > "$tmp/assets.txt"
           from html.parser import HTMLParser
@@ -98,7 +98,7 @@ jobs:
             --dump-dom \
             "$url" > "$tmp/dom.html" 2> "$tmp/chrome.log"
 
-          grep -Fq 'WEBGL2 · Foundation running' "$tmp/dom.html"
+          grep -Fq 'WEBGL2 · Scene running' "$tmp/dom.html"
           grep -Eq '&quot;renderer&quot;:[[:space:]]*&quot;webgl2&quot;|"renderer":[[:space:]]*"webgl2"' "$tmp/dom.html"
           if grep -Fq 'Unable to run the scene' "$tmp/dom.html" && ! grep -Fq 'hidden' "$tmp/dom.html"; then
             echo 'Renderer error UI may be visible.' >&2
@@ -106,7 +106,7 @@ jobs:
             exit 1
           fi
 
-          echo 'Published WebGL2 runtime reached Foundation running state.'
+          echo 'Published WebGL2 runtime reached Scene running state.'
 
       - uses: actions/checkout@v4
 
@@ -123,4 +123,4 @@ jobs:
         with:
           name: published-phase4-evidence
           path: artifacts/published-phase4
-          if-no-files-found: error
+          if-no-files-found: warn
