@@ -90,6 +90,11 @@ export class GatherLoop {
       }
       const after = this.economy.node(worker.targetNodeId);
       if (worker.carriedAmount >= worker.capacity - 1e-9 || !after || after.depleted) worker.status = 'returning';
+      if (!after || after.depleted) {
+        for (const peer of this.workers.values()) {
+          if (peer.targetNodeId === worker.targetNodeId && peer.carriedAmount > 0) peer.status = 'returning';
+        }
+      }
     }
   }
 
