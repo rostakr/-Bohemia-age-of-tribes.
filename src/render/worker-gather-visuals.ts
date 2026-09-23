@@ -93,6 +93,18 @@ export class WorkerGatherVisuals {
     this.previousStockpile = stockpile;
   }
 
+  diagnostics(): { workerMarkers: number; workersShowingCargo: number; activeDepositPulses: number } {
+    let workerMarkers = 0;
+    let workersShowingCargo = 0;
+    let activeDepositPulses = 0;
+    for (const visual of this.visuals.values()) {
+      if (visual.roleMarker.enabled) workerMarkers++;
+      if (visual.cargo.enabled) workersShowingCargo++;
+      if (visual.depositPulse.enabled) activeDepositPulses++;
+    }
+    return { workerMarkers, workersShowingCargo, activeDepositPulses };
+  }
+
   destroy(): void {
     for (const visual of this.visuals.values()) visual.root.destroy();
     this.visuals.clear();
