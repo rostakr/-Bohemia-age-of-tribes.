@@ -1,5 +1,13 @@
 # Project state
 
+## Development priority — latest owner direction
+
+The primary objective is steady implementation toward the complete game, through a finished Boii vertical slice. Public hosting is secondary and must not block gameplay/content implementation or internal milestone QA. Use a reproducible local build or CI artifact for review; public deployment is required only when explicitly delivering a public preview/release. Do not spend repeated work sessions checking unchanged hosting blockers.
+
+Finish the assigned P4-VIS-01 checkpoint, then hand it to QA. Plan subsequent bounded tickets toward construction, production, combat, AI/fog, Boii trade/progression and a complete win/loss loop, with art and animation work accompanying playable features. Do not remain indefinitely in preview preparation or cosmetic-only work. Keep milestone dependencies and independent QA; this direction does not authorize an unreviewed jump into all later phases or declare unfinished work accepted.
+
+Progress reports must identify implemented player capability or integrated content. A plan, status-only commit, passing CI or a public URL alone is not development progress. Existing deployment-related waiting instructions are superseded by this priority.
+
 ## Active work correction — supersedes older sequential blockers
 
 - DEV owner: development chat; active task P4-VIS-01 (worker readability, authoritative cargo presentation and deposit feedback). Full scope and acceptance are in the correction at the top of the canonical V2 prompts on main.
