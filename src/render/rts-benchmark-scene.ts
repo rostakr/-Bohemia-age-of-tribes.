@@ -131,7 +131,7 @@ export class RtsBenchmarkScene implements RuntimeScene {
   }
 
   diagnostics(): SceneDiagnostics {
-    const base = this.base.diagnostics(); const metrics = this.simulation?.metrics(); const gathering = this.gatherCoordinator?.metrics();
+    const base = this.base.diagnostics(); const metrics = this.simulation?.metrics(); const gathering = this.gatherCoordinator?.metrics(); const gatherVisuals = this.gatherVisuals?.diagnostics();
     return { ...base, milestone: this.milestone, artGatePassed: true,
       activeUnits: metrics?.activeUnits ?? 0, movingUnits: metrics?.movingUnits ?? 0, stalledUnits: metrics?.stalledUnits ?? 0, selectedUnits: this.controller?.selectedCount ?? 0,
       pendingPaths: metrics?.pendingPaths ?? 0, maxObservedPathQueue: metrics?.maxObservedPathQueue ?? 0, pathsSolvedPerTick: metrics?.pathsSolvedThisTick ?? 0,
@@ -141,7 +141,8 @@ export class RtsBenchmarkScene implements RuntimeScene {
       phase4DebugUnits: this.milestone === 'phase-4' ? countOrDefault(this.debugUnitCount, 120) : 0, phase4QaFast: this.milestone === 'phase-4' && this.gatheringQaFast,
       resourceNodes: this.gatherCoordinator?.resourceState().length ?? 0, activeGatherOrders: gathering?.activeGatherOrders ?? 0, gatheringWorkers: gathering?.gatheringWorkers ?? 0,
       returningWorkers: gathering?.returningWorkers ?? 0, carriedWoodTotal: Number((gathering?.carriedWoodTotal ?? 0).toFixed(3)), woodRemaining: Number((gathering?.woodRemaining ?? 0).toFixed(3)),
-      woodStockpile: Number((gathering?.woodStockpile ?? 0).toFixed(3)), gatherFailure: gathering?.lastGatherFailure ?? '' };
+      woodStockpile: Number((gathering?.woodStockpile ?? 0).toFixed(3)), gatherFailure: gathering?.lastGatherFailure ?? '',
+      workerRoleMarkers: gatherVisuals?.workerMarkers ?? 0, workersShowingCargo: gatherVisuals?.workersShowingCargo ?? 0, activeDepositPulses: gatherVisuals?.activeDepositPulses ?? 0 };
   }
 
   destroy(): void {
