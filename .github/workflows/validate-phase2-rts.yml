@@ -4,6 +4,7 @@ on:
     branches:
       - qa/phase2-integration
     paths:
+      - 'index.html'
       - 'src/core/navigation-grid.ts'
       - 'src/core/rts-simulation.ts'
       - 'src/render/inspection-camera.ts'
