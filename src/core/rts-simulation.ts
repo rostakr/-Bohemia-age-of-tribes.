@@ -104,8 +104,46 @@ export class RtsSimulation {
     });
   }
 
+  issueGather(units: readonly EntityId[], target: EntityId, destination: WorldPoint, executeAtTick: number): void {
+    this.queueCommand({
+      executeAtTick,
+      sequence: ++this.sequence,
+      player: this.localPlayer,
+      units: [...units].sort((a, b) => a - b),
+      queue: false,
+      order: { type: 'gather', target },
+    });
+    this.gatherDestinations.set(target, { x: destination.x, z: destination.z });
+  }
+
+  private readonly gatherDestinations = new Map<EntityId, WorldPoint>();
+  private readonly gatherTargets = new Map<EntityId, EntityId>();
+
+  gatherTarget(unitId: EntityId): EntityId | null { return this.gatherTargets.get(unitId) ?? null; }
+
   private applyCommand(command: Command): void {
-    if (command.player !== this.localPlayer || command.order.type !== 'move' || command.queue) return;
+    if (command.player !== this.localPlayer || command.queue) return;
+    if (command.order.type === 'gather') {
+      const destination = this.gatherDestinations.get(command.order.target);
+      if (!destination) return;
+      const owned = command.units
+        .map(id => this.units.get(id))
+        .filter((unit): unit is UnitState => Boolean(unit && unit.owner === command.player))
+        .sort((a, b) => a.id - b.id);
+      const slots = this.assignDestinationSlots(owned.length, destination);
+      const replacing = new Set(owned.map(unit => unit.id));
+      this.pendingPaths = this.pendingPaths.filter(request => !replacing.has(request.unitId));
+      owned.forEach((unit, index) => {
+        unit.orderVersion++;
+        unit.path = [];
+        unit.waypoint = 0;
+        this.gatherTargets.set(unit.id, command.order.target);
+        const slot = slots[index];
+        if (slot) this.pendingPaths.push({ unitId: unit.id, destination: slot, orderVersion: unit.orderVersion });
+      });
+      return;
+    }
+    if (command.order.type !== 'move') return;
     const owned = command.units
       .map(id => this.units.get(id))
       .filter((unit): unit is UnitState => Boolean(unit && unit.owner === command.player))
@@ -119,6 +157,7 @@ export class RtsSimulation {
       const unit = owned[index]!;
       const destination = slots[index];
       unit.orderVersion++;
+      this.gatherTargets.delete(unit.id);
       unit.path = [];
       unit.waypoint = 0;
       if (!destination) {
@@ -285,6 +324,8 @@ export class RtsSimulation {
   destroy(): void {
     this.commands.length = 0;
     this.pendingPaths.length = 0;
+    this.gatherDestinations.clear();
+    this.gatherTargets.clear();
     this.units.clear();
   }
 }
