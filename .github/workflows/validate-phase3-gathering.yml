@@ -17,6 +17,10 @@ on:
       - 'scripts/check-phase3.mjs'
       - 'scripts/browser-phase2-smoke.mjs'
       - 'scripts/browser-phase3-smoke.mjs'
+      - 'docs/PROJECT_STATE.md'
+      - 'docs/DECISIONS.md'
+      - 'docs/HANDOFF_PHASE_3.md'
+      - 'docs/PHASE_3_SCOPE_PROPOSAL.md'
       - 'package.json'
       - '.github/workflows/validate-phase3-gathering.yml'
   workflow_dispatch:
