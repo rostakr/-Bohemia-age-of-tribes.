@@ -1,5 +1,5 @@
-import type { Command, EntityId, PlayerId, WorldPoint } from './contracts';
-import { NavigationGrid } from './navigation-grid';
+import type { Command, EntityId, PlayerId, WorldPoint } from './contracts.ts';
+import { NavigationGrid } from './navigation-grid.ts';
 
 export interface UnitSpawn {
   id: EntityId;
