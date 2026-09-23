@@ -139,20 +139,24 @@ async function dragSelect(cdp) {
 }
 
 async function rightClick(cdp, x = 1480, y = 650) {
-  // Headless Chromium/CDP does not consistently synthesize a DOM contextmenu event
-  // from right-button mouse dispatch. Deliver the standard browser event explicitly
-  // to the real gameplay canvas while preserving viewport coordinates.
+  // Exercise the controller's explicit right-button pointerup path. Headless
+  // Chromium/CDP does not consistently synthesize contextmenu from right-button
+  // mouse dispatch, while the gameplay controller intentionally handles both
+  // pointerup(button=2) and contextmenu in normal browsers.
   await evaluate(cdp, `(() => {
     const canvas = document.querySelector('#viewport');
     if (!canvas) throw new Error('RTS canvas missing');
-    return canvas.dispatchEvent(new MouseEvent('contextmenu', {
+    return canvas.dispatchEvent(new PointerEvent('pointerup', {
       bubbles: true,
       cancelable: true,
       view: window,
       clientX: ${x},
       clientY: ${y},
       button: 2,
-      buttons: 2,
+      buttons: 0,
+      pointerId: 1,
+      pointerType: 'mouse',
+      isPrimary: true,
     }));
   })()`);
 }
