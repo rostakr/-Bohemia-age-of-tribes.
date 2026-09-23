@@ -6,14 +6,37 @@ Read `docs/PROJECT_STATE.md` before changing gameplay or architecture. If it doe
 
 Build a commercially credible, historically grounded 3D RTS set in Bohemia and Moravia for desktop web browsers using PlayCanvas Engine 2.x. Prefer a small finished vertical slice over broad unfinished systems, preserve classic RTS readability, and treat performance as an evidence-driven requirement.
 
+## Outcome-driven delivery and validation — 2026-09-23
+
+Read [shared project instructions V2](docs/prompts/BOHEMIA_PROJECT_INSTRUCTIONS_V2.txt) and the appropriate [development](docs/prompts/BOHEMIA_DEV_PROMPT_V2.txt) or [QA](docs/prompts/BOHEMIA_QA_PROMPT_V2.txt) prompt. These supersede older operational guidance on acceptance and routine validation; the original game vision and required release gates remain in force.
+
+- Judge progress by a visible, understandable player experience; build/CI success alone does not establish product or art acceptance.
+- Complete the existing Phase 4 scope, then prioritize an accessible, coherent settlement demonstration with visible worker activity before expanding gameplay systems. Do not silently enlarge the current Phase 4 PR.
+- Historical Phase 1–3 technical acceptance remains recorded. The gap between current visuals and the original professional art target is explicitly open.
+- Validate coherent checkpoints according to change impact. Documentation changes need content review; local visual changes need targeted scene review; gameplay changes need focused behavior/regression checks; shared-engine changes need broader relevant regression. Run all required milestone/release checks before acceptance.
+- Reuse earlier evidence only for demonstrably unaffected areas. Do not duplicate full suites after each cosmetic commit or remove checks to hide failures. These instructions do not themselves modify GitHub Actions or branch protection.
+- Every handoff states player benefit, exact SHA, actual validation, remaining product gaps, and a verified preview URL or a concrete deployment blocker.
+
+## Coordination and scheduled work
+
+- One implementation owner and one QA owner per task. Use the existing assigned branch/PR; do not concurrently edit another owner's work.
+- Read current GitHub state at each resumed run. Chat memory, attached snapshots and old PR numbers are not current repository state.
+- The authorized twelve-hour plan is a maximum work budget: finish Phase 4 admission and an exact-SHA preview, then the separately scoped settlement/worker visual checkpoint after QA acceptance. Do not start Phase 5.
+- A twelve-hour plan does not create an automation or promise uninterrupted execution. Scheduling must be confirmed separately by the scheduling service.
+- Before a scheduled run writes, establish that no earlier run owns the same task. If ownership cannot be established, do not start competing writes.
+- Mark stable handoffs READY FOR QA with exact SHA, PR, change scope, performed checks and preview URL or deployment blocker. QA acts on a new handoff, not every commit or timer tick.
+- Record QA findings/verdict against the reviewed SHA. New commits do not inherit PASS for affected areas; documentation-only changes do not automatically invalidate unchanged runtime evidence.
+- Save unfinished work and the exact next step. Stop when the authorized result is complete; do not invent work to fill the time budget.
+- On branches missing the V2 prompt files, read their canonical main copies: https://github.com/rostakr/-Bohemia-age-of-tribes./tree/main/docs/prompts . Synchronize instructions deliberately; do not merge unrelated gameplay just to obtain documentation.
+
 ## Active milestone discipline
 
-- Work only on the active milestone. Phase 0 establishes the technical foundation and a disposable calibration scene; it does not implement terrain gameplay, navigation, an RTS camera, factions, economy, combat, AI, or production art.
+- Work only on the currently authorized milestone or follow-up ticket. Phase 0 restrictions describe historical foundation work and must not be applied as a ban on already authorized RTS/economy development. Preserve accepted systems; do not expand gameplay scope without an assigned outcome.
 - Preserve strict TypeScript, ES modules, the pinned PlayCanvas version, and the documented lifecycle and simulation contracts.
 - Treat primitive geometry and generated calibration visuals as disposable greybox work. Do not present them as production assets.
 - Do not import or mass-produce commercial assets until their license, source, historical fit, visual fit, technical fit and pipeline have been reviewed and recorded in `docs/ASSET_MANIFEST.md`.
 - Keep changes milestone-scoped and reviewable. Update `docs/PROJECT_STATE.md` when a milestone, blocker, major performance result, QA result or next task changes.
-- Run the milestone validation commands before handoff. Report observed results without inventing output, commit hashes, deployment status, GPU capability or performance claims.
+- For routine checkpoints, run only validation justified by the changed behavior and its dependencies. Required milestone/release gates apply at milestone acceptance or release, not every small handoff. Report observed results without inventing output, commit hashes, deployment status, GPU capability or performance claims.
 - Hand a completed milestone to external GPT-5.6 Sol QA. Do not begin the next phase until that QA pass accepts the milestone or its findings are resolved.
 
 ## QA and bug priority
@@ -23,7 +46,7 @@ For visual changes inspect close, normal gameplay and strategic overview scales.
 - P0 — game cannot run / data corruption
 - P1 — major gameplay blocker
 - P2 — important functional defect
-- P3 — visual/minor defect
+- P3 — minor defect; visual issues that defeat the agreed art/readability goal are product blockers, not automatically minor
 - P4 — polish
 
 ## Specialist escalation
