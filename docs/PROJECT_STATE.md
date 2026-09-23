@@ -1,5 +1,15 @@
 # Project state
 
+## Active work correction — supersedes older sequential blockers
+
+- DEV owner: development chat; active task P4-VIS-01 (worker readability, authoritative cargo presentation and deposit feedback). Full scope and acceptance are in the correction at the top of the canonical V2 prompts on main.
+- QA owner: QA chat; accept a stable READY FOR QA SHA with a reproducible local build/CI artifact even if public deployment is blocked. Report implementation and publication separately.
+- Publication blocker owner: coordinator. Public Phase 4 runtime remains unverified in this coordination pass; no release PASS is implied.
+- PR #93 is confirmed merged into main; see its GitHub metadata for the exact merge commit. No merge or deployment was performed by this instruction correction.
+- Independent visual implementation is authorized now; it does not wait for publication verification. Phase 5 remains out of scope. Repeated unchanged blockers do not warrant new status-only commits.
+- The records below are historical snapshots; verify current refs before starting work.
+
+
 ## Current coordination status — 2026-09-23
 
 This section supersedes the active-milestone and next-task fields in the historical Phase 1 record below. Historical acceptance evidence remains intact.
