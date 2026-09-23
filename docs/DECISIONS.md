@@ -52,6 +52,27 @@
 
 The detailed source-backed review and its uncertainty rules are recorded in `docs/PHASE_1_HISTORICAL_ART_REVIEW.md`.
 
+## Phase 2 RTS interaction foundation decisions
+
+| Area | Decision | Consequence |
+| --- | --- | --- |
+| Scope | Admit camera, selection, MOVE, bounded navigation, group destination slots, feedback UI and diagnostics only | Economy, combat, construction, production, AI, fog, multiplayer, advanced formations, mobile controls and Phase 3 remain out of scope |
+| Phase 1 baseline | Build Phase 2 from the clean accepted Phase 1 integration SHA `9d4c9fb642a2952efb279c0461378e5527891099` | Phase 2 interaction work cannot silently alter the independently accepted Phase 1 content baseline |
+| Camera ownership | Use one RTS camera controller for keyboard, edge-scroll, middle-drag pan, rotation and wheel zoom | Camera input remains centralized and teardown can be regression-tested |
+| Selection | Support click, drag-box and Shift toggle with stable simulation IDs | UI selection is decoupled from transient render-object identity |
+| MOVE semantics | A new MOVE order deterministically replaces the previous route for the ordered units | Command behavior is predictable and testable at fixed simulation ticks |
+| Navigation | Use terrain-derived bounded A* with explicit building/water blockers, explicit ford crossing and no diagonal corner cutting | Units cannot legally cut across blocked water or obstacle corners; unreachable requests resolve within bounded rules |
+| Group movement | Assign distinct deterministic destination slots and use bounded separation | Multi-unit MOVE avoids pathological stacking without introducing an advanced formation system |
+| Path workload | Bound path solving per simulation tick | Debug/stress unit counts cannot create an unbounded pathfinding spike in one fixed step |
+| Runtime timing | Keep movement execution in the existing fixed-step simulation and presentation interpolation in rendering | Phase 2 does not create a second gameplay clock or couple movement determinism to frame rate |
+| Browser QA | Maintain a dedicated WebGL2 interaction smoke covering five-unit interaction, remount and 40-unit debug stress | The interaction foundation must be exercised through the real browser/runtime path, not Node tests alone |
+| Input smoke fidelity | Exercise the controller's actual right-button `pointerup` path in headless CI rather than relying on a synthetic `contextmenu` path that proved unreliable | CI validates the same gameplay event route implemented by the controller while avoiding a headless-browser event synthesis false failure |
+| Performance interpretation | Treat SwiftShader/WebGL2 CI as correctness evidence only | No desktop-GPU FPS, frame-time or production performance claim may be inferred from the CI smoke |
+| Integration | Admit accepted Phase 2 work first into `qa/phase2-integration`; do not merge this milestone directly to `main` | QA integration remains reviewable and `main` stays stable until a later explicit release/admission decision |
+| Sequencing | Define the next Phase 2 increment explicitly before implementation | Acceptance of interaction/navigation foundation alone does not authorize broad Phase 3 or economy/combat/AI scope |
+
+The exact accepted evidence is recorded in `docs/PHASE_2_RTS_INTERACTION_FOUNDATION.md` and `docs/PROJECT_STATE.md`.
+
 ## Product constraints carried forward
 
 - The chronological campaign distinguishes Boii (Late La Tène), Marcomanni (early Roman Imperial), and Slavs (6th–7th centuries).
@@ -62,4 +83,4 @@ The detailed source-backed review and its uncertainty rules are recorded in `doc
 
 ## Validation and handoff
 
-The clean setup remains `npm ci`, followed by `npm run validate` for type checking, focused Node tests, and a production build. Browser regression coverage additionally runs WebGL2 startup/fallback, interactions, lifecycle remount and software WebGPU smoke tests in CI. Reviewed releases are deployed through the manual-only Pages workflow and can be checked independently with `Verify published foundation` against the public URL. Actual results, workflow IDs and commit references belong in `docs/PROJECT_STATE.md` and the milestone handoff document rather than being inferred from this decisions log.
+The clean setup remains `npm ci`, followed by `npm run validate` for type checking, focused Node tests, asset admission checks and a production build. Phase 2 additionally requires its dedicated WebGL2 RTS interaction smoke and retained evidence artifact. Browser regression coverage from the foundation remains relevant and must not be weakened to make later milestones pass. Actual run IDs, commit references and milestone evidence belong in `docs/PROJECT_STATE.md` and the milestone handoff document.
