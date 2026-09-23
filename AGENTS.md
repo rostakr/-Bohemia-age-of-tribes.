@@ -2,6 +2,14 @@
 
 Read `docs/PROJECT_STATE.md` before changing gameplay or architecture. If it does not exist, stay within the assigned milestone and record that absence in the handoff.
 
+## Development priority — latest owner direction
+
+The primary objective is steady implementation toward the complete game, through a finished Boii vertical slice. Public hosting is secondary and must not block gameplay/content implementation or internal milestone QA. Use a reproducible local build or CI artifact for review; public deployment is required only when explicitly delivering a public preview/release. Do not spend repeated work sessions checking unchanged hosting blockers.
+
+Finish the assigned P4-VIS-01 checkpoint, then hand it to QA. Plan subsequent bounded tickets toward construction, production, combat, AI/fog, Boii trade/progression and a complete win/loss loop, with art and animation work accompanying playable features. Do not remain indefinitely in preview preparation or cosmetic-only work. Keep milestone dependencies and independent QA; this direction does not authorize an unreviewed jump into all later phases or declare unfinished work accepted.
+
+Progress reports must identify implemented player capability or integrated content. A plan, status-only commit, passing CI or a public URL alone is not development progress. Existing deployment-related waiting instructions are superseded by this priority.
+
 ## Product target
 
 Build a commercially credible, historically grounded 3D RTS set in Bohemia and Moravia for desktop web browsers using PlayCanvas Engine 2.x. Prefer a small finished vertical slice over broad unfinished systems, preserve classic RTS readability, and treat performance as an evidence-driven requirement.
@@ -27,7 +35,7 @@ READY FOR QA may provide a reproducible local build or CI artifact when a public
 
 - One implementation owner and one QA owner per task. Use the existing assigned branch/PR; do not concurrently edit another owner's work.
 - Read current GitHub state at each resumed run. Chat memory, attached snapshots and old PR numbers are not current repository state.
-- The authorized twelve-hour plan is a maximum work budget: finish Phase 4 admission and an exact-SHA preview, and the separately scoped worker visual checkpoint under the publication-blocker correction above. Do not start Phase 5.
+- The authorized twelve-hour plan is a maximum work budget: finish Phase 4 implementation admission and the separately scoped worker visual checkpoint under the publication-blocker correction above. Do not start Phase 5.
 - A twelve-hour plan does not create an automation or promise uninterrupted execution. Scheduling must be confirmed separately by the scheduling service.
 - Before a scheduled run writes, establish that no earlier run owns the same task. If ownership cannot be established, do not start competing writes.
 - Mark stable handoffs READY FOR QA with exact SHA, PR, change scope, performed checks and preview URL or deployment blocker. QA acts on a new handoff, not every commit or timer tick.
