@@ -226,10 +226,11 @@ try {
   await cdp.send('Page.enable');
   await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1920, height: 1080, deviceScaleFactor: 1, mobile: false });
 
-  await cdp.send('Page.navigate', { url: `${previewBase}/?gather=1&renderer=webgl2&debug=1` });
+  await cdp.send('Page.navigate', { url: `${previewBase}/?gather=1&renderer=webgl2&debug=1&qaFast=1` });
   let state = await waitFor(cdp, value =>
     value?.snapshot?.milestone === 'phase-3' &&
     value.snapshot.phase3Gathering === true &&
+    value.snapshot.phase3GatheringQaFast === true &&
     value.snapshot.renderer === 'webgl2' &&
     value.snapshot.failed === false &&
     value.snapshot.deviceLost === false &&
@@ -270,6 +271,7 @@ try {
   await evaluate(cdp, `window.__BOHEMIA_DEBUG__.remount()`);
   state = await waitFor(cdp, value =>
     value?.snapshot?.milestone === 'phase-3' && value.snapshot.phase3Gathering === true &&
+    value.snapshot.phase3GatheringQaFast === true &&
     Number(value.snapshot.activeUnits) === 5 && Number(value.snapshot.resourceNodes) >= 1 &&
     Number(value.snapshot.woodStockpile) === 0 && value.overlayCount === 1 && value.canvasCount === 1,
   'Phase 3 gathering remount', 45_000);
@@ -284,7 +286,7 @@ try {
     remainingWood,
     commandScreenshot,
     depositScreenshot,
-    note: 'SwiftShader/WebGL2 CI regression evidence only; not desktop-GPU performance evidence.',
+    note: 'qaFast uses fixed-step substeps only for debug CI; production gathering rates and movement timing are unchanged.',
   }, null, 2));
 } finally {
   cdp?.close();
