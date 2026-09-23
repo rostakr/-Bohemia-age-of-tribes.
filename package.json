@@ -18,6 +18,7 @@
     "smoke:webgpu": "node scripts/browser-webgpu-smoke.mjs",
     "smoke:phase1": "node scripts/browser-phase1-smoke.mjs",
     "smoke:phase2": "node scripts/browser-phase2-smoke.mjs",
+    "smoke:phase3": "node scripts/browser-phase3-smoke.mjs",
     "smoke:supplied-storehouse": "node scripts/browser-supplied-storehouse-smoke.mjs",
     "smoke:supplied-storehouse-closeup": "node scripts/browser-supplied-storehouse-closeup.mjs",
     "check:glb": "node scripts/check-glb.mjs",
