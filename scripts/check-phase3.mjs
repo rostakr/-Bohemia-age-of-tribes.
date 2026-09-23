@@ -117,7 +117,7 @@ test('120-unit group movement keeps path solving bounded and settles without pat
   for (let a = 0; a < states.length; a++) {
     for (let b = a + 1; b < states.length; b++) {
       assert.ok(Math.hypot(states[a].x - states[b].x, states[a].z - states[b].z) > 0.08,
-        `stress units ${states[a].id}/${states[b].id should not end in an exact stack`);
+        `stress units ${states[a].id}/${states[b].id} should not end in an exact stack`);
     }
   }
   simulation.destroy();
