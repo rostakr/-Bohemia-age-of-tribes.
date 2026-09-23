@@ -107,3 +107,20 @@ jobs:
           fi
 
           echo 'Published WebGL2 runtime reached Foundation running state.'
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Verify published Phase 4 production gather loop
+        run: node scripts/browser-published-phase4-smoke.mjs
+
+      - name: Upload published Phase 4 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: published-phase4-evidence
+          path: artifacts/published-phase4
+          if-no-files-found: error
