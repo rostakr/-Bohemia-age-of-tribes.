@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test scripts/check-core.mjs scripts/check-assets.mjs scripts/check-landscape.mjs scripts/check-storehouse.mjs scripts/check-workshop.mjs scripts/check-tree.mjs scripts/check-inhabitant.mjs scripts/check-dwelling-lods.mjs scripts/check-glb-tools.mjs scripts/check-phase2.mjs scripts/check-phase3.mjs",
+    "test": "node --experimental-strip-types --test scripts/check-core.mjs scripts/check-assets.mjs scripts/check-landscape.mjs scripts/check-storehouse.mjs scripts/check-workshop.mjs scripts/check-tree.mjs scripts/check-inhabitant.mjs scripts/check-dwelling-lods.mjs scripts/check-glb-tools.mjs scripts/check-phase2.mjs scripts/check-phase2-economy.mjs scripts/check-phase2-gather.mjs scripts/check-phase3.mjs",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
     "smoke:webgl2": "node scripts/browser-smoke.mjs",
