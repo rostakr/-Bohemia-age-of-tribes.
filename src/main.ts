@@ -44,7 +44,7 @@ const workerR2Closeup = parameters.get('scene') === 'worker-r2-preview';
 const workerR2Benchmark = parameters.get('worker') === 'r2';
 const completionCandidate = parameters.get('candidate') === 'phase1';
 const phase2Interaction = parameters.get('phase2') === '1';
-const phase2DebugUnits = parameters.get('units') === '40' ? 40 : 5;
+const phase2DebugUnits = debug && parameters.get('units') === '40' ? 40 : 5;
 const workshopPreview = completionCandidate || phase2Interaction || parameters.get('workshop') === 'project';
 const runningLabel = calibration
   ? 'Foundation running'
