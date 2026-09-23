@@ -8,115 +8,123 @@
   "engine": "playcanvas@2.22.1",
   "phase_0_status": "COMPLETE_ACCEPTED",
   "phase_0_5_status": "COMPLETE_VERIFIED",
-  "phase_1_status": "QA_DESIGNATED_ACCEPTED_BASE_FOR_PHASE_2",
-  "phase_2_status": "ACCEPTED_IN_QA_INTEGRATION",
-  "phase_3_status": "RECONCILED_BASE_FOR_PHASE_4",
-  "active_milestone": "PHASE_4_WOOD_GATHERING_VERTICAL_SLICE",
-  "phase_4_status": "DEV_STABILIZATION_CI_GREEN_AWAITING_INDEPENDENT_QA",
-  "phase_4": {
-    "task": "P4-WOOD-GATHERING-VERTICAL-SLICE",
-    "pr": 92,
-    "base_branch": "qa/phase4-integration",
-    "base_sha": "0289dfc7b71fbf5a6ceb3e9b352c9d9870f9c30b",
-    "head_branch": "phase4/wood-gathering-vertical-slice",
-    "current_code_candidate_sha": "8bb08c50a5f809a79516756a13cbd9edbee918a7",
-    "pr_state": "OPEN_DRAFT",
-    "main_modified": false,
-    "independent_qa": "HANDOFF_POSTED_FOR_CODE_CANDIDATE_RETEST"
-  },
-  "phase_4_implemented_scope": [
-    "ResourceEconomy remains authoritative for finite resource nodes and stockpiles",
-    "GatherLoop remains authoritative for worker cargo and gather state",
-    "GatherCoordinator orchestrates accepted movement with gather and drop-off",
-    "existing deciduous trees map to stable wood resource IDs",
-    "existing Boii storehouse maps to a reachable drop-off apron",
-    "RMB on mapped wood issues GATHER and RMB terrain MOVE replaces gather routing",
-    "carried cargo survives MOVE replacement",
-    "finite wood extraction cannot duplicate or go negative",
-    "production constants are carry 10, gather 2 wood/s and 100 wood/tree",
-    "debug acceleration is restricted to phase4=1&debug=1",
-    "selected-worker HUD exposes Gather/Return/Idle task state and carried wood",
-    "stalled or lost gather approach routes are deterministically re-issued",
-    "fixed host information panel stacks above world-space resource markers",
-    "fixed diagnostics panel stacks above world-space resource markers"
-  ],
-  "phase_4_dev_evidence": {
-    "previous_green_head": "f148ee12b0f8bf0b93d15f26c328f58eba7ea741",
-    "previous_green_phase4_workflow_run": 35851056033,
-    "previous_green_node_tests": "45/45 passed",
-    "previous_green_phase2_smoke": "passed",
-    "previous_green_phase3_smoke": "passed",
-    "previous_green_phase4_smoke": "passed",
-    "previous_green_resource_nodes": 8,
-    "previous_green_initial_wood": 800,
-    "previous_green_deposited_wood": 2,
-    "previous_green_remaining_after_deposit": 790,
-    "previous_green_evidence_artifact_id": 10746061441,
-    "previous_green_evidence_sha256": "492b9437768ba295c368357f6fbe5a030c0fffb0f9a9d8b44aaf0ce19f8ebcce",
-    "current_code_candidate": "8bb08c50a5f809a79516756a13cbd9edbee918a7",
-    "current_phase4_workflow_run": 35906865576,
-    "current_validation": "passed",
-    "current_full_repository_validation": "passed",
-    "current_phase2_smoke": "passed",
-    "current_phase3_smoke": "passed",
-    "current_phase4_smoke": "passed",
-    "current_evidence_artifact_id": 10772095789,
-    "current_evidence_sha256": "3a361b7d082d31b8a2ec86c51fa96092a81f656a04a36bdbf230818d9f0ca463",
-    "dev_visual_evidence_review": "right diagnostics readable in gather-command and wood-deposited 1920x1080 WebGL2 screenshots",
-    "qa_handoff_comment": 5801120492
-  },
-  "qa_findings": {
-    "QA-P4-001": "FIXED_IN_CODE_CANDIDATE_AWAITING_EXACT_HEAD_QA_VERDICT",
-    "QA-P4-002": "NON_BLOCKING_PER_QA_INTEGRATION_INVARIANT",
-    "QA-DOC-001": "PASS_ON_CONTENT_REVIEW",
-    "QA-VIS-001": "PASS_FIX_VERIFIED_ON_A1ACAEE",
-    "QA-VIS-002": "FIXED_IN_CODE_CANDIDATE_AWAITING_VISUAL_RETEST",
-    "QA-CONSOLE-NETWORK-COVERAGE": "COVERAGE_GAP_NOT_REPRODUCED_DEFECT"
-  },
-  "known_limits": [
-    "Worker R2 remains static/unrigged and has no walk or harvesting animation",
-    "SwiftShader CI is regression evidence, not desktop-GPU performance evidence",
-    "actual desktop-hardware performance remains unmeasured",
-    "explicit CDP console/unhandled-rejection/4xx-5xx audit is not part of the current smoke harness and remains a QA coverage gap rather than a reproduced defect",
-    "legacy PROJECT_STATE content lagged behind the reconciled Phase 3/Phase 4 branch history; this file records the reconciled current state without inventing missing historical QA admission claims"
-  ],
-  "next_step": "Independent QA must retest runtime code candidate 8bb08c50... against the current PR contents, especially QA-VIS-002, and issue an evidence-backed verdict before any merge into qa/phase4-integration. This documentation update may itself become the PR tip without changing runtime code. Do not merge to main and do not start a new gameplay phase."
+  "active_milestone": "PHASE_2_RTS_INTERACTION_FOUNDATION",
+  "phase_1_authorized": true,
+  "phase_1_status": "COMPLETE_QA_ACCEPTED",
+  "art_gate_passed": true,
+  "phase_1_accepted_sha": "26546b893fa37df4f0c56934b8fabaac8d942218",
+  "phase_1_reviewed_candidate_sha": "853d802e0512f4c89f068eb54f64337cf2a23195",
+  "phase_1_integration_merge_sha": "9d4c9fb642a2952efb279c0461378e5527891099",
+  "phase_1_reviewed_content_tree_sha": "1fde280d7a8b61f3a1c87299b400fedc532c3b60",
+  "phase_1_canonical_admission_tree_sha": "3b002d9c6801692c6b9561ebbbd103d8da5c6b78",
+  "phase_1_release_pr": 73,
+  "phase_1_release_evidence_pr": 74,
+  "main_at_final_qa_start": "a845caafc1ccf6268facde48539c75520c0ba921",
+  "canonical_phase_1_benchmark_query": "?candidate=phase1",
+  "phase_2_entry_gate": "OPEN",
+  "phase_2_base_branch": "phase2/phase1-accepted-base",
+  "phase_2_base_sha": "9d4c9fb642a2952efb279c0461378e5527891099",
+  "phase_2_integration_branch": "qa/phase2-integration",
+  "next_task": "P2-RTS-INTERACTION-FOUNDATION"
 }
 ```
 
-## Current decision
+## Final Phase 1 QA decision
 
-Phase 4 wood gathering is the active milestone. Development remains on PR #92 from `phase4/wood-gathering-vertical-slice` into `qa/phase4-integration`. The reconciled base is `0289dfc7b71fbf5a6ceb3e9b352c9d9870f9c30b`. The current runtime code candidate is `8bb08c50a5f809a79516756a13cbd9edbee918a7`; this documentation update may itself become the PR tip without changing runtime code. `main` is not the Phase 4 target.
+**PHASE 1: COMPLETE / QA ACCEPTED.**  
+**ART GATE: PASS — `artGatePassed=true`.**  
+**PHASE 2 ENTRY GATE: OPEN.**
 
-The previous project-state history was stale and still described Phase 2 as active even on the reconciled Phase 4 base. This file does not manufacture a historical Phase 3 QA admission record. It records only the reconciled branch state and evidence that can be tied to concrete commits/workflows.
+The single canonical accepted Phase 1 commit is `26546b893fa37df4f0c56934b8fabaac8d942218`, admitted to `main` by PR #73 after fresh current-head validation. The underlying complete content candidate independently reviewed in PR #71 is `853d802e0512f4c89f068eb54f64337cf2a23195`; it was merged into `qa/phase1-integration` as `9d4c9fb642a2952efb279c0461378e5527891099`. The PR #71 candidate and integration merge have the same Git tree, `1fde280d7a8b61f3a1c87299b400fedc532c3b60`, so the independently reviewed runtime/content bytes were unchanged by that integration merge.
 
-## Phase 4 development status
+The canonical admission head used for PR #73 was `78f0d12a30fcfcad460a6d8d757b87773df9b3c9`; the resulting `main` admission commit `26546b893fa37df4f0c56934b8fabaac8d942218` has the identical admitted tree `3b002d9c6801692c6b9561ebbbd103d8da5c6b78`. PR #74 subsequently added only the final release receipt/documentation.
 
-The wood loop is implemented as an engine-independent simulation path coupled to PlayCanvas presentation only at the controller/scene boundary. Production values remain 10 wood carry capacity, 2 wood/second gather rate and 100 wood per mapped tree. Debug acceleration is valid only under `?phase4=1&debug=1`.
+The accepted benchmark is the explicit Phase 1 composition selected by `?candidate=phase1`: dwelling LOD1, compact storehouse, repaired project workshop, five compact R2 workers, terrain, stream, paths, meadow and the current vegetation composition.
 
-Stabilization after the previously green Phase 4 head now includes:
+## Final validation evidence
 
-1. gather/drop-off routing detects a finished or lost movement route still outside interaction range and deterministically re-issues the approach instead of leaving the worker stranded;
-2. the Phase 4 HUD exposes selected-worker task state (`Gather`, `Return`, `Idle`) and carried wood directly from simulation state, with browser smoke coverage for command state, MOVE replacement and remount reset;
-3. the fixed host information panel explicitly stacks above world-space resource markers, resolving `QA-VIS-001` without changing Phase 2/3 interaction semantics;
-4. the fixed right-side diagnostics panel now also stacks above the Phase 4 world-space marker overlay, addressing `QA-VIS-002` with a CSS-only change;
-5. `PROJECT_STATE.md` is reconciled to PR #92 / Phase 4, addressing `QA-DOC-001`.
+Exact PR #71 head `853d802e0512f4c89f068eb54f64337cf2a23195`:
 
-`QA-P4-002` was downgraded by independent QA to non-blocking because the actual `RtsBenchmarkScene` requires a same-component reachable storehouse apron or fails startup before `GatherCoordinator` is constructed. Generic coordinator hardening remains optional and is not added to this scoped stabilization patch.
+- foundation workflow run `35769849049`: **SUCCESS**;
+- Phase 1 completion workflow run `35769849029`: **SUCCESS**;
+- worker R2 workflow run `35769849012`: **SUCCESS**;
+- completion evidence artifact `10713746346`, digest `sha256:16152d8d000eb58eb7aae6627d6b87fa68e05258b9e98ae3becda4f9bcbd7224`;
+- foundation Phase 1 browser evidence artifact `10713692561`, digest `sha256:c1ed3ccf3e8a5c3746920091217f1c21d0f86f57dc6baee471a3cdec3a36e408`.
 
-## Evidence and QA gate
+Fresh conflict-resolved admission head `78f0d12a30fcfcad460a6d8d757b87773df9b3c9` before PR #73 merge:
 
-The previously green head `f148ee12b0f8bf0b93d15f26c328f58eba7ea741` passed workflow `35851056033`: 45/45 Node tests, production build, Phase 2 browser regression, Phase 3 browser regression and Phase 4 browser smoke. The smoke observed 8 mapped nodes / 800 initial wood, a 2-wood deposit and 790 remaining wood, and produced evidence artifact `10746061441` with SHA-256 `492b9437768ba295c368357f6fbe5a030c0fffb0f9a9d8b44aaf0ce19f8ebcce`.
+- foundation `35774232591`: **SUCCESS**;
+- Phase 1 completion candidate `35774232549`: **SUCCESS**;
+- worker R2 `35774232581`: **SUCCESS**;
+- compact storehouse `35774232567`: **SUCCESS**;
+- complete Phase 1 evidence artifact `10715133305`;
+- Phase 1 browser evidence artifact `10715453292`;
+- worker evidence artifact `10714869061`;
+- compact storehouse evidence artifact `10716035179`.
 
-For runtime code candidate `8bb08c50a5f809a79516756a13cbd9edbee918a7`, Phase 4 workflow `35906865576` is PASS: full repository validation, Phase 2 browser regression, Phase 3 scalable movement regression and Phase 4 WebGL2 smoke all succeeded. Evidence artifact `10772095789` has SHA-256 `3a361b7d082d31b8a2ec86c51fa96092a81f656a04a36bdbf230818d9f0ca463`. DEV inspection of `phase4-gather-command-webgl2.png` and `phase4-wood-deposited-webgl2.png` at 1920×1080 confirms the right diagnostics text is no longer overpainted by resource markers. This is development evidence, not a substitute for the independent QA verdict requested in PR comment `5801120492`.
+Observed gates include `npm ci`, repository validation, deterministic worker generation/compaction, deterministic repaired-workshop export, strict GLB intake, production build, WebGL2 startup, interaction smoke, lifecycle/three-remount regression, software WebGPU regression, Phase 1 benchmark, full completion candidate, storehouse admission and storehouse close-up. No validation threshold was relaxed and no failing validation was removed.
 
-Independent QA already verified `QA-VIS-001` on head `a1acaee972cfd0daadedfa2b58c58ce16c4e654c` and then opened `QA-VIS-002`. Independent QA also recorded that an explicit browser console/unhandled-rejection/404 audit is not currently run; that is a coverage gap, not a reproduced Phase 4 defect.
+## Independent visual QA
 
-## Phase gate
+### Repaired workshop — PASS
 
-**PHASE 0: PASS / ACCEPTED.**  
-**PHASE 0.5: PASS / COMPLETE_VERIFIED.**  
-**PHASE 1: QA-DESIGNATED BASE USED FOR PHASE 2.**  
-**PHASE 2: PASS / ACCEPTED IN QA INTEGRATION.**  
-**PHASE 3: RECONCILED BASE PRESENT FOR PHASE 4; historical state file was stale.**  
-**PHASE 4: DEV CI GREEN / AWAITING INDEPENDENT QA VERDICT.**
+The #63 blocker classes are resolved sufficiently for the Phase 1 milestone:
+
+- roof/thatch reads warm and materially darker rather than extremely pale/flat;
+- roof-edge strands are restrained and do not form a noisy escaping fringe;
+- bench/trestle work surfaces and iron tools remain readable at the dedicated craft view;
+- the ground treatment reads as a shallow irregular earth patch rather than a raised dark rectangular slab;
+- no obvious floating structure, catastrophic seam, severe z-fighting or unexpected metallic response is visible at the reviewed normal-game camera distance;
+- generated GLB remains inside the documented production target at 22,540 triangles / 25,649 vertices, with NORMAL and UV0 on all five material primitives and no external dependencies.
+
+### Compact worker R2 — PASS / equivalent
+
+PR #68 compaction preserves the already accepted #65 worker rendering while changing storage/layout only. It keeps 28,212 triangles, reduces vertices from 56,424 to 20,725 and size from 3,615,224 to 2,106,832 bytes. Its equivalence checker verifies raw POSITION/NORMAL/UV triangle-corner bytes, embedded image bytes and scene/material metadata, and the accepted/compact neutral close-up evidence is pixel-identical. The worker remains static/unrigged by design for Phase 1.
+
+### Whole scene — PASS for Phase 1
+
+Settlement, river and craft evidence were reviewed at inspection and RTS-useful scales. Structures and inhabitants are readable, major scale relationships are coherent, terrain/stream/path composition is usable for RTS interaction work, and no gross texture failure, catastrophic seam or obvious floating geometry requires another foundational art-gate rebuild. This is a credible Phase 1 benchmark, not a claim of final shipping/AAA art.
+
+## Runtime / asset QA
+
+The exact completion candidate loads through the real PlayCanvas runtime in WebGL2 and reaches a healthy Phase 1 diagnostic state with three structures, five GLB worker candidates, 32 trees and the generated workshop. Required benchmark models/textures successfully resolve and load; a missing required candidate asset would fail candidate initialization/smoke rather than satisfy those assertions. Foundation regression also passes lifecycle remount, interactions, storehouse and available software WebGPU paths.
+
+The WebGPU result is explicitly software/CI regression evidence, not desktop-GPU performance evidence. WebGL2 remains the required fallback path and passed.
+
+## Performance evidence
+
+`ACTUAL_DESKTOP_GPU_BENCHMARK: NOT_AVAILABLE_IN_THIS_ENVIRONMENT`
+
+No 60 FPS, frame-time, VRAM or hardware-device claim is made. CI software rendering remains regression evidence only. Actual 1920×1080 desktop-GPU tuning, especially runtime tree-LOD thresholds, is deferred. This deferral does **not** block Phase 2 camera/selection/movement/navigation implementation; performance thresholds must be measured before later production LOD tuning/release claims.
+
+## Accepted later-phase limitations
+
+| Limitation | BLOCKS_PHASE_2 | Disposition |
+| --- | --- | --- |
+| Storehouse lacks full production normal/roughness texture set | NO | Later material polish |
+| Workshop uses base-color-focused material treatment and no full normal/roughness map set | NO | Later material polish |
+| Worker R2 is static/unrigged | NO | Animation/character follow-up; Phase 2 may move the static accepted asset |
+| Tree runtime LOD thresholds lack actual-hardware tuning | NO | Keep current composition; select thresholds only after hardware evidence |
+| Vegetation repetition/density polish remains | NO | Later environment polish |
+| Actual desktop-GPU benchmark unavailable in this execution environment | NO | Explicitly deferred; no performance number fabricated |
+
+There are **no unresolved Phase 1 blockers** carried into Phase 2.
+
+## Phase 2 entry contract
+
+- `PHASE_2_ENTRY_GATE: OPEN`
+- `PHASE_1_ACCEPTED_SHA: 26546b893fa37df4f0c56934b8fabaac8d942218`
+- `PHASE_1_REVIEWED_CANDIDATE_SHA: 853d802e0512f4c89f068eb54f64337cf2a23195`
+- `PHASE_1_INTEGRATION_SHA: 9d4c9fb642a2952efb279c0461378e5527891099`
+- `PHASE_2_BASE_BRANCH: phase2/phase1-accepted-base`
+- `PHASE_2_BASE_SHA: 9d4c9fb642a2952efb279c0461378e5527891099`
+- `PHASE_2_INTEGRATION_BRANCH: qa/phase2-integration`
+- `NEXT_TASK: P2-RTS-INTERACTION-FOUNDATION`
+
+The authoritative Phase 2 base branch and integration target both currently point to the clean accepted integration SHA `9d4c9fb642a2952efb279c0461378e5527891099`. Any separate Phase 2 development branch is outside this closure until explicitly admitted through the dedicated Phase 2 DEV/QA flow.
+
+Phase 2 implementation is deliberately not part of this closure.
+
+## Historical state
+
+Earlier blocked/superseded Phase 1 PRs and their evidence remain in Git history, PR discussions and the archive documents. In particular, PR #63 remains historical evidence for the rejected workshop preview, while #65/#68 and #60 document the accepted worker/storehouse evolution. Older `PROJECT_STATE` assertions that treated those repaired candidates as current blockers are superseded by this final acceptance record.
