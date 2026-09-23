@@ -1,0 +1,54 @@
+BOHEMIA — VÝVOJOVÝ CHAT V2, BLOK DO 6 HODIN
+Používej společné pokyny BOHEMIA_PROJECT_INSTRUCTIONS_V2.txt.
+Pracuj běžným modelem; Astru šetři pro izolované složité problémy.
+
+Začni ověřením repozitáře rostakr/-Bohemia-age-of-tribes., aktuálního
+PROJECT_STATE, AGENTS.md a aktivního PR. Nepovažuj níže uvedený snapshot za aktuální pravdu.
+Poslední ověřený bod v této relaci: PR #92, Phase 4 wood gathering,
+head phase4/wood-gathering-vertical-slice na 9b03587aed8d8598765e8d5560322321ddf890d3,
+base qa/phase4-integration na 0289dfc7b71fbf5a6ceb3e9b352c9d9870f9c30b.
+Pokud mezitím QA milník přijalo, neopakuj jej; převezmi aktuální schválený ticket.
+
+CÍL PRVNÍHO BALÍKU
+Dokončit funkční hráčský cyklus existující Phase 4:
+výběr pracovníka -> příkaz ke stromu -> příchod -> sběr ->
+přeprava -> odevzdání -> pokračování.
+Zachovej autority pohybu, ResourceEconomy, GatherLoop a GatherCoordinator.
+Řeš doložené chyby, ztrátu/duplikaci nákladu, přepis příkazů,
+vyčerpání zdroje, nedostupný cíl a čitelnost stavu.
+Produkční konstanty ověř v aktuálním kontraktu; neměň je jen kvůli snadnějším testům.
+
+JAK PRACOVAT
+- Vyber jeden soudržný balík s konkrétním přínosem pro hráče.
+- Neprováděj další audit celého repozitáře.
+- Implementuj úzké patche.
+- Spusť cílené testy změněného chování.
+- Udělej krátkou kontrolu v reálné scéně tam, kde je potřebná.
+- Předej stabilní SHA QA; potom řeš konkrétní nálezy.
+- Neopakuj plné browser suite po každé drobné UI či textové změně.
+- Neměň stejnou větev současně s jiným implementačním chatem.
+- Nevyřazuj povinné release kontroly.
+
+PŘEDÁNÍ QA
+Uveď skutečný hráčský výsledek, SHA, rozsah změny,
+provedené kontroly, dotčené návaznosti a krátký scénář.
+Důkazy musí odpovídat reálnému produkčnímu režimu; debug akceleraci označ.
+
+DALŠÍ PRODUKTOVÝ KONTROLNÍ BOD
+Po uzavření Phase 4 připrav samostatný úzký ticket pro dostupnou
+přesvědčivou osadu: ověřený webový náhled, kvalitnější vegetace/terén/stavby,
+čitelný pracovník a viditelný pracovní cyklus.
+Tento celý rozsah nepřidávej do PR #92 a nezačínej Phase 5.
+Před novou implementací musí být určen rozsah a vlastník.
+Veřejný náhled musí odpovídat uvedenému SHA; stará Phase 0 URL není náhled Phase 4.
+Žádná migrace enginu, nový boj/AI/fog ani neodsouhlasené placené assety.
+
+ČASOVÝ ROZPOČET
+Krátké převzetí -> hlavní část času implementace -> cílený retest -> předání.
+Netrav pevnou část bloku kontrolami, když zbývající riziko je již ověřeno.
+Průběžně ukládej práci; konec limitu není důvod k falešnému PASS.
+Výsledkem má být konkrétní posun hry, nikoli pouze plán.
+
+HANDOFF
+HRÁČSKÝ VÝSLEDEK / ZMĚNY / SHA A PR / NÁHLED /
+SKUTEČNÁ VALIDACE / BLOKÁTORY / DALŠÍ KROK.
