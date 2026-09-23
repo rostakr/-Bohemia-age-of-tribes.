@@ -86,7 +86,9 @@ export class RtsBenchmarkScene implements RuntimeScene {
         id: 2001,
         owner: 1,
         position: { x: storehousePosition.x, z: storehousePosition.z },
-        radius: 2.4,
+        // Storehouse navigation blocker is 4.4 m; keep the interaction envelope
+        // outside that blocked footprint so a valid nav endpoint can deposit.
+        radius: 5.0,
       }];
 
       const trees: Entity[] = [];
