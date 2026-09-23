@@ -58,6 +58,16 @@ export class GatherLoop {
     }
   }
 
+  /** Cancels the active gather order while preserving cargo already carried. */
+  cancel(workerIds: readonly EntityId[]): void {
+    for (const id of [...workerIds].sort((a, b) => a - b)) {
+      const worker = this.workers.get(id);
+      if (!worker) continue;
+      worker.targetNodeId = null;
+      worker.status = 'idle';
+    }
+  }
+
   setWorkerPosition(workerId: EntityId, position: WorldPoint): void {
     const worker = this.workers.get(workerId);
     if (worker) worker.position = { ...position };
@@ -118,6 +128,12 @@ export class GatherLoop {
       targetNodeId: worker.targetNodeId, carrying: worker.carrying,
       carriedAmount: worker.carriedAmount, status: worker.status,
     } : null;
+  }
+
+  statesSnapshot(): readonly GatherWorkerState[] {
+    return [...this.workers.keys()].sort((a, b) => a - b)
+      .map(id => this.state(id))
+      .filter((state): state is GatherWorkerState => state !== null);
   }
 
   destroy(): void { this.workers.clear(); }
