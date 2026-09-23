@@ -76,6 +76,11 @@ export class RtsController {
       if (distance >= 6) this.showDragBox();
     }, options);
     canvas.addEventListener('pointerup', event => {
+      if (event.button === 2) {
+        event.preventDefault();
+        this.issueContextMove(event.clientX, event.clientY);
+        return;
+      }
       if (event.button !== 0 || !this.drag || this.drag.id !== event.pointerId) return;
       const drag = this.drag;
       const distance = Math.hypot(drag.x - drag.startX, drag.y - drag.startY);
@@ -85,32 +90,33 @@ export class RtsController {
     }, options);
     canvas.addEventListener('pointercancel', () => this.finishDrag(), options);
     canvas.addEventListener('lostpointercapture', () => this.finishDrag(), options);
-    canvas.addEventListener('contextmenu', event => {
-      event.preventDefault();
-      if (this.selected.size === 0) {
-        this.setFeedback('Select workers first', false);
-        return;
-      }
-      const ground = this.screenGround(event.clientX, event.clientY);
-      if (!ground) {
-        this.setFeedback('Invalid destination', false);
-        return;
-      }
-      const resolved = this.navigation.resolveNearestReachable(ground, 8);
-      if (!resolved) {
-        this.addMarker(ground, false);
-        this.setFeedback('Destination is unreachable', false);
-        return;
-      }
-      this.simulation.issueMove([...this.selected], resolved, this.currentTick() + 1);
-      this.addMarker(resolved, true);
-      this.setFeedback('Move', true);
-    }, options);
+    canvas.addEventListener('contextmenu', event => event.preventDefault(), options);
     window.addEventListener('blur', () => this.finishDrag(), options);
     document.addEventListener('visibilitychange', () => { if (document.hidden) this.finishDrag(); }, options);
   }
 
   get selectedCount(): number { return this.selected.size; }
+
+  private issueContextMove(clientX: number, clientY: number): void {
+    if (this.selected.size === 0) {
+      this.setFeedback('Select workers first', false);
+      return;
+    }
+    const ground = this.screenGround(clientX, clientY);
+    if (!ground) {
+      this.setFeedback('Invalid destination', false);
+      return;
+    }
+    const resolved = this.navigation.resolveNearestReachable(ground, 8);
+    if (!resolved) {
+      this.addMarker(ground, false);
+      this.setFeedback('Destination is unreachable', false);
+      return;
+    }
+    this.simulation.issueMove([...this.selected], resolved, this.currentTick() + 1);
+    this.addMarker(resolved, true);
+    this.setFeedback('Move', true);
+  }
 
   private finishDrag(): void {
     if (this.drag && this.canvas.hasPointerCapture(this.drag.id)) this.canvas.releasePointerCapture(this.drag.id);
