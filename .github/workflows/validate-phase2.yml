@@ -1,0 +1,48 @@
+name: Validate Phase 2 RTS interaction
+on:
+  pull_request:
+    paths:
+      - 'src/core/navigation-grid.ts'
+      - 'src/core/rts-simulation.ts'
+      - 'src/render/inspection-camera.ts'
+      - 'src/render/rts-*.ts'
+      - 'src/main.ts'
+      - 'src/style.css'
+      - 'scripts/check-phase2.mjs'
+      - 'scripts/browser-phase2-smoke.mjs'
+      - 'package.json'
+      - '.github/workflows/validate-phase2.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  rts-interaction:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Rebuild accepted Phase 1 generated assets
+        run: |
+          node scripts/build-worker-r2.mjs
+          node scripts/compact-worker-r2.mjs
+          node scripts/check-worker-r2.mjs
+          node --experimental-strip-types scripts/export-workshop-project.mjs
+          node scripts/check-glb.mjs public/assets/buildings/boii_carpentry_shed_project.glb --min-tris 20000 --max-tris 45000 --require-normals --require-uv0
+      - name: Static validation and Phase 2 core tests
+        run: npm run validate
+      - name: Phase 2 WebGL2 interaction smoke
+        run: npm run smoke:phase2
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase2-rts-interaction-evidence
+          path: |
+            artifacts/phase2/phase2-five-unit-webgl2.png
+            artifacts/phase2/phase2-40-unit-webgl2.png
+          if-no-files-found: warn
+          retention-days: 14
