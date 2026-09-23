@@ -1,6 +1,6 @@
 # Phase 1 final closure — QA ACCEPTED
 
-Date: 2026-09-22
+Date: 2026-09-23
 
 ## Decision
 
@@ -8,7 +8,7 @@ Date: 2026-09-22
 **ART GATE: PASS**  
 **PHASE 2 ENTRY GATE: OPEN**
 
-The complete Phase 1 benchmark from PR #71 has completed independent QA. The exact reviewed candidate is `853d802e0512f4c89f068eb54f64337cf2a23195`. It was merged into `qa/phase1-integration` as `9d4c9fb642a2952efb279c0461378e5527891099`; both commits point to the identical tree `1fde280d7a8b61f3a1c87299b400fedc532c3b60`.
+The canonical accepted Phase 1 commit is `26546b893fa37df4f0c56934b8fabaac8d942218`, admitted to `main` by PR #73 after fresh current-head validation. The complete benchmark independently reviewed in PR #71 is candidate `853d802e0512f4c89f068eb54f64337cf2a23195`; it was merged into `qa/phase1-integration` as `9d4c9fb642a2952efb279c0461378e5527891099`, and those two commits point to the identical reviewed content tree `1fde280d7a8b61f3a1c87299b400fedc532c3b60`.
 
 The accepted benchmark is selected by `?candidate=phase1` and contains the intended dwelling, compact storehouse, repaired workshop, five compact R2 workers, terrain, stream, paths, meadow and current vegetation composition.
 
@@ -36,7 +36,7 @@ Removing `renderer=webgl2` exercises the preferred renderer selection on a capab
 
 ## Exact validation evidence
 
-Candidate head `853d802e0512f4c89f068eb54f64337cf2a23195`:
+Original independently reviewed candidate head `853d802e0512f4c89f068eb54f64337cf2a23195`:
 
 - foundation workflow `35769849049`: **SUCCESS**;
 - completion workflow `35769849029`: **SUCCESS**;
@@ -46,7 +46,18 @@ Candidate head `853d802e0512f4c89f068eb54f64337cf2a23195`:
 - evidence artifact `phase1-completion-evidence`: ID `10713746346`, digest `sha256:16152d8d000eb58eb7aae6627d6b87fa68e05258b9e98ae3becda4f9bcbd7224`;
 - foundation Phase 1 browser artifact: ID `10713692561`, digest `sha256:c1ed3ccf3e8a5c3746920091217f1c21d0f86f57dc6baee471a3cdec3a36e408`.
 
-No failing test was removed and no validation threshold was weakened for acceptance.
+Fresh canonical-admission head `78f0d12a30fcfcad460a6d8d757b87773df9b3c9` before PR #73 merge:
+
+- foundation `35774232591`: **SUCCESS**;
+- completion candidate `35774232549`: **SUCCESS**;
+- worker R2 `35774232581`: **SUCCESS**;
+- compact storehouse current baseline `35774232567`: **SUCCESS**;
+- complete Phase 1 evidence artifact `10715133305`;
+- foundation Phase 1 browser evidence artifact `10715453292`;
+- worker R2 artifact `10714869061`;
+- compact storehouse artifact `10716035179`.
+
+The resulting canonical `main` admission commit `26546b893fa37df4f0c56934b8fabaac8d942218` has the same admitted Git tree `3b002d9c6801692c6b9561ebbbd103d8da5c6b78` as the fresh-validated admission head. No failing test was removed and no validation threshold was weakened for acceptance.
 
 ## Workshop final QA
 
@@ -127,17 +138,20 @@ No Phase 1 blocker remains ambiguous.
 
 ## Canonical admission
 
-The final accepted Phase 1 content identity is the exact PR #71 candidate SHA `853d802e0512f4c89f068eb54f64337cf2a23195`, represented in QA integration by merge SHA `9d4c9fb642a2952efb279c0461378e5527891099` with an identical Git tree. The accepted canonical benchmark selector is `?candidate=phase1`.
+`PHASE_1_ACCEPTED_SHA` is `26546b893fa37df4f0c56934b8fabaac8d942218`, the canonical `main` admission from PR #73. The underlying independently reviewed content candidate remains `853d802e0512f4c89f068eb54f64337cf2a23195`, represented in QA integration by `9d4c9fb642a2952efb279c0461378e5527891099` with identical reviewed-content tree `1fde280d7a8b61f3a1c87299b400fedc532c3b60`. The accepted canonical benchmark selector is `?candidate=phase1`.
 
 Historical blocked/superseded PRs remain retained as evidence and are not reactivated.
 
 ## Phase 2 entry
 
 - `PHASE_2_ENTRY_GATE: OPEN`
-- `PHASE_1_ACCEPTED_SHA: 853d802e0512f4c89f068eb54f64337cf2a23195`
+- `PHASE_1_ACCEPTED_SHA: 26546b893fa37df4f0c56934b8fabaac8d942218`
+- `PHASE_1_REVIEWED_CANDIDATE_SHA: 853d802e0512f4c89f068eb54f64337cf2a23195`
 - `PHASE_2_BASE_BRANCH: phase2/phase1-accepted-base`
 - `PHASE_2_BASE_SHA: 9d4c9fb642a2952efb279c0461378e5527891099`
 - `PHASE_2_INTEGRATION_BRANCH: qa/phase2-integration`
 - `NEXT_TASK: P2-RTS-INTERACTION-FOUNDATION`
 
-Stop here. Phase 2 gameplay systems are deliberately not implemented by this closure.
+Both authoritative Phase 2 base/integration refs currently remain on clean accepted SHA `9d4c9fb642a2952efb279c0461378e5527891099`. Separate unmerged Phase 2 development branches are outside this closure and are not accepted or integrated here.
+
+Stop here. Phase 2 gameplay systems are deliberately not implemented or admitted by this closure.
