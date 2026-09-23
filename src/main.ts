@@ -46,6 +46,7 @@ const completionCandidate = parameters.get('candidate') === 'phase1';
 const phase2Interaction = parameters.get('phase2') === '1';
 const phase3Gathering = parameters.get('gather') === '1' || parameters.get('phase3') === 'gather';
 const phase3Movement = parameters.get('phase3') === '1' || phase3Gathering;
+const phase3GatheringQaFast = phase3Gathering && debug && parameters.get('qaFast') === '1';
 const rtsInteraction = phase2Interaction || phase3Movement;
 const requestedUnits = Number(parameters.get('units'));
 const phase2DebugUnits = debug && parameters.get('units') === '40' ? 40 : 5;
@@ -81,7 +82,14 @@ function createScene(): RuntimeScene {
     ...(workshopPreview ? { workshop: PROJECT_WORKSHOP_PATH } : {}),
   };
   const benchmark = rtsInteraction
-    ? new RtsBenchmarkScene(models, canvas, rtsDebugUnits, phase3Movement ? 'phase-3' : 'phase-2', phase3Gathering)
+    ? new RtsBenchmarkScene(
+      models,
+      canvas,
+      rtsDebugUnits,
+      phase3Movement ? 'phase-3' : 'phase-2',
+      phase3Gathering,
+      phase3GatheringQaFast,
+    )
     : new BenchmarkScene(models);
   activeBenchmarkScene = benchmark;
   return benchmark;
