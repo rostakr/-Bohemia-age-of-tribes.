@@ -1,0 +1,109 @@
+BOHEMIA: AGE OF TRIBES — SPOLEČNÉ POKYNY V2
+Datum: 2026-09-23
+Nahrazuje předchozí provozní pokyny; zachovává původní cíle hry.
+Repozitář: https://github.com/rostakr/-Bohemia-age-of-tribes.
+
+SMYSL A MĚŘÍTKO POKROKU
+Cílem je hratelná historická RTS, kterou chce hráč ovládat a ukazovat.
+Každý úkol musí mít konkrétní přínos k tomuto výsledku.
+Počet commitů, testů, dokumentů a formálně uzavřených fází není měřítkem kvality hry.
+Technické testy jsou potřebný důkaz funkčnosti, nikoli náhrada herního a vizuálního výsledku.
+Interní práce je oprávněná, pokud řeší doloženou chybu, výkonový problém nebo umožňuje nejbližší potřebnou funkci.
+
+NEJBLIŽŠÍ PRODUKTOVÝ CÍL
+Jedna malá přesvědčivá osada dostupná přes ověřený webový odkaz:
+otevřít -> poznat osadu a pracovníka -> vybrat -> zadat těžbu ->
+vidět práci a nesený náklad -> sledovat odevzdání do skladu.
+Hráč musí rozumět výsledku bez debug panelu a bez vysvětlování zdrojového kódu.
+Existující Phase 1–3 jsou technický základ; jejich historické přijetí nemaž.
+Vizuální připravenost vůči původnímu komerčnímu cíli je znovu otevřená.
+Neoznačuj současný prototyp jako hotovou produkční grafiku.
+
+POŘADÍ PRÁCE
+1. Dokončit současný smluvený rozsah Phase 4 a cíleně ověřit sběr.
+2. Zpřístupnit ověřený náhled konkrétního SHA s přímým vstupem do správné scény.
+3. Na stejném malém prostoru zlepšit vegetaci, terén, tři stavby, čitelnost pracovníka a pracovní animace.
+4. Ověřit celý výše popsaný hráčský scénář.
+5. Teprve po tomto kontrolním bodu plánovat rozšíření dalších systémů.
+Dokončení Phase 4 samo o sobě neznamená dokončení vizuálu ani celé ekonomiky.
+Nevkládej celý grafický opravný milník do stávajícího PR Phase 4.
+
+ARCHITEKTURA A OBSAH
+Zachovej PlayCanvas 2.x, TypeScript/Vite, fixed-step simulaci,
+oddělení simulace/renderingu/UI a WebGPU s WebGL2 fallbackem.
+Přesné verze a aktuální stav zjisti z repozitáře.
+Zachovej funkční pohyb, ekonomiku a existující assety, pokud plní účel.
+Neprováděj plošný rewrite ani migraci hostingu bez konkrétní potřeby.
+Pro důležité produkční objekty vybírej kvalitní hotové nebo vhodně vytvořené assety.
+Hrubou procedurální geometrii nepovyšuj na finální obsah jen proto, že se načte.
+U externích assetů eviduj zdroj, práva, technické parametry a použití.
+Respektuj současný nekomerční režim; neodvozuj z něj práva pro komerční vydání.
+Placené služby vyžadují konkrétní souhlas.
+
+DĚLBA PRÁCE
+Koordinátor: vybírá nejbližší hráčský výsledek, drží rozsah a odstraňuje blokátory.
+Vývoj: implementuje soudržné balíky a provádí krátké cílené ověření.
+QA: nezávisle kontroluje předaný balík a jeho skutečný herní výsledek.
+Astra: pouze pro složitou architekturu a doložené náročné technické problémy.
+Rutinní vývoj, asset integraci, GitHub a QA řeší dostupný běžný model.
+Jeden úkol = jeden vlastník implementace, jedna větev/PR, jeden QA vlastník.
+Chaty nesdílejí automaticky paměť. Koordinuj přes PR, SHA a stručný PROJECT_STATE.
+Netvrď, že jsi upravil nebo kontaktoval jiný chat, pokud k tomu nemáš nástroj.
+Nevytvářej souběžné implementace téhož úkolu.
+
+RYCHLÉ OVĚŘOVÁNÍ PODLE DOPADU
+Dokumentace/text: kontrola změněného obsahu; žádný herní browser běh.
+Drobné UI: kontrola dotčeného pohledu; build/typecheck jen pokud je zasažen kód nebo integrace.
+Materiál/světlo/model: načtení scény a porovnání stejné kamery; strukturální kontrola nového assetu.
+Herní logika: cílené testy pravidel a krátký scénář dotčených návazností.
+Sdílená simulace/engine/závislosti/pipeline: širší regrese podle doloženého dopadu.
+Přijetí milníku/vydání: kompletní relevantní požadované QA pro přesné finální SHA.
+
+Nepouštěj plnou sadu po každém kosmetickém commitu.
+Neopakuj shodnou kontrolu vývoje a QA bez nezávislého ověřovacího účelu.
+Seskupuj související změny; QA předávej stabilní kontrolní bod.
+Dřívější důkazy používej jen pro nezměněné oblasti a uveď, proč stále platí.
+Změna společné závislosti může takové důkazy zneplatnit.
+Žádné časové kvóty, které by nutily vynechat potřebný test.
+Opakování testu musí odpovídat nové změně, nové hypotéze nebo konkrétnímu riziku.
+Rozliš chybu hry od chyby prostředí; nestabilní software WebGPU nezastavuje
+nezávislou práci, ale nenahrazuj neúspěch výsledkem PASS.
+Nevypínej testy, nesnižuj očekávání ani neobcházej branch protection.
+Tyto pokyny samy nemění konfiguraci GitHub Actions.
+Úpravu CI proveď úzce a zachovej úplnou cestu pro milníkové/release ověření.
+
+AKCEPTACE PRODUKTU
+Každý balík uvádí:
+- co hráč nově uvidí nebo udělá;
+- které původní kritérium tím plní;
+- jak se výsledek předvede za několik minut;
+- ověřené SHA a dostupný náhled, případně konkrétní blokátor nasazení;
+- důkaz podle povahy změny: běžný screenshot, krátké video nebo scénář;
+- zbývající omezení.
+Grafiku porovnávej ze stejné kamery při blízkém i běžném RTS pohledu.
+Funkční pracovní cyklus ověř i bez diagnostického UI a mimo zrychlený debug režim.
+Požadovanou vizuální úroveň nesnižuj jen proto, aby mohl být milník uzavřen.
+Software-renderer FPS neprezentuj jako výkon desktopové GPU.
+
+GIT A STAV
+Přečti příslušné AGENTS.md, aktuální PROJECT_STATE a ticket; pak jen relevantní soubory.
+Nezaměňuj přiložený historický dokument za aktuální stav GitHubu.
+Používej existující pracovní PR. Neprováděj cleanup větví ani force push bez konkrétního zadání.
+Před push ověř remote změny. Nemerguj rozpracovanou Phase 4 do main.
+Přijetí kódu, QA a publikace jsou různé události s vlastními důkazy.
+Aktualizuj stručně stávající dokumenty, nevytvářej report pro každý malý krok.
+
+AUTONOMIE
+Pokračuj samostatně v již schváleném rozsahu.
+Šest hodin je rozpočet, nikoli slib běhu na pozadí.
+Je-li výsledek hotový dříve, předej jej; nezačínej další fázi pro vyplnění času.
+Při přerušení ulož SHA, rozpracované změny, blokátor a přesný další krok.
+
+STRUČNÝ HANDOFF
+HRÁČSKÝ VÝSLEDEK:
+ZMĚNY / SOUBORY / ASSETY:
+SHA / VĚTEV / PR / NÁHLED:
+SKUTEČNĚ PROVEDENÉ OVĚŘENÍ:
+PASS / FAIL / BLOCKED / NOT RUN:
+ZBÝVAJÍCÍ ROZDÍL PROTI CÍLI:
+DALŠÍ NEJMENŠÍ UŽITEČNÝ KROK:
