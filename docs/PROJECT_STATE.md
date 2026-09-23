@@ -13,6 +13,9 @@ This section supersedes historical active-milestone and next-task fields below. 
 - Preview blocker remains concrete: `.github/workflows/deploy-pages.yml` is manual and its build job permits only `refs/heads/main`. Do not merge unfinished Phase 4 into `main` and do not overwrite the existing public release merely to obtain a preview.
 - Next implementation task: deliver an isolated preview pinned to an exact Phase 4 SHA using the existing build/hosting constraints, enter via `?phase4=1` without `debug=1`, expose build identification, then verify select -> GATHER -> carry -> deposit at production constants on the actual deployed game.
 - Professional visual readiness remains OPEN. Worker R2 remains static/unrigged. The separate worker/readability/settlement visual package starts only after Phase 4 QA acceptance.
+- Remote-state warning discovered after this checkpoint: PR #93 is now reported CLOSED / MERGED from `qa/phase4-integration` into `main`, using integration head `02183da9419d9750070cbba693e18729dbc4b0dd`. Current `main` is `b482030d8736a44f0e68508410edf4593f3c1283` and is a descendant of that integration head. This happened outside this run and invalidates the earlier assumption that Phase 4 was not on `main`.
+- Current `main` also contains a published-preview verification harness (`scripts/browser-published-phase4-smoke.mjs`) and expanded `.github/workflows/verify-pages.yml`, but no workflow run is associated with current main SHA `b482030...`; therefore a working published Phase 4 preview is **not verified** by this run.
+- Because another owner/run changed `main` and the deployment/verification path after the prior checkpoint, do not create a competing preview implementation from this branch. First reconcile the external #93/main publication state and obtain an evidence-backed deployed QA verdict; only then decide whether any preview code change remains necessary.
 
 ## Historical Phase 1 acceptance record
 
