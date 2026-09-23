@@ -8,7 +8,7 @@ header { max-width: 540px; text-shadow: 0 2px 8px #101819; }
 h1 { font-family: Georgia, serif; font-weight: 400; font-size: clamp(24px, 3vw, 44px); letter-spacing: .05em; margin: 8px 0; }
 h2 { font-family: Georgia, serif; font-weight: 400; margin: 8px 0 12px; }
 p { line-height: 1.6; }
-.panel { pointer-events: auto; max-width: 300px; margin-top: 36px; padding: 20px; background: #152022df; border: 1px solid #89917b66; }
+.panel { position: relative; z-index: 40; pointer-events: auto; max-width: 300px; margin-top: 36px; padding: 20px; background: #152022df; border: 1px solid #89917b66; }
 .muted, footer { color: #b0bab1; font-size: 12px; }
 #status { font-size: 13px; color: #d2b77e; }
 button { cursor: pointer; background: #263b37; color: #eee8d6; border: 1px solid #7f8e74; padding: 11px 16px; margin: 5px 4px 0 0; font: inherit; font-size: 13px; }
