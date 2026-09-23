@@ -17,6 +17,8 @@ export interface GatherWorkerState {
   carrying: ResourceId | null;
   carriedAmount: number;
   status: 'idle' | 'gathering' | 'returning';
+  /** Monotonic receipt incremented only after this worker credits real cargo to the economy. */
+  depositSequence: number;
 }
 
 /**
@@ -30,7 +32,7 @@ export class GatherLoop {
   private readonly workers = new Map<EntityId, {
     id: EntityId; owner: PlayerId; position: WorldPoint; targetNodeId: EntityId | null;
     carrying: ResourceId | null; carriedAmount: number; capacity: number; rate: number;
-    status: 'idle' | 'gathering' | 'returning';
+    status: 'idle' | 'gathering' | 'returning'; depositSequence: number;
   }>();
 
   private readonly economy: ResourceEconomy;
@@ -42,7 +44,7 @@ export class GatherLoop {
       this.workers.set(spawn.id, {
         id: spawn.id, owner: spawn.owner, position: { ...spawn.position }, targetNodeId: null,
         carrying: null, carriedAmount: 0, capacity: spawn.carryCapacity ?? 10,
-        rate: spawn.gatherRatePerSecond ?? 1, status: 'idle',
+        rate: spawn.gatherRatePerSecond ?? 1, status: 'idle', depositSequence: 0,
       });
     }
   }
@@ -115,6 +117,7 @@ export class GatherLoop {
     this.economy.credit(worker.owner, worker.carrying, amount);
     worker.carriedAmount = 0;
     worker.carrying = null;
+    worker.depositSequence++;
     const node = worker.targetNodeId === null ? null : this.economy.node(worker.targetNodeId);
     if (node && !node.depleted) worker.status = 'gathering';
     else { worker.status = 'idle'; worker.targetNodeId = null; }
@@ -127,6 +130,7 @@ export class GatherLoop {
       id: worker.id, owner: worker.owner, position: { ...worker.position },
       targetNodeId: worker.targetNodeId, carrying: worker.carrying,
       carriedAmount: worker.carriedAmount, status: worker.status,
+      depositSequence: worker.depositSequence,
     } : null;
   }
 
