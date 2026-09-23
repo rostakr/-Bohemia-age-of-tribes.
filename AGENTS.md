@@ -17,11 +17,17 @@ Read [shared project instructions V2](docs/prompts/BOHEMIA_PROJECT_INSTRUCTIONS_
 - Reuse earlier evidence only for demonstrably unaffected areas. Do not duplicate full suites after each cosmetic commit or remove checks to hide failures. These instructions do not themselves modify GitHub Actions or branch protection.
 - Every handoff states player benefit, exact SHA, actual validation, remaining product gaps, and a verified preview URL or a concrete deployment blocker.
 
+## Publication blocker correction — takes precedence over older ordering
+
+Publication verification gates public release acceptance, not independent visual implementation. The current assigned follow-up is P4-VIS-01, owned by the development chat with the QA chat as reviewer: improve normal-camera worker readability, show carried wood from authoritative cargo state, and give deposit feedback from actual economy events. Use existing suitable assets; preserve simulation authorities and production constants. Work in one separate feature PR from freshly verified current main containing Phase 4, or reuse that task's existing PR. Do not begin Phase 5. No milestone/release gate is waived.
+
+READY FOR QA may provide a reproducible local build or CI artifact when a public URL is unavailable. QA reports implementation and publication separately. The coordinator owns the publication blocker; development proceeds with P4-VIS-01 while it is unresolved. Repeated unchanged blockers do not warrant another documentation commit or test run. The completion of a prior QA batch is not completion of the entire authorized work plan. Read the correction at the top of the canonical main V2 prompts for exact scope and acceptance.
+
 ## Coordination and scheduled work
 
 - One implementation owner and one QA owner per task. Use the existing assigned branch/PR; do not concurrently edit another owner's work.
 - Read current GitHub state at each resumed run. Chat memory, attached snapshots and old PR numbers are not current repository state.
-- The authorized twelve-hour plan is a maximum work budget: finish Phase 4 admission and an exact-SHA preview, then the separately scoped settlement/worker visual checkpoint after QA acceptance. Do not start Phase 5.
+- The authorized twelve-hour plan is a maximum work budget: finish Phase 4 admission and an exact-SHA preview, and the separately scoped worker visual checkpoint under the publication-blocker correction above. Do not start Phase 5.
 - A twelve-hour plan does not create an automation or promise uninterrupted execution. Scheduling must be confirmed separately by the scheduling service.
 - Before a scheduled run writes, establish that no earlier run owns the same task. If ownership cannot be established, do not start competing writes.
 - Mark stable handoffs READY FOR QA with exact SHA, PR, change scope, performed checks and preview URL or deployment blocker. QA acts on a new handoff, not every commit or timer tick.
