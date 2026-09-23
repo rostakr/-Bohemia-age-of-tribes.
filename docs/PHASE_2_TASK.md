@@ -12,16 +12,17 @@ REPOSITORY: rostakr/-Bohemia-age-of-tribes. (the trailing period is part of the 
 Phase 1 has explicit independent QA acceptance.
 
 - `PHASE_2_ENTRY_GATE: OPEN`
-- `PHASE_1_ACCEPTED_SHA: 853d802e0512f4c89f068eb54f64337cf2a23195`
+- `PHASE_1_ACCEPTED_SHA: 26546b893fa37df4f0c56934b8fabaac8d942218`
+- `PHASE_1_REVIEWED_CANDIDATE_SHA: 853d802e0512f4c89f068eb54f64337cf2a23195`
 - `PHASE_1_INTEGRATION_SHA: 9d4c9fb642a2952efb279c0461378e5527891099`
 - `PHASE_2_BASE_BRANCH: phase2/phase1-accepted-base`
 - `PHASE_2_BASE_SHA: 9d4c9fb642a2952efb279c0461378e5527891099`
 - `PHASE_2_INTEGRATION_BRANCH: qa/phase2-integration`
 - `NEXT_TASK: P2-RTS-INTERACTION-FOUNDATION`
 
-Read current `AGENTS.md`, `docs/PROJECT_STATE.md`, `docs/ASSET_MANIFEST.md`, `docs/qa/PHASE1_WORK_QUEUE.md` and `docs/qa/PHASE1_COMPLETION_HANDOFF.md` before implementation. The exact accepted content is the PR #71 candidate; its integration merge has the identical Git tree. Do not reopen Phase 1 art polish as a prerequisite for interaction work. Accepted later-phase limitations include static/unrigged workers, incomplete production PBR map sets, vegetation polish and desktop-hardware LOD tuning.
+Read current `AGENTS.md`, `docs/PROJECT_STATE.md`, `docs/ASSET_MANIFEST.md`, `docs/qa/PHASE1_WORK_QUEUE.md` and `docs/qa/PHASE1_COMPLETION_HANDOFF.md` before implementation. The exact independently reviewed content is the PR #71 candidate; its integration merge has the identical reviewed-content Git tree. The canonical accepted Phase 1 admission is PR #73 / `26546b893fa37df4f0c56934b8fabaac8d942218`. Do not reopen Phase 1 art polish as a prerequisite for interaction work. Accepted later-phase limitations include static/unrigged workers, incomplete production PBR map sets, vegetation polish and desktop-hardware LOD tuning.
 
-Create a fresh Phase 2 DEV branch from the exact base SHA above and target `qa/phase2-integration`. Do not implement directly on the immutable Phase 1 base branch.
+Create a fresh Phase 2 DEV branch from the exact base SHA above and target `qa/phase2-integration`. Do not implement directly on the immutable Phase 1 base branch. Any pre-existing unreviewed Phase 2 feature branch, including `phase2/rts-interaction-foundation`, is non-authoritative and must not be treated as the accepted entry base or as completed Phase 2 work; start the dedicated DEV task from the clean base SHA above.
 
 ## Goal
 

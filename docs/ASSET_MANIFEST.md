@@ -1,6 +1,6 @@
 # Asset Manifest
 
-This is the authoritative current Phase 1 asset-state summary after final QA acceptance on 2026-09-22. Earlier long-form states remain preserved in `docs/archive/` and Git history.
+This is the authoritative current Phase 1 asset-state summary after final QA acceptance. Earlier long-form states remain preserved in `docs/archive/` and Git history.
 
 ## Project-owner supplied asset rights policy
 
@@ -18,9 +18,11 @@ All files supplied by the project owner are considered cleared for this project.
 
 ## Accepted Phase 1 benchmark
 
-Final accepted candidate commit: `853d802e0512f4c89f068eb54f64337cf2a23195`  
+Canonical accepted Phase 1 commit: `26546b893fa37df4f0c56934b8fabaac8d942218` (PR #73)  
+Independently reviewed complete candidate: `853d802e0512f4c89f068eb54f64337cf2a23195` (PR #71)  
 Integration merge: `9d4c9fb642a2952efb279c0461378e5527891099`  
-Accepted tree: `1fde280d7a8b61f3a1c87299b400fedc532c3b60`  
+Reviewed candidate/integration tree: `1fde280d7a8b61f3a1c87299b400fedc532c3b60`  
+Canonical admission tree: `3b002d9c6801692c6b9561ebbbd103d8da5c6b78`  
 Canonical benchmark selector: `?candidate=phase1`
 
 | Asset | Runtime form | Geometry / scale | Materials / textures | Phase 1 state |
@@ -92,14 +94,25 @@ Exact terrain hashes and dimensions remain recorded in `assets/source/phase1/ter
 
 ## Final evidence
 
-Exact candidate `853d802e0512f4c89f068eb54f64337cf2a23195`:
+Original reviewed candidate `853d802e0512f4c89f068eb54f64337cf2a23195`:
 
 - foundation workflow `35769849049`: PASS;
 - completion workflow `35769849029`: PASS;
 - worker workflow `35769849012`: PASS;
-- completion artifact `10713746346`, digest `sha256:16152d8d000eb58eb7aae6627d6b87fa68e05258b9e98ae3becda4f9bcbd7224`;
-- candidate loaded and rendered through the real PlayCanvas WebGL2 runtime with the expected dwelling/storehouse/workshop/five workers/environment composition;
-- lifecycle/remount and software WebGPU regressions passed through the foundation workflow.
+- completion artifact `10713746346`, digest `sha256:16152d8d000eb58eb7aae6627d6b87fa68e05258b9e98ae3becda4f9bcbd7224`.
+
+Fresh canonical-admission head `78f0d12a30fcfcad460a6d8d757b87773df9b3c9`:
+
+- foundation `35774232591`: PASS;
+- completion candidate `35774232549`: PASS;
+- worker R2 `35774232581`: PASS;
+- compact storehouse `35774232567`: PASS;
+- complete candidate artifact `10715133305`;
+- Phase 1 browser artifact `10715453292`;
+- worker artifact `10714869061`;
+- compact storehouse artifact `10716035179`.
+
+The candidate loaded and rendered through the real PlayCanvas WebGL2 runtime with the expected dwelling/storehouse/workshop/five workers/environment composition; lifecycle/remount and available software WebGPU regressions passed. The canonical admission commit has the same admitted tree as the fresh-validated admission head.
 
 `ACTUAL_DESKTOP_GPU_BENCHMARK: NOT_AVAILABLE_IN_THIS_ENVIRONMENT`. No CI software-renderer performance value is promoted as desktop-GPU evidence.
 
@@ -119,4 +132,4 @@ Do not choose final runtime LOD thresholds from software CI. Revisit those thres
 ## Asset gate result
 
 **PHASE 1 ASSET / ART GATE: PASS.**  
-`artGatePassed=true` for the accepted Phase 1 milestone benchmark. This means the content foundation is sufficient for Phase 2 RTS interaction work; it does not freeze later material, animation, vegetation or performance improvements.
+`artGatePassed=true` for the accepted Phase 1 milestone benchmark. This means the content foundation is sufficient for the dedicated Phase 2 RTS interaction task; it does not freeze later material, animation, vegetation or performance improvements.
