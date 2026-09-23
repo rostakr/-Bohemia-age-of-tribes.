@@ -28,6 +28,9 @@ export class RtsController {
   private readonly countLabel: HTMLDivElement;
   private readonly feedback: HTMLDivElement;
   private drag: DragState | undefined;
+  private lastContextMoveAt = Number.NEGATIVE_INFINITY;
+  private lastContextMoveX = Number.NaN;
+  private lastContextMoveY = Number.NaN;
   private readonly tempWorld = new Vec3();
   private readonly tempScreen = new Vec3();
   private readonly cameraPosition = new Vec3();
@@ -90,7 +93,10 @@ export class RtsController {
     }, options);
     canvas.addEventListener('pointercancel', () => this.finishDrag(), options);
     canvas.addEventListener('lostpointercapture', () => this.finishDrag(), options);
-    canvas.addEventListener('contextmenu', event => event.preventDefault(), options);
+    canvas.addEventListener('contextmenu', event => {
+      event.preventDefault();
+      this.issueContextMove(event.clientX, event.clientY);
+    }, options);
     window.addEventListener('blur', () => this.finishDrag(), options);
     document.addEventListener('visibilitychange', () => { if (document.hidden) this.finishDrag(); }, options);
   }
@@ -98,6 +104,14 @@ export class RtsController {
   get selectedCount(): number { return this.selected.size; }
 
   private issueContextMove(clientX: number, clientY: number): void {
+    const now = performance.now();
+    const duplicate = now - this.lastContextMoveAt < 250 &&
+      Math.hypot(clientX - this.lastContextMoveX, clientY - this.lastContextMoveY) < 2;
+    if (duplicate) return;
+    this.lastContextMoveAt = now;
+    this.lastContextMoveX = clientX;
+    this.lastContextMoveY = clientY;
+
     if (this.selected.size === 0) {
       this.setFeedback('Select workers first', false);
       return;
