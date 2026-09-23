@@ -132,7 +132,10 @@ export class RtsBenchmarkScene implements RuntimeScene {
   fixedUpdate(dtSeconds: number, tick: number): void {
     this.tick = tick;
     this.base.fixedUpdate(dtSeconds, tick);
-    this.simulation?.fixedUpdate(dtSeconds, tick);
+    const simulation = this.simulation;
+    if (!simulation) return;
+    const qaSubsteps = this.gatheringQaFast ? 8 : 1;
+    for (let step = 0; step < qaSubsteps; step++) simulation.fixedUpdate(dtSeconds, tick);
   }
 
   update(dtSeconds: number, interpolationAlpha: number): void {
