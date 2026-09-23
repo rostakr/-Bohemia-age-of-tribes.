@@ -1,5 +1,21 @@
 # Project state
 
+## Current coordination status — 2026-09-23
+
+This section supersedes historical active-milestone and next-task fields below. Historical acceptance evidence remains intact.
+
+- Active work: Phase 4 admission reconciliation and isolated exact-SHA preview. **Do not start Phase 5.**
+- Phase 4 PR #92 is CLOSED / MERGED into `qa/phase4-integration`. Feature tip: `9b03587aed8d8598765e8d5560322321ddf890d3`; runtime candidate: `8bb08c50a5f809a79516756a13cbd9edbee918a7`; merge commit: `be18ce556e0fc25baad758a6256af402314ae42b`.
+- Independent QA comment #5801467209 reports the runtime workflows green and QA-VIS-002 verified. Exact-tip Phase 4 workflow `35907705268` passed on documentation-only feature tip `9b03587...`.
+- Before this reconciliation, `qa/phase4-integration` resolved to `02183da9419d9750070cbba693e18729dbc4b0dd`. Direct compare against feature tip `9b03587...` showed the branch ahead by two commits and only `docs/PROJECT_STATE.md` changed; gameplay/package/public content was not changed by that integration discrepancy.
+- This checkpoint repairs QA-DOC-003/source-of-truth drift only. No gameplay, assets, dependencies, CI expectations or production constants are changed, so browser/game suites are intentionally not repeated for this documentation-only correction.
+- Remaining Phase 4 coverage to group into one targeted preview QA pass: active-gather pause/resume, closer-camera readability, explicit console/unhandled-rejection/network audit, and real deployed asset/runtime loading.
+- Preview blocker remains concrete: `.github/workflows/deploy-pages.yml` is manual and its build job permits only `refs/heads/main`. Do not merge unfinished Phase 4 into `main` and do not overwrite the existing public release merely to obtain a preview.
+- Next implementation task: deliver an isolated preview pinned to an exact Phase 4 SHA using the existing build/hosting constraints, enter via `?phase4=1` without `debug=1`, expose build identification, then verify select -> GATHER -> carry -> deposit at production constants on the actual deployed game.
+- Professional visual readiness remains OPEN. Worker R2 remains static/unrigged. The separate worker/readability/settlement visual package starts only after Phase 4 QA acceptance.
+
+## Historical Phase 1 acceptance record
+
 ```json
 {
   "schema_version": 5,
