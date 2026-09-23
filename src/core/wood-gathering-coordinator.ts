@@ -169,14 +169,15 @@ export class WoodGatheringCoordinator {
       }
       return;
     }
-    if (position.moving) return;
     const radius = (this.resourceMeta.get(resource.id)?.interactionRadius ?? 1.5) + 1.15;
-    if (Math.hypot(position.x - resource.position.x, position.z - resource.position.z) > radius) {
-      this.lastFailure = `Worker ${worker.id} stopped outside gather range for resource ${resource.id}`;
-      worker.task = 'idle';
+    const distance = Math.hypot(position.x - resource.position.x, position.z - resource.position.z);
+    if (distance <= radius) {
+      worker.task = 'gathering';
       return;
     }
-    worker.task = 'gathering';
+    if (position.moving) return;
+    this.lastFailure = `Worker ${worker.id} stopped outside gather range for resource ${resource.id}`;
+    worker.task = 'idle';
   }
 
   private gather(worker: WorkerTaskState, dtSeconds: number, tick: number): void {
@@ -208,7 +209,6 @@ export class WoodGatheringCoordinator {
   }
 
   private updateToDropoff(worker: WorkerTaskState, position: { x: number; z: number; moving: boolean }, tick: number): void {
-    if (position.moving) return;
     const dropoff = this.dropoffFor(worker.owner);
     if (!dropoff) {
       this.lastFailure = `No wood drop-off for player ${worker.owner}`;
@@ -216,21 +216,23 @@ export class WoodGatheringCoordinator {
       return;
     }
     const radius = (dropoff.radius ?? 2) + 1.5;
-    if (Math.hypot(position.x - dropoff.position.x, position.z - dropoff.position.z) > radius) {
-      this.lastFailure = `Worker ${worker.id} stopped outside drop-off range`;
-      worker.task = 'idle';
+    const distance = Math.hypot(position.x - dropoff.position.x, position.z - dropoff.position.z);
+    if (distance <= radius) {
+      if (worker.carriedWood > 1e-9) {
+        this.economy.credit(worker.owner, 'wood', worker.carriedWood);
+        worker.carriedWood = 0;
+      }
+      const resource = worker.targetResourceId === null ? null : this.economy.node(worker.targetResourceId);
+      if (resource && !resource.depleted) this.routeToResource(worker, tick + 1);
+      else {
+        worker.task = 'idle';
+        worker.targetResourceId = null;
+      }
       return;
     }
-    if (worker.carriedWood > 1e-9) {
-      this.economy.credit(worker.owner, 'wood', worker.carriedWood);
-      worker.carriedWood = 0;
-    }
-    const resource = worker.targetResourceId === null ? null : this.economy.node(worker.targetResourceId);
-    if (resource && !resource.depleted) this.routeToResource(worker, tick + 1);
-    else {
-      worker.task = 'idle';
-      worker.targetResourceId = null;
-    }
+    if (position.moving) return;
+    this.lastFailure = `Worker ${worker.id} stopped outside drop-off range`;
+    worker.task = 'idle';
   }
 
   private routeToResource(worker: WorkerTaskState, executeAtTick: number): void {
