@@ -4,7 +4,7 @@ import { NavigationGrid } from '../src/core/navigation-grid.ts';
 import { RtsSimulation } from '../src/core/rts-simulation.ts';
 
 function grid() {
-  return new NavigationGrid({ origin: { x: 0, z: 0 }, cellSize: 1, width: 16, height: 16, blocked: new Uint8Array(16 * 16) });
+  return new NavigationGrid({ minX: 0, maxX: 15, minZ: 0, maxZ: 15, cellSize: 1, isBlocked: () => false });
 }
 
 test('GATHER command routes owned worker toward resource and preserves target identity', () => {
