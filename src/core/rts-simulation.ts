@@ -65,6 +65,13 @@ function bucketKey(x: number, z: number): number {
   return ((x & 0xffff) << 16) | (z & 0xffff);
 }
 
+function pairAvoidanceSide(a: EntityId, b: EntityId): number {
+  const low = Math.min(a, b);
+  const high = Math.max(a, b);
+  const hash = Math.imul(low, 73_856_093) ^ Math.imul(high, 19_349_663);
+  return (hash & 1) === 0 ? -1 : 1;
+}
+
 export class RtsSimulation {
   private readonly navigation: NavigationGrid;
   private readonly localPlayer: PlayerId;
@@ -398,8 +405,8 @@ export class RtsSimulation {
       const toOtherX = other.x - unit.x;
       const toOtherZ = other.z - unit.z;
       const sd = Math.hypot(toOtherX, toOtherZ);
+      const side = pairAvoidanceSide(unit.id, other.id);
       if (sd < 1e-5) {
-        const side = unit.id < other.id ? -1 : 1;
         avoidX += -directZ * side;
         avoidZ += directX * side;
         continue;
@@ -416,7 +423,6 @@ export class RtsSimulation {
       if (sd < anticipationRadius) {
         const ahead = (toOtherX * directX + toOtherZ * directZ) / sd;
         if (ahead > 0.1) {
-          const side = unit.id < other.id ? -1 : 1;
           const strength = (1 - sd / anticipationRadius) * ahead;
           avoidX += -directZ * side * strength;
           avoidZ += directX * side * strength;
