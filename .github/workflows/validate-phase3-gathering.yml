@@ -1,0 +1,55 @@
+name: Validate Phase 3 wood gathering vertical slice
+on:
+  pull_request:
+    branches:
+      - qa/phase3-integration
+    paths:
+      - 'index.html'
+      - 'src/core/contracts.ts'
+      - 'src/core/navigation-grid.ts'
+      - 'src/core/rts-simulation.ts'
+      - 'src/render/benchmark-scene.ts'
+      - 'src/render/inspection-camera.ts'
+      - 'src/render/rts-*.ts'
+      - 'src/main.ts'
+      - 'src/style.css'
+      - 'scripts/check-phase2.mjs'
+      - 'scripts/check-phase3.mjs'
+      - 'scripts/browser-phase2-smoke.mjs'
+      - 'scripts/browser-phase3-smoke.mjs'
+      - 'package.json'
+      - '.github/workflows/validate-phase3-gathering.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  phase3-gathering:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Rebuild accepted Phase 1 worker/workshop inputs
+        run: |
+          node scripts/build-worker-r2.mjs
+          node scripts/compact-worker-r2.mjs
+          node --experimental-strip-types scripts/export-workshop-project.mjs
+      - name: Full repository validation
+        run: npm run validate
+      - name: Phase 2 interaction regression
+        run: npm run smoke:phase2
+      - name: Phase 3 wood gathering smoke
+        run: npm run smoke:phase3
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase3-wood-gathering-evidence
+          path: |
+            artifacts/phase3/phase3-gather-command-webgl2.png
+            artifacts/phase3/phase3-wood-deposited-webgl2.png
+          if-no-files-found: error
+          retention-days: 14
