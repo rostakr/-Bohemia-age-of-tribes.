@@ -22,10 +22,12 @@ export class RtsController {
   private readonly events = new AbortController();
   private readonly selected = new Set<EntityId>();
   private readonly rings = new Map<EntityId, HTMLDivElement>();
+  private readonly resourceMarkers = new Map<EntityId, HTMLDivElement>();
   private readonly markers: FeedbackMarker[] = [];
   private readonly overlay: HTMLDivElement;
   private readonly dragBox: HTMLDivElement;
   private readonly countLabel: HTMLDivElement;
+  private readonly stockpileLabel: HTMLDivElement;
   private readonly feedback: HTMLDivElement;
   private drag: DragState | undefined;
   private lastContextMoveAt = Number.NEGATIVE_INFINITY;
@@ -43,6 +45,7 @@ export class RtsController {
     private readonly simulation: RtsSimulation,
     private readonly unitEntities: ReadonlyMap<EntityId, Entity>,
     private readonly currentTick: () => number,
+    private readonly resourceEntities: ReadonlyMap<EntityId, Entity> = new Map(),
   ) {
     this.overlay = document.createElement('div');
     this.overlay.className = 'rts-overlay';
@@ -52,11 +55,15 @@ export class RtsController {
     this.dragBox.hidden = true;
     this.countLabel = document.createElement('div');
     this.countLabel.className = 'rts-count';
+    this.stockpileLabel = document.createElement('div');
+    this.stockpileLabel.className = 'rts-stockpile';
+    this.stockpileLabel.hidden = resourceEntities.size === 0;
     this.feedback = document.createElement('div');
     this.feedback.className = 'rts-feedback';
-    this.overlay.append(this.dragBox, this.countLabel, this.feedback);
+    this.overlay.append(this.dragBox, this.countLabel, this.stockpileLabel, this.feedback);
     document.body.appendChild(this.overlay);
     this.syncCount();
+    this.syncResourceUi();
 
     const options = { signal: this.events.signal };
     canvas.addEventListener('pointerdown', event => {
@@ -81,7 +88,7 @@ export class RtsController {
     canvas.addEventListener('pointerup', event => {
       if (event.button === 2) {
         event.preventDefault();
-        this.issueContextMove(event.clientX, event.clientY);
+        this.issueContextCommand(event.clientX, event.clientY);
         return;
       }
       if (event.button !== 0 || !this.drag || this.drag.id !== event.pointerId) return;
@@ -95,7 +102,7 @@ export class RtsController {
     canvas.addEventListener('lostpointercapture', () => this.finishDrag(), options);
     canvas.addEventListener('contextmenu', event => {
       event.preventDefault();
-      this.issueContextMove(event.clientX, event.clientY);
+      this.issueContextCommand(event.clientX, event.clientY);
     }, options);
     window.addEventListener('blur', () => this.finishDrag(), options);
     document.addEventListener('visibilitychange', () => { if (document.hidden) this.finishDrag(); }, options);
@@ -103,7 +110,7 @@ export class RtsController {
 
   get selectedCount(): number { return this.selected.size; }
 
-  private issueContextMove(clientX: number, clientY: number): void {
+  private issueContextCommand(clientX: number, clientY: number): void {
     const now = performance.now();
     const duplicate = now - this.lastContextMoveAt < 250 &&
       Math.hypot(clientX - this.lastContextMoveX, clientY - this.lastContextMoveY) < 2;
@@ -116,6 +123,18 @@ export class RtsController {
       this.setFeedback('Select workers first', false);
       return;
     }
+
+    const resourceId = this.pickResource(clientX, clientY);
+    if (resourceId !== null) {
+      const resource = this.simulation.resourceState().find(state => state.id === resourceId && state.type === 'wood' && state.remaining > 0);
+      if (resource) {
+        this.simulation.issueGather([...this.selected], resourceId, this.currentTick() + 1);
+        this.addMarker({ x: resource.x, z: resource.z }, true);
+        this.setFeedback('Gather wood', true);
+        return;
+      }
+    }
+
     const ground = this.screenGround(clientX, clientY);
     if (!ground) {
       this.setFeedback('Invalid destination', false);
@@ -199,10 +218,23 @@ export class RtsController {
     return best?.id ?? null;
   }
 
-  private projectEntity(entity: Entity): { x: number; y: number } | null {
+  private pickResource(clientX: number, clientY: number): EntityId | null {
+    let best: { id: EntityId; distance: number } | null = null;
+    const remaining = new Map(this.simulation.resourceState().map(resource => [resource.id, resource.remaining]));
+    for (const [id, entity] of this.resourceEntities) {
+      if ((remaining.get(id) ?? 0) <= 0) continue;
+      const screen = this.projectEntity(entity, 2.5);
+      if (!screen) continue;
+      const distance = Math.hypot(screen.x - clientX, screen.y - clientY);
+      if (distance <= 34 && (!best || distance < best.distance)) best = { id, distance };
+    }
+    return best?.id ?? null;
+  }
+
+  private projectEntity(entity: Entity, yOffset = 0.9): { x: number; y: number } | null {
     if (!entity.enabled || !this.cameraEntity.camera) return null;
     const position = entity.getPosition();
-    this.tempWorld.set(position.x, position.y + 0.9, position.z);
+    this.tempWorld.set(position.x, position.y + yOffset, position.z);
     this.cameraPosition.copy(this.cameraEntity.getPosition());
     const dx = this.tempWorld.x - this.cameraPosition.x;
     const dy = this.tempWorld.y - this.cameraPosition.y;
@@ -273,6 +305,19 @@ export class RtsController {
     this.countLabel.textContent = `${this.selected.size} selected`;
   }
 
+  private syncResourceUi(): void {
+    for (const [id] of this.resourceEntities) {
+      if (this.resourceMarkers.has(id)) continue;
+      const marker = document.createElement('div');
+      marker.className = 'rts-resource-node';
+      marker.dataset.rtsUi = 'true';
+      marker.dataset.resourceId = String(id);
+      this.overlay.appendChild(marker);
+      this.resourceMarkers.set(id, marker);
+    }
+    if (this.resourceEntities.size > 0) this.stockpileLabel.textContent = 'Wood 0';
+  }
+
   private setFeedback(message: string, valid: boolean): void {
     this.feedback.textContent = message;
     this.feedback.dataset.valid = String(valid);
@@ -309,6 +354,21 @@ export class RtsController {
       ring.hidden = !projected;
       if (projected) ring.style.transform = `translate(${projected.x}px, ${projected.y + 10}px)`;
     }
+
+    const resources = new Map(this.simulation.resourceState().map(resource => [resource.id, resource]));
+    for (const [id, marker] of this.resourceMarkers) {
+      const entity = this.resourceEntities.get(id);
+      const resource = resources.get(id);
+      const projected = entity && resource && resource.remaining > 0 ? this.projectEntity(entity, 2.5) : null;
+      marker.hidden = !projected;
+      marker.dataset.remaining = resource ? resource.remaining.toFixed(2) : '0';
+      marker.title = resource ? `Wood ${Math.max(0, resource.remaining).toFixed(0)}` : 'Wood depleted';
+      if (projected) marker.style.transform = `translate(${projected.x}px, ${projected.y}px)`;
+    }
+
+    const metrics = this.simulation.metrics();
+    if (this.resourceEntities.size > 0) this.stockpileLabel.textContent = `Wood ${metrics.woodStockpile.toFixed(0)}`;
+
     const now = performance.now();
     for (let index = this.markers.length - 1; index >= 0; index--) {
       const marker = this.markers[index]!;
@@ -330,6 +390,7 @@ export class RtsController {
     this.events.abort();
     for (const marker of this.markers) marker.element.remove();
     this.markers.length = 0;
+    this.resourceMarkers.clear();
     this.rings.clear();
     this.selected.clear();
     this.overlay.remove();
