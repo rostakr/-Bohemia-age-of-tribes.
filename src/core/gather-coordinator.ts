@@ -39,7 +39,7 @@ export class GatherCoordinator {
     simulation: RtsSimulation,
     economy: ResourceEconomy,
     gatherLoop: GatherLoop,
-    dropoff: WorldPoint,
+    dropoffCenter: WorldPoint,
     localPlayer: PlayerId = 1,
     gatherRange = 1.6,
     dropoffRange = 2.2,
@@ -48,7 +48,9 @@ export class GatherCoordinator {
     this.simulation = simulation;
     this.economy = economy;
     this.gatherLoop = gatherLoop;
-    this.dropoff = { x: dropoff.x, z: dropoff.z };
+    const reachableDropoff = navigation.resolveNearestReachable(dropoffCenter, 8);
+    if (!reachableDropoff) throw new Error('Storehouse has no reachable drop-off point');
+    this.dropoff = { x: reachableDropoff.x, z: reachableDropoff.z };
     this.localPlayer = localPlayer;
     this.gatherRange = gatherRange;
     this.dropoffRange = dropoffRange;
