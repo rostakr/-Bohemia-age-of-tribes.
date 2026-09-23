@@ -62,9 +62,11 @@ class MinHeap {
 export class NavigationGrid {
   readonly width: number;
   readonly height: number;
+  readonly options: NavigationGridOptions;
   private readonly passable: Uint8Array;
 
-  constructor(readonly options: NavigationGridOptions) {
+  constructor(options: NavigationGridOptions) {
+    this.options = options;
     if (!(options.cellSize > 0)) throw new Error('Navigation cellSize must be positive');
     this.width = Math.floor((options.maxX - options.minX) / options.cellSize) + 1;
     this.height = Math.floor((options.maxZ - options.minZ) / options.cellSize) + 1;
