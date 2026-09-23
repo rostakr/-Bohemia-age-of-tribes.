@@ -1,5 +1,21 @@
 # Project state
 
+## Current coordination status — 2026-09-23
+
+This section supersedes the active-milestone and next-task fields in the historical Phase 1 record below. Historical acceptance evidence remains intact.
+
+- Working direction: finish Phase 4 admission reconciliation, then publish an exact-SHA preview of the wood-gathering loop. Do not start Phase 5.
+- GitHub PR #92 reports CLOSED / MERGED into `qa/phase4-integration`, with head `9b03587aed8d8598765e8d5560322321ddf890d3` and merge commit `be18ce556e0fc25baad758a6256af402314ae42b`. This does not establish admission into `main` or a deployment.
+- Independent QA comment #5801467209 reports passing runtime workflows and verification of QA-VIS-002 for runtime candidate `8bb08c50a5f809a79516756a13cbd9edbee918a7`. DEV comment #5801332880 reports exact-tip Phase 4 workflow `35907705268` passing on `9b03587...`, a documentation-only child.
+- The latest inspected QA disposition still requests final state reconciliation and a decision on remaining coverage gaps. Do not equate the merge flag with final product acceptance.
+- Source-of-truth discrepancy: fetching `docs/PROJECT_STATE.md` with the integration branch ref returned the old Phase 1 record during this coordination pass. Verify the actual integration commit/tree before using it as a new implementation base; no branch repair or gameplay change was performed here.
+- Existing QA gaps: active-gather pause/resume, closer-camera Phase 4 evidence and explicit console/network audit were recorded NOT RUN. No new game tests were run for this documentation change.
+- Professional visual readiness: OPEN. Historical Phase 1 acceptance is retained; it does not close the current gap to the original art target. Worker R2 is still recorded as static/unrigged.
+- Public preview of the current Phase 4 SHA: NOT VERIFIED in this pass. Next useful deliverable is a directly accessible scene demonstrating select -> gather -> carry -> deposit at ordinary production settings.
+- Follow `docs/prompts/BOHEMIA_PROJECT_INSTRUCTIONS_V2.txt` and the DEV/QA prompts. Reuse existing evidence for unchanged code; target only unresolved behavior and deployment risks. A separate visual improvement checkpoint follows the current Phase 4 scope.
+
+## Historical Phase 1 acceptance record
+
 ```json
 {
   "schema_version": 5,
