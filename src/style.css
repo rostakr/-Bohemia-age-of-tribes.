@@ -16,7 +16,7 @@ button:hover { background: #355149; }
 button:focus-visible { outline: 3px solid #e3c386; outline-offset: 4px; }
 button:disabled { opacity: .5; cursor: wait; }
 .error { border-color: #cb896a; }
-pre { position: absolute; right: 24px; top: 24px; padding: 16px; background: #10191de8; color: #c0d3bf; font-size: 12px; pointer-events: auto; }
+pre { position: absolute; z-index: 40; right: 24px; top: 24px; padding: 16px; background: #10191de8; color: #c0d3bf; font-size: 12px; pointer-events: auto; }
 footer { position: fixed; left: 32px; right: 32px; bottom: 20px; text-align: center; letter-spacing: .1em; text-shadow: 0 1px 4px #000; }
 footer nav { pointer-events: auto; display: inline-flex; padding: 5px; border: 1px solid #89917b66; background: #152022df; }
 footer button { background: transparent; margin: 0; border: 0; padding: 13px 20px; }
