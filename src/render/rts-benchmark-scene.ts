@@ -23,6 +23,7 @@ export class RtsBenchmarkScene implements RuntimeScene {
   private gathering: WoodGatheringCoordinator | undefined;
   private controller: RtsController | undefined;
   private tick = 0;
+  private acceleratedTick = 0;
   private destroyed = false;
 
   constructor(
@@ -31,6 +32,7 @@ export class RtsBenchmarkScene implements RuntimeScene {
     private readonly debugUnitCount = 5,
     private readonly milestone: RtsMilestone = 'phase-2',
     private readonly gatheringEnabled = false,
+    private readonly gatheringQaFast = false,
   ) {
     this.base = new BenchmarkScene(models);
   }
@@ -147,10 +149,14 @@ export class RtsBenchmarkScene implements RuntimeScene {
   setView(view: ViewName): void { this.base.setView(view); }
 
   fixedUpdate(dtSeconds: number, tick: number): void {
-    this.tick = tick;
     this.base.fixedUpdate(dtSeconds, tick);
-    this.simulation?.fixedUpdate(dtSeconds, tick);
-    this.gathering?.fixedUpdate(dtSeconds, tick);
+    const substeps = this.gatheringQaFast ? 8 : 1;
+    for (let step = 0; step < substeps; step++) {
+      const simulationTick = this.gatheringQaFast ? ++this.acceleratedTick : tick;
+      this.tick = simulationTick;
+      this.simulation?.fixedUpdate(dtSeconds, simulationTick);
+      this.gathering?.fixedUpdate(dtSeconds, simulationTick);
+    }
   }
 
   update(dtSeconds: number, interpolationAlpha: number): void {
@@ -189,6 +195,7 @@ export class RtsBenchmarkScene implements RuntimeScene {
       phase2DebugUnits: this.milestone === 'phase-2' ? countOrDefault(this.debugUnitCount, 40) : 0,
       phase3DebugUnits: this.milestone === 'phase-3' ? countOrDefault(this.debugUnitCount, 120) : 0,
       phase3Gathering: this.gatheringEnabled,
+      phase3GatheringQaFast: this.gatheringEnabled && this.gatheringQaFast,
       resourceNodes: gathering?.resourceNodes ?? 0,
       woodRemaining: Number((gathering?.woodRemaining ?? 0).toFixed(3)),
       woodStockpile: Number((gathering?.woodStockpile ?? 0).toFixed(3)),
