@@ -2,200 +2,114 @@
 
 ```json
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "project": "BOHEMIA: AGE OF TRIBES",
-  "updated": "2026-09-19",
+  "updated": "2026-09-23",
   "engine": "playcanvas@2.22.1",
   "phase_0_status": "COMPLETE_ACCEPTED",
   "phase_0_5_status": "COMPLETE_VERIFIED",
-  "active_milestone": "PHASE_1_CONTENT_ART_GATE",
-  "phase_1_authorized": true,
-  "phase_1_status": "QA_INTEGRATION_ACTIVE_ART_GATE_OPEN",
-  "art_gate_passed": false,
-  "verified_main": {
-    "sha": "47728da23ae73a01b298b935d59a431bc6088548",
-    "workflow_run": 35410230067,
-    "result": "passed"
-  },
+  "phase_1_status": "QA_DESIGNATED_ACCEPTED_BASE_FOR_PHASE_2",
+  "active_milestone": "PHASE_2_RTS_INTERACTION_FOUNDATION",
+  "phase_2_status": "ACCEPTED_IN_QA_INTEGRATION",
+  "phase_3_status": "NOT_AUTHORIZED_SCOPE_UNDEFINED",
   "qa_integration": {
-    "branch": "qa/phase1-integration",
-    "base_main_sha": "47728da23ae73a01b298b935d59a431bc6088548",
-    "work_queue": "docs/qa/PHASE1_WORK_QUEUE.md",
-    "flow": "feature DEV branch -> qa/phase1-integration -> QA -> main",
-    "qa_owns": ["admission", "regression testing", "PROJECT_STATE", "integration", "merge to main"],
-    "dev_owns": ["asset creation", "feature implementation"],
-    "current_qa_active_pr": null,
-    "latest_dev_handoff_pr": 60,
-    "latest_dev_handoff_status": "BLOCKED_REPAIR_REQUIRED",
-    "next_ready_for_qa": [43, 55]
+    "branch": "qa/phase2-integration",
+    "accepted_pr": 76,
+    "accepted_head": "8e6b0f5f00b18661811d1e5a4d984341de4a6f1e",
+    "merge_sha": "8916dcb35c68f3b976fda730bf73cd3e9a48d3ea",
+    "main_modified_by_phase_2_admission": false,
+    "flow": "feature DEV branch -> qa/phase2-integration -> independent QA -> integration",
+    "next_step": "post-acceptance cleanup and explicit definition of the next milestone before any large economy/combat/AI implementation"
   },
-  "runtime_baseline": {
-    "phase_0_5_merge_sha": "1b1b28bbfea91689d22455b117d12f412f5a24c2",
-    "phase_1_reconciliation_merge_sha": "e542bcf48ebe6f79bf08fd2b0a0a9e4441432c62",
-    "dwelling_lod_merge_sha": "6be481b5619d8558632c94ab0ef74bd6664a28e5"
+  "phase_2_validation": {
+    "foundation_workflow_run": 35844829656,
+    "compact_storehouse_workflow_run": 35844829668,
+    "worker_r2_workflow_run": 35844829657,
+    "phase_1_completion_workflow_run": 35844829718,
+    "phase_2_rts_workflow_run": 35844829713,
+    "result": "all_success",
+    "node_tests": "28/28 passed",
+    "production_build": "passed",
+    "webgl2_phase_2_smoke": "passed",
+    "five_unit_selection": 5,
+    "forty_unit_debug_active": 40,
+    "forty_unit_visible_box_selection": 11,
+    "evidence_artifact_id": 10742942507,
+    "evidence_artifact_sha256": "134dda8d9b3cce0013bfe95a2e6c019197d5f8f6138f2289ff04e4de894b4f81"
   },
-  "current_benchmark": {
-    "structures": 3,
-    "dwelling": {"candidate":"trellis-derived-generated-lod1","lod":1,"triangles":53538,"lod0_source_triangles":99298,"lod2_candidate_triangles":31286},
-    "storehouse": {"candidate":"project-owned-glb","path":"public/assets/buildings/boii_storehouse_small.glb","bytes":9933356,"vertices":15910,"triangles":15550,"materials":5,"embedded_images":3,"embedded_textures":3,"lod":null,"full_pbr":false},
-    "workshop": {"candidate":"procedural-project-owned","triangles":22480},
-    "inhabitants": {"candidate":"procedural-project-owned-readability-prototype","instances":5,"triangles_per_shared_mesh":1404},
-    "trees": {"candidate":"procedural-project-owned","instances":32,"triangles_per_shared_mesh":15980},
-    "grass_clumps": 4678,
-    "art_gate_passed": false
-  },
-  "compact_storehouse_dev_handoff_qa": {
-    "pr": 60,
-    "head": "bb43b497ebd31c3cb3d4f1f75ca22dedf954ad6b",
-    "dedicated_workflow_run": 35412640794,
-    "foundation_workflow_run": 35412640899,
-    "foundation_retry_job": 105815391664,
-    "jpeg_rebuild_workflow_run": 35412640855,
-    "structural_result": "passed",
-    "generated_bytes": 791800,
-    "generated_sha256_observed": "775c4d918c3d59f0d6dd622af7a6bdcc4ef84af9ac10aeffd10654d3eaef9d90",
-    "triangles": 15550,
-    "vertices": 17810,
-    "normals_primitives": "5/5",
-    "uv0_primitives": "5/5",
-    "webgl2_smoke": "passed",
-    "interaction_smoke": "passed",
-    "lifecycle_result": "failed_reproducibly_on_initial_mount",
-    "observed_failure": "Renderer unavailable; debug bridge present; runtime not mounted; diagnostics null",
-    "downstream_webgpu_phase1_storehouse_smokes": "not_executed_due_to_lifecycle_failure",
-    "jpeg_reproducibility": "blocked_runtime_jpeg_hashes_do_not_match_separate_rebuild_output_hashes",
-    "canonical_admission": false,
-    "repair_required": true
-  },
-  "adult_worker_dev_handoff_qa": {
-    "pr": 58,
-    "head": "2ee931a0f2195487cec7eef96cef6885eddc9d0c",
-    "candidate_workflow_run": 35412134308,
-    "foundation_workflow_run": 35412134254,
-    "technical_result": "passed",
-    "triangles": 26140,
-    "vertices": 13783,
-    "target_triangles": "25000-50000",
-    "visual_production_result": "blocked",
-    "blocker": "procedural placeholder anatomy and face remain below production art quality",
-    "canonical_admission": false,
-    "repair_required": true
-  },
-  "supplied_storehouse_qa": {
-    "pr": 51,
-    "qa_head": "bb9b1783aed4836fb24b4961ec3fb29b33b4bf0b",
-    "workflow_run": 35408681042,
-    "result": "passed",
-    "node_tests": "22/22 passed",
-    "strict_glb_intake": "passed",
-    "primitives_with_normals": "5/5",
-    "primitives_with_uv0": "5/5",
-    "external_dependencies": 0,
-    "phase_1_lifecycle_remount": "3/3 cycles passed",
-    "phase_0_webgpu_regression": "passed",
-    "phase_1_webgl2_render_smoke": "passed",
-    "storehouse_admission_smoke": "passed",
-    "storehouse_closeup_smoke": "passed",
-    "evidence_artifact_id": 10573840636,
-    "evidence_artifact_sha256": "eaee51e6987cf4e9d87c66c4d2865d846bf3a3e8753fba06881e6ff7dafb58e2",
-    "art_gate_passed": false
-  },
-  "supplied_preview_qa": {
-    "pr": 59,
-    "head": "0038fd5304d2e9cc0935fae0347fe8bbeb2cbcb1",
-    "preview_workflow_run": 35412011470,
-    "foundation_workflow_run": 35412011476,
-    "result": "passed",
-    "workshop": {"triangles":89778,"render":"passed_multi_angle","canonical_admission":false,"blocker":"above 20k-45k production target"},
-    "adult_worker": {"triangles":14106,"render":"passed_multi_angle","severe_projection_failure_reproduced":false,"canonical_admission":false,"blocker":"below 25k-50k production brief; no rig/animations/LOD"},
-    "art_gate_passed": false
-  }
+  "phase_2_accepted_scope": [
+    "RTS camera input ownership: WASD/arrows, Q/E rotation, middle-drag pan, wheel zoom and viewport edge-scroll",
+    "stable simulation unit IDs independent of PlayCanvas entities",
+    "fixed-step MOVE simulation with render interpolation",
+    "click, drag-box and Shift selection",
+    "contextual right-click MOVE commands with deterministic replacement",
+    "terrain-derived bounded A* navigation",
+    "building and river blockers with explicit ford crossing",
+    "no diagonal corner cutting and bounded nearest-reachable destination resolution",
+    "deterministic group destination slots and lightweight separation",
+    "bounded path-solving queue including a 40-unit debug case",
+    "selection rings, drag rectangle, command markers, selected count and feedback",
+    "Phase 2 diagnostics and browser regression evidence"
+  ],
+  "deferred_scope": [
+    "economy",
+    "combat",
+    "construction",
+    "production",
+    "AI",
+    "fog of war",
+    "control groups and advanced formations",
+    "multiplayer",
+    "mobile controls",
+    "engine migration"
+  ],
+  "known_limits": [
+    "Worker R2 is static/unrigged and has no walk animation",
+    "SwiftShader CI is regression evidence, not desktop-GPU performance evidence",
+    "actual desktop-hardware performance remains unmeasured",
+    "Phase 2 admission does not authorize an undefined Phase 3 scope"
+  ]
 }
 ```
 
 ## Current decision
 
-Phase 1 uses one QA-controlled integration flow:
+Phase 2 RTS interaction foundation is accepted into `qa/phase2-integration`. The accepted PR is #76. The exact reviewed head was `8e6b0f5f00b18661811d1e5a4d984341de4a6f1e`, merged as `8916dcb35c68f3b976fda730bf73cd3e9a48d3ea`.
 
-`feature DEV branch` → `qa/phase1-integration` → QA → `main`.
+This branch is now the authoritative integration baseline for further Phase 2 cleanup and for defining the next milestone. Do not start new work from the older Phase 1 integration branch or from the pre-Phase-2 feature branch.
 
-`docs/qa/PHASE1_WORK_QUEUE.md` is the single authoritative queue between DEV and QA. QA owns admission, regressions, this `PROJECT_STATE`, integration and merge to `main`. DEV owns asset creation and implementation.
+## Phase 2 acceptance evidence
 
-There is currently **no `QA_ACTIVE` handoff**. The latest DEV handoff, PR #60 (`phase1/storehouse-512-current-baseline`), completed independent QA and was returned as **BLOCKED / repair required**. PR #58 remains independently BLOCKED on art repair. PRs #43 and #55 remain `READY_FOR_QA`; #48 remains BLOCKED on #43.
+The final reviewed head passed all repository workflows that were active for the PR:
 
-## Compact storehouse DEV handoff QA — PR #60
+- foundation: `35844829656` — PASS;
+- compact storehouse current baseline: `35844829668` — PASS;
+- Worker R2 candidate: `35844829657` — PASS;
+- Phase 1 completion candidate: `35844829718` — PASS;
+- Phase 2 RTS interaction foundation: `35844829713` — PASS.
 
-The compact asset optimization is structurally promising but is **not accepted into `qa/phase1-integration`**.
+The Phase 2 workflow passed strict TypeScript, 28/28 Node tests, the production Vite build and the WebGL2 interaction smoke. The smoke selected all five normal workers, exercised MOVE, remount, and the 40-worker debug scene. The final evidence artifact is `10742942507` with SHA-256 `134dda8d9b3cce0013bfe95a2e6c019197d5f8f6138f2289ff04e4de894b4f81`.
 
-Current head `bb43b497ebd31c3cb3d4f1f75ca22dedf954ad6b` produced:
+## Accepted runtime behavior
 
-- 791,800-byte GLB;
-- 15,550 triangles / 17,810 vertices;
-- 5/5 primitives with NORMAL and 5/5 with UV0;
-- UV physical-repeat/seam regression PASS;
-- typecheck, 23/23 Node tests, strict intake and production build PASS;
-- Phase 0 WebGL2 and interaction smokes PASS.
+The integration baseline now contains a real RTS interaction layer rather than the old inspection-only input model. Selection is handled by left click/drag with Shift toggle. MOVE is issued with right click. Camera control uses keyboard/edge pan, middle-drag pan, wheel zoom and Q/E rotation. Simulation remains engine-independent and fixed-step, while PlayCanvas remains the sole render/game engine.
 
-The runtime gate fails reproducibly on the **initial lifecycle mount**:
+Navigation is terrain-derived and bounded. River/building blockers are respected, the explicit ford is traversable, diagonal corner cutting is prevented, and invalid targets can resolve to bounded reachable ground. Group MOVE uses deterministic destination slots and bounded path solving.
 
-- dedicated run `35412640794`: FAIL at `smoke:lifecycle`;
-- standard foundation run `35412640899`: FAIL at the same gate;
-- clean retry job `105815391664` on another runner region: same FAIL.
+## Scope still excluded
 
-Observed state is consistently `Renderer unavailable`, one canvas, debug bridge present, runtime not mounted and diagnostics null. Because initialization does not complete, software WebGPU, normal Phase-1 benchmark, storehouse admission and storehouse close-up smokes do not execute. This is a release/admission blocker regardless of the file-size improvement.
+Phase 2 acceptance does not include economy, combat, construction, production, AI, fog of war, control groups, advanced formations, multiplayer, mobile controls or any engine migration. Those systems require an explicitly defined subsequent milestone before implementation.
 
-A second blocker is deterministic asset provenance/rebuild consistency. Workflow `35412640855` successfully rebuilds JPEG derivatives under a separate `runtime-rebuilt` path and asserts historical hashes, while `scripts/export-storehouse.mjs` consumes `assets/source/phase1/materials/runtime/*.jpg`; the bytes/hashes actually consumed in the compact GLB run differ from the separately rebuilt outputs. The rebuild gate therefore does not yet prove the exact runtime JPEG bytes are reproducible.
+## Known limitations
 
-The exact repair contract is recorded in `docs/qa/PHASE1_WORK_QUEUE.md` and on PR #60. DEV must restore lifecycle/Phase-1/storehouse browser gates and make the rebuild path verify the exact exporter-consumed JPEG bytes before re-handoff.
+Worker R2 remains intentionally static/unrigged, so movement currently has no fabricated walk animation. CI rendering uses SwiftShader/software WebGL2 and therefore must not be used to claim production FPS or desktop-GPU performance. Actual-hardware performance remains a separate future gate.
 
-## Adult-worker DEV handoff QA — PR #58
-
-PR #58 current head `2ee931a0f2195487cec7eef96cef6885eddc9d0c` is technically healthy:
-
-- candidate workflow `35412134308`: PASS;
-- standard foundation workflow `35412134254`: PASS;
-- 26,140 triangles / 13,783 vertices, inside the documented 25k–50k worker geometry target;
-- scale and RTS grounding are usable.
-
-Production visual admission is **not** accepted. The current neutral close-up still reads as procedural/placeholder: detached oval hands, spherical shoulder caps, simplified cylindrical limb construction, toy-like facial/head geometry and weak body/clothing transitions. The current candidate remains out of `ADMITTED_MODELS` pending the repair contract in the work queue.
-
-## Current runtime baseline
-
-Only the **project-owned textured storehouse GLB already present on verified `main`** is accepted for WIP runtime use. PR #60 does not replace it because #60 did not pass the lifecycle/runtime admission gate. The default workshop remains the project-owned procedural candidate; the default inhabitants remain the shared 1,404-triangle readability prototype.
-
-PlayCanvas remains the sole game/render engine. The Phase 0.5 lifecycle, fixed-step simulation, central asset resolver, current tree composition, five inhabitant readability prototypes and dwelling LOD pipeline remain unchanged.
-
-## Existing storehouse WIP admission
-
-The currently admitted `main` storehouse remains the last accepted WIP storehouse baseline. Its prior QA run `35408681042` passed 22/22 Node tests, production build, WebGL2/interactions, three lifecycle remount cycles, software WebGPU, Phase-1 render, storehouse admission and close-up smokes. Its evidence artifact was `10573840636`, SHA-256 `eaee51e6987cf4e9d87c66c4d2865d846bf3a3e8753fba06881e6ff7dafb58e2`.
-
-## Supplied workshop / worker QA result
-
-QA PR #59 rendered normals-fixed supplied workshop/worker copies through PlayCanvas WebGL2 from multiple checked angles. The workshop remains non-admitted at 89,778 triangles versus the 20k–45k target. The supplied worker's earlier severe texture-projection concern was not reproduced in the checked normals-fixed views, but it remains non-admitted at 14,106 triangles versus the 25k–50k brief and has no rig/animations/LOD.
-
-## Phase 1 queue state
-
-See `docs/qa/PHASE1_WORK_QUEUE.md` for the authoritative ordering. Current state:
-
-1. PR #60 compact storehouse current baseline — `BLOCKED`, runtime/reproducibility repair required.
-2. PR #58 project-owned adult worker — `BLOCKED`, art repair required.
-3. PR #43 project-owned workshop GLB — `READY_FOR_QA`.
-4. PR #55 tree LOD candidates — `READY_FOR_QA`.
-5. PR #48 workshop LOD1 — `BLOCKED` on #43 acceptance.
-6. PRs #41, #45, #53 and #59 — closed as `SUPERSEDED`; not merge candidates.
-
-## Current limits / next gate
-
-`artGatePassed=false` remains authoritative. The Phase 1 integration branch contains governance/state only; neither #60 nor #58 has been admitted. No new DEV task was released while #60 was QA_ACTIVE; #60 has now been explicitly returned for repair.
-
-## Archive
-
-The exact pre-storehouse-admission state and manifest are preserved byte-for-byte at:
-- `docs/archive/PROJECT_STATE_PRE_TEXTURED_STOREHOUSE.md`
-- `docs/archive/ASSET_MANIFEST_PRE_TEXTURED_STOREHOUSE.md`
+The post-acceptance cleanup branch updates the stale host control copy and ensures `index.html` changes trigger the dedicated Phase 2 validation workflow.
 
 ## Phase gate
 
 **PHASE 0: PASS / ACCEPTED.**  
-**PHASE 0.5: PASS / COMPLETE_VERIFIED / DEPLOYED.**  
-**PHASE 1: AUTHORIZED / QA INTEGRATION CONSOLIDATED / CURRENT DEV HANDOFFS BLOCKED / ART GATE OPEN / `artGatePassed=false`.**
+**PHASE 0.5: PASS / COMPLETE_VERIFIED.**  
+**PHASE 1: QA-DESIGNATED BASE USED FOR PHASE 2.**  
+**PHASE 2 RTS INTERACTION FOUNDATION: PASS / ACCEPTED INTO `qa/phase2-integration`.**  
+**PHASE 3: NOT AUTHORIZED / SCOPE NOT YET DEFINED.**

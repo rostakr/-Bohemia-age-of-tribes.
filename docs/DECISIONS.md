@@ -52,6 +52,26 @@
 
 The detailed source-backed review and its uncertainty rules are recorded in `docs/PHASE_1_HISTORICAL_ART_REVIEW.md`.
 
+## Phase 2 RTS interaction foundation decisions
+
+| Area | Decision | Consequence |
+| --- | --- | --- |
+| Integration base | Build Phase 2 from the exact QA-designated Phase 1 base and admit through `qa/phase2-integration` | RTS work does not silently bypass the accepted content/runtime baseline or merge directly to `main` |
+| Camera ownership | Replace inspection-only interaction with an RTS-ready camera using WASD/arrows, edge scroll, middle-drag pan, wheel zoom and Q/E rotation | Camera input is usable for gameplay while PlayCanvas retains render-loop ownership |
+| Simulation identity | Use stable numeric simulation IDs independent of PlayCanvas `Entity` instances | Gameplay state can remain engine-independent and deterministic instead of using renderer objects as authoritative units |
+| Movement timing | Execute MOVE in the fixed-step simulation and interpolate presentation in rendering | Unit motion remains consistent with the existing deterministic timing architecture |
+| Selection | Support click, drag-box and Shift toggle selection | The interaction layer now matches core desktop RTS selection expectations without introducing production HUD complexity |
+| Context command | Use right-click for contextual MOVE and deterministically replace an existing route when a new MOVE is issued | Repeated orders have predictable simulation semantics and do not accumulate uncontrolled command state |
+| Browser input path | Handle right-button `pointerup(button=2)` as the explicit production MOVE path while retaining `contextmenu` handling and duplicate suppression | Headless browser QA can exercise the production path without depending on inconsistent synthesized `contextmenu` behavior |
+| Navigation | Use a terrain-derived bounded grid and bounded A* with building/water blockers, explicit ford traversal and no diagonal corner cutting | Units respect the benchmark world instead of crossing blocked water/buildings, while path work remains bounded |
+| Invalid destinations | Resolve to bounded nearest-reachable ground when possible and provide explicit invalid feedback otherwise | User commands fail predictably instead of silently routing through obstacles or hanging the solver |
+| Group movement | Assign deterministic destination slots, lightweight separation and a bounded path-solving queue | Multiple selected workers can move without permanent stacking or unbounded path work spikes |
+| Diagnostics | Expose active/selected units, pending paths, paths solved per tick, simulation time and path failure state | Browser smoke tests and future performance work have observable state instead of relying only on screenshots |
+| Stress case | Keep a debug-only 40-unit scenario in addition to the normal five-worker scene | CI can exercise bounded path processing without changing the production benchmark population |
+| QA evidence | Keep SwiftShader/WebGL2 browser evidence as regression proof only | CI success must not be presented as desktop-GPU FPS or final performance evidence |
+| Scope boundary | Exclude economy, combat, construction, production, AI, fog, multiplayer, advanced formations, mobile controls and engine migration from this milestone | Phase 2 remains a reviewable interaction/navigation foundation rather than an uncontrolled systems expansion |
+| Next-phase gate | Do not begin a large undefined Phase 3 system until its scope and acceptance criteria are explicitly recorded | Future development cannot infer authorization for economy/combat/AI solely from the Phase 2 merge |
+
 ## Product constraints carried forward
 
 - The chronological campaign distinguishes Boii (Late La Tène), Marcomanni (early Roman Imperial), and Slavs (6th–7th centuries).
@@ -62,4 +82,4 @@ The detailed source-backed review and its uncertainty rules are recorded in `doc
 
 ## Validation and handoff
 
-The clean setup remains `npm ci`, followed by `npm run validate` for type checking, focused Node tests, and a production build. Browser regression coverage additionally runs WebGL2 startup/fallback, interactions, lifecycle remount and software WebGPU smoke tests in CI. Reviewed releases are deployed through the manual-only Pages workflow and can be checked independently with `Verify published foundation` against the public URL. Actual results, workflow IDs and commit references belong in `docs/PROJECT_STATE.md` and the milestone handoff document rather than being inferred from this decisions log.
+The clean setup remains `npm ci`, followed by `npm run validate` for type checking, focused Node tests, and a production build. Browser regression coverage additionally runs WebGL2 startup/fallback, interactions, lifecycle remount and software WebGPU smoke tests in CI. Phase 2 adds `npm run smoke:phase2` and the dedicated `Validate Phase 2 RTS interaction foundation` workflow for the five-worker and 40-worker interaction/navigation cases. Reviewed releases remain separate from QA integration; actual workflow IDs, evidence artifacts and accepted commit references belong in `docs/PROJECT_STATE.md` and the milestone handoff document rather than being inferred from this decisions log.
