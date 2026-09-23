@@ -1,3 +1,32 @@
+OPRAVA BLOKUJÍCÍHO POŘADÍ — 2026-09-23
+Tato úprava má přednost před níže uvedeným pořadím práce a starším 12h plánem.
+Neověřená publikace blokuje přijetí veřejného vydání, nikoli nezávislou implementaci vizuálu.
+Neměň žádný FAIL/BLOCKED na PASS. Zachovej povinné kontroly při přijetí a vydání.
+
+AKTIVNÍ ÚKOL DEV: P4-VIS-01 — čitelný pracovník a nesený náklad.
+Vlastník: vývojový chat. QA vlastník: QA chat. Publikaci koordinuje hlavní koordinační chat odděleně.
+Po ověření aktuálního main s integrovanou Phase 4 založ jednu samostatnou pracovní větev/PR,
+nebo pokračuj v již existujícím PR tohoto úkolu. Nepoužívej historickou divergovanou větev jako automatickou základnu.
+Implementuj čitelnost pracovníka při běžné RTS kameře, vizuální stav neseného dřeva podle skutečného cargo
+a zpětnou vazbu odevzdání podle skutečné události ekonomiky. Použij existující vhodné assety;
+neměň autority simulace, pravidla ekonomiky ani produkční konstanty.
+Soustřeď se na tento malý balík; celou osadu ani nový animační systém současně nepřepisuj.
+Přijetí: bez diagnostického panelu lze rozeznat pracovníka bez nákladu, s nákladem a odevzdání;
+zobrazení odpovídá skutečnému stavu i při nahrazení příkazu. Dolož stejnou kameru před/po.
+Chybějící rig/animace zůstávají přiznaným následným úkolem, ne důvodem předstírat hotovou animaci.
+Kontrola: cílené načtení scény a pracovní cyklus, typecheck/build při zásahu do kódu;
+další test jen pro konkrétně dotčené riziko. Phase 5 se nezahajuje.
+
+PŘEDÁNÍ A BLOKÁTORY
+READY FOR QA = stabilní SHA + rozsah + skutečné ověření + URL NEBO reprodukovatelný místní build/CI artefakt.
+Veřejná URL není podmínkou zahájení QA implementace. QA reportuje zvlášť IMPLEMENTATION a PUBLICATION.
+QA přebírá P4-VIS-01 při novém předání; dokončení starého QA balíku není dokončením celého 12h plánu.
+Pokud žádné nové předání není, nevytvářej opakované testy ani statusové commity.
+Nedostupný dispatch/browser zaznamenej jednou s konkrétní chybou a vlastníkem; opakuj pokus až při změně podmínek.
+Pokud je blokována jen publikace, DEV pokračuje P4-VIS-01. Pokud je blokována i jeho implementace,
+uveď přesný nezbytný vstup/nástroj; nenahrazuj práci opakovanou aktualizací PROJECT_STATE.
+Tato úprava nezakládá ani neprodlužuje plánovanou úlohu a neobchází oprávnění či povinné kontroly.
+
 BOHEMIA — VÝVOJOVÝ CHAT V2, BLOK DO 6 HODIN
 Používej společné pokyny BOHEMIA_PROJECT_INSTRUCTIONS_V2.txt.
 Pracuj běžným modelem; Astru šetři pro izolované složité problémy.
