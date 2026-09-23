@@ -63,6 +63,7 @@ interface ResourceMeta {
 }
 
 export class WoodGatheringCoordinator {
+  private readonly simulation: RtsSimulation;
   private readonly economy: ResourceEconomy;
   private readonly workers = new Map<EntityId, WorkerTaskState>();
   private readonly resourceMeta = new Map<EntityId, ResourceMeta>();
@@ -71,12 +72,13 @@ export class WoodGatheringCoordinator {
   private lastFailure = '';
 
   constructor(
-    private readonly simulation: RtsSimulation,
+    simulation: RtsSimulation,
     workerOwners: ReadonlyMap<EntityId, PlayerId>,
     resources: readonly WoodResourceSpawn[],
     dropoffs: readonly WoodDropoffSpawn[],
     config: Partial<WoodGatheringConfig> = {},
   ) {
+    this.simulation = simulation;
     this.config = {
       carryCapacity: config.carryCapacity ?? DEFAULT_CONFIG.carryCapacity,
       woodPerSecond: config.woodPerSecond ?? DEFAULT_CONFIG.woodPerSecond,
