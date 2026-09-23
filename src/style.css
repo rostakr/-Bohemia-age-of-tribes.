@@ -25,5 +25,13 @@ footer button span { color: #d2b77e; margin-right: 10px; font-size: 10px; }
 footer p { font-size: 10px; color: #ecebdf; }
 .tagline { font-size: 13px; }
 #viewport:focus-visible { outline: 2px solid #d2b77e; outline-offset: -3px; }
+.rts-overlay { position: fixed; inset: 0; z-index: 30; pointer-events: none; overflow: hidden; }
+.rts-drag-box { position: fixed; border: 1px solid #d7c58d; background: #d7c58d1a; box-shadow: 0 0 0 1px #16201ca8 inset; }
+.rts-count { position: fixed; left: 24px; bottom: 88px; min-width: 104px; padding: 8px 12px; background: #152022d9; border: 1px solid #89917b66; color: #eee8d6; font-size: 12px; letter-spacing: .04em; }
+.rts-feedback { position: fixed; left: 50%; top: 20px; transform: translateX(-50%); padding: 7px 12px; background: #152022e6; border: 1px solid #89917b88; color: #e8dfc8; font-size: 12px; }
+.rts-feedback[data-valid="false"] { border-color: #bc765f; color: #f1c1ad; }
+.rts-selection-ring { position: fixed; left: 0; top: 0; width: 30px; height: 13px; margin-left: -15px; margin-top: -6px; border: 2px solid #d7c58d; border-radius: 50%; box-shadow: 0 0 6px #0008; }
+.rts-move-marker { position: fixed; left: 0; top: 0; width: 20px; height: 20px; margin-left: -10px; margin-top: -10px; border: 2px solid #d7c58d; border-radius: 50%; box-shadow: 0 0 0 5px #d7c58d1a; }
+.rts-move-marker.invalid { border-color: #c96e58; box-shadow: 0 0 0 5px #c96e581a; }
 [hidden] { display: none !important; }
 @media (max-width: 700px) { .shell { padding: 20px 20px 150px; } pre { position: static; max-width: 355px; } footer { left: 10px; right: 10px; } footer button { padding: 10px; } }
