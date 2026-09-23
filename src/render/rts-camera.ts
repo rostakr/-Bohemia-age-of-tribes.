@@ -1,6 +1,6 @@
 import { Vec3, type Entity } from 'playcanvas';
 import type { TerrainSurface } from '../core/contracts';
-import { VIEWS, type ViewName } from './inspection-camera';
+import { VIEWS, type ViewName } from './camera-views';
 
 export interface RtsCameraOptions {
   edgeScroll?: boolean;
