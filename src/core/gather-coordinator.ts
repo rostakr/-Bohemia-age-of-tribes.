@@ -22,20 +22,37 @@ export interface GatherCoordinatorMetrics {
  * snapshots; resource accounting never depends on PlayCanvas entities.
  */
 export class GatherCoordinator {
+  private readonly navigation: NavigationGrid;
+  private readonly simulation: RtsSimulation;
+  private readonly economy: ResourceEconomy;
+  private readonly gatherLoop: GatherLoop;
+  private readonly dropoff: WorldPoint;
+  private readonly localPlayer: PlayerId;
+  private readonly gatherRange: number;
+  private readonly dropoffRange: number;
   private readonly activeTargets = new Map<EntityId, EntityId>();
   private readonly routePhases = new Map<EntityId, RoutePhase>();
   private lastGatherFailure = '';
 
   constructor(
-    private readonly navigation: NavigationGrid,
-    private readonly simulation: RtsSimulation,
-    private readonly economy: ResourceEconomy,
-    private readonly gatherLoop: GatherLoop,
-    private readonly dropoff: WorldPoint,
-    private readonly localPlayer: PlayerId = 1,
-    private readonly gatherRange = 1.6,
-    private readonly dropoffRange = 2.2,
-  ) {}
+    navigation: NavigationGrid,
+    simulation: RtsSimulation,
+    economy: ResourceEconomy,
+    gatherLoop: GatherLoop,
+    dropoff: WorldPoint,
+    localPlayer: PlayerId = 1,
+    gatherRange = 1.6,
+    dropoffRange = 2.2,
+  ) {
+    this.navigation = navigation;
+    this.simulation = simulation;
+    this.economy = economy;
+    this.gatherLoop = gatherLoop;
+    this.dropoff = { x: dropoff.x, z: dropoff.z };
+    this.localPlayer = localPlayer;
+    this.gatherRange = gatherRange;
+    this.dropoffRange = dropoffRange;
+  }
 
   issueGather(workerIds: readonly EntityId[], nodeId: EntityId, executeAtTick: number): boolean {
     const node = this.economy.node(nodeId);
@@ -57,12 +74,12 @@ export class GatherCoordinator {
     for (const id of valid) {
       this.activeTargets.set(id, nodeId);
       if (this.routeToResource(id, node, executeAtTick)) routed++;
+      else {
+        this.gatherLoop.cancel([id]);
+        this.clearWorker(id);
+      }
     }
-    if (routed === 0) {
-      this.gatherLoop.cancel(valid);
-      for (const id of valid) this.clearWorker(id);
-      return false;
-    }
+    if (routed === 0) return false;
     this.lastGatherFailure = '';
     return true;
   }
