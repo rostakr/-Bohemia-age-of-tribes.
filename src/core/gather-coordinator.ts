@@ -1,5 +1,5 @@
 import type { EntityId, PlayerId, WorldPoint } from './contracts.ts';
-import { GatherLoop } from './gather-loop.ts';
+import { GatherLoop, type GatherWorkerState } from './gather-loop.ts';
 import { NavigationGrid } from './navigation-grid.ts';
 import { ResourceEconomy, type ResourceNodeState } from './resource-economy.ts';
 import { RtsSimulation } from './rts-simulation.ts';
@@ -159,6 +159,10 @@ export class GatherCoordinator {
 
   resourceState(): readonly ResourceNodeState[] {
     return this.economy.nodesSnapshot();
+  }
+
+  workerState(workerId: EntityId): GatherWorkerState | null {
+    return this.gatherLoop.state(workerId);
   }
 
   metrics(): GatherCoordinatorMetrics {

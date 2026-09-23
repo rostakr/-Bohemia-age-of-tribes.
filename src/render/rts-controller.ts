@@ -1,5 +1,6 @@
 import { Vec3, type Entity } from 'playcanvas';
 import type { GatherCoordinator } from '../core/gather-coordinator';
+import type { GatherWorkerState } from '../core/gather-loop';
 import type { EntityId, TerrainSurface, WorldPoint } from '../core/contracts';
 import type { NavigationGrid } from '../core/navigation-grid';
 import type { RtsSimulation } from '../core/rts-simulation';
@@ -35,6 +36,7 @@ export class RtsController {
   private readonly countLabel: HTMLDivElement;
   private readonly feedback: HTMLDivElement;
   private readonly stockpile: HTMLDivElement | undefined;
+  private readonly taskLabel: HTMLDivElement | undefined;
   private drag: DragState | undefined;
   private lastContextMoveAt = Number.NEGATIVE_INFINITY;
   private lastContextMoveX = Number.NaN;
@@ -69,7 +71,11 @@ export class RtsController {
       this.stockpile = document.createElement('div');
       this.stockpile.className = 'rts-stockpile';
       this.stockpile.dataset.rtsUi = 'true';
-      this.overlay.appendChild(this.stockpile);
+      this.taskLabel = document.createElement('div');
+      this.taskLabel.className = 'rts-task';
+      this.taskLabel.dataset.rtsUi = 'true';
+      this.taskLabel.hidden = true;
+      this.overlay.append(this.taskLabel, this.stockpile);
       for (const id of [...gathering.resourceEntities.keys()].sort((a, b) => a - b)) {
         const marker = document.createElement('div');
         marker.className = 'rts-resource-node';
@@ -328,6 +334,42 @@ export class RtsController {
     this.countLabel.textContent = `${this.selected.size} selected`;
   }
 
+  private syncGatherTask(): void {
+    if (!this.gathering || !this.taskLabel) return;
+    const states = [...this.selected]
+      .sort((a, b) => a - b)
+      .map(id => this.gathering!.coordinator.workerState(id))
+      .filter((state): state is GatherWorkerState => state !== null);
+    if (states.length === 0) {
+      this.taskLabel.hidden = true;
+      this.taskLabel.textContent = '';
+      this.taskLabel.dataset.selected = '0';
+      this.taskLabel.dataset.gathering = '0';
+      this.taskLabel.dataset.returning = '0';
+      this.taskLabel.dataset.idle = '0';
+      this.taskLabel.dataset.cargo = '0.000';
+      return;
+    }
+
+    const gathering = states.filter(state => state.status === 'gathering').length;
+    const returning = states.filter(state => state.status === 'returning').length;
+    const idle = states.filter(state => state.status === 'idle').length;
+    const cargo = states.reduce((sum, state) => sum + (state.carrying === 'wood' ? state.carriedAmount : 0), 0);
+    if (states.length === 1) {
+      const state = states[0]!;
+      const task = state.status === 'gathering' ? 'Gather wood' : state.status === 'returning' ? 'Return wood' : 'Idle';
+      this.taskLabel.textContent = `${task} · cargo ${cargo.toFixed(1)}`;
+    } else {
+      this.taskLabel.textContent = `Tasks G ${gathering} · R ${returning} · I ${idle} · cargo ${cargo.toFixed(1)}`;
+    }
+    this.taskLabel.dataset.selected = String(states.length);
+    this.taskLabel.dataset.gathering = String(gathering);
+    this.taskLabel.dataset.returning = String(returning);
+    this.taskLabel.dataset.idle = String(idle);
+    this.taskLabel.dataset.cargo = cargo.toFixed(3);
+    this.taskLabel.hidden = false;
+  }
+
   private setFeedback(message: string, valid: boolean): void {
     this.feedback.textContent = message;
     this.feedback.dataset.valid = String(valid);
@@ -380,6 +422,7 @@ export class RtsController {
         this.stockpile.textContent = `Wood ${metrics.woodStockpile.toFixed(1)}`;
         this.stockpile.dataset.wood = metrics.woodStockpile.toFixed(3);
       }
+      this.syncGatherTask();
     }
 
     const now = performance.now();

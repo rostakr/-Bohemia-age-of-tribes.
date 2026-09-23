@@ -87,6 +87,7 @@ async function evaluate(cdp, expression) {
 
 const stateExpression = `(() => {
   const snapshot = window.__BOHEMIA_DEBUG__?.snapshot?.() ?? null;
+  const task = document.querySelector('.rts-task');
   const resources = [...document.querySelectorAll('.rts-resource-node')].map(element => {
     const rect = element.getBoundingClientRect();
     return {
@@ -108,6 +109,13 @@ const stateExpression = `(() => {
     validMarkers: document.querySelectorAll('.rts-move-marker.valid').length,
     feedback: document.querySelector('.rts-feedback')?.textContent || '',
     stockpileWood: Number(document.querySelector('.rts-stockpile')?.dataset.wood || 0),
+    taskText: task?.textContent || '',
+    taskHidden: task?.hidden ?? true,
+    taskSelected: Number(task?.dataset.selected || 0),
+    taskGathering: Number(task?.dataset.gathering || 0),
+    taskReturning: Number(task?.dataset.returning || 0),
+    taskIdle: Number(task?.dataset.idle || 0),
+    taskCargo: Number(task?.dataset.cargo || 0),
     resources,
     snapshot,
   };
@@ -215,25 +223,34 @@ try {
     Number(value.snapshot.resourceNodes) >= 1 &&
     Number(value.snapshot.woodStockpile) === 0 &&
     value.resources.some(resource => !resource.hidden && resource.width > 0 && resource.height > 0) &&
+    value.taskHidden === true &&
     value.overlayCount === 1 &&
     value.canvasCount === 1,
   'Phase 4 startup', 60_000);
 
   const initialWoodRemaining = Number(state.snapshot.woodRemaining);
   await dragSelect(cdp);
-  state = await waitFor(cdp, value => Number(value?.snapshot?.selectedUnits) >= 1, 'Phase 4 worker selection', 15_000);
+  state = await waitFor(cdp, value =>
+    Number(value?.snapshot?.selectedUnits) >= 1 &&
+    value.taskHidden === false &&
+    Number(value.taskSelected) === Number(value.snapshot.selectedUnits),
+  'Phase 4 worker selection', 15_000);
   const selected = Number(state.snapshot.selectedUnits);
 
   const resource = state.resources.find(candidate => !candidate.hidden && candidate.width > 0 && candidate.height > 0);
   if (!resource) throw new Error(`No visible Phase 4 resource marker: ${JSON.stringify(state.resources)}`);
   await rightClick(cdp, resource.x + 3, resource.y + 3);
-  state = await waitFor(cdp, value => value.feedback === 'Gather wood' && Number(value.snapshot.activeGatherOrders) >= 1,
-    'Phase 4 gather command feedback', 12_000, 40);
+  state = await waitFor(cdp, value =>
+    value.feedback === 'Gather wood' &&
+    Number(value.snapshot.activeGatherOrders) >= 1 &&
+    Number(value.taskSelected) === selected &&
+    Number(value.taskGathering) >= 1,
+  'Phase 4 gather command feedback', 12_000, 40);
   const beforeDepositScreenshot = await capture(cdp, 'phase4-gather-command-webgl2.png');
 
   let sawCargo = false;
   const depositState = await waitFor(cdp, value => {
-    if (Number(value?.snapshot?.carriedWoodTotal) > 0) sawCargo = true;
+    if (Number(value?.snapshot?.carriedWoodTotal) > 0 || Number(value?.taskCargo) > 0) sawCargo = true;
     return Number(value?.snapshot?.woodRemaining) < initialWoodRemaining &&
       Number(value.snapshot.woodStockpile) > 0 &&
       Number(value.stockpileWood) > 0;
@@ -245,7 +262,10 @@ try {
 
   await rightClick(cdp, 1500, 690);
   const moved = await waitFor(cdp, value =>
-    value.feedback === 'Move' && Number(value?.snapshot?.activeGatherOrders) === 0,
+    value.feedback === 'Move' &&
+    Number(value?.snapshot?.activeGatherOrders) === 0 &&
+    Number(value.taskSelected) === selected &&
+    Number(value.taskIdle) === selected,
   'Phase 4 MOVE replacement', 15_000, 50);
   if (Number(moved.snapshot.woodStockpile) <= 0) throw new Error('MOVE replacement unexpectedly removed deposited wood');
 
@@ -255,6 +275,7 @@ try {
     Number(value.snapshot.activeUnits) === 5 &&
     Number(value.snapshot.resourceNodes) >= 1 &&
     Number(value.snapshot.woodStockpile) === 0 &&
+    value.taskHidden === true &&
     value.overlayCount === 1 &&
     value.canvasCount === 1,
   'Phase 4 remount', 60_000);
@@ -269,6 +290,8 @@ try {
     depositedWood: depositState.snapshot.woodStockpile,
     remainingAfterDeposit: depositState.snapshot.woodRemaining,
     sawCargo,
+    taskAfterGather: state.taskText,
+    taskAfterMove: moved.taskText,
     beforeDepositScreenshot,
     afterDepositScreenshot,
     note: 'SwiftShader/WebGL2 regression evidence only; Phase 4 debug mode uses accelerated gathering constants for wall-clock QA only.',

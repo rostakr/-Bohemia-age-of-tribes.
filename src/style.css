@@ -35,6 +35,7 @@ footer p { font-size: 10px; color: #ecebdf; }
 .rts-move-marker.invalid { border-color: #c96e58; box-shadow: 0 0 0 5px #c96e581a; }
 .rts-resource-node { position: fixed; left: 0; top: 0; transform: translate(-50%, -50%); padding: 4px 7px; border: 1px solid #9fbd7b; border-radius: 999px; background: #17251ee6; color: #d8efbd; font-size: 9px; font-weight: 700; letter-spacing: .1em; box-shadow: 0 1px 5px #0009; }
 .rts-resource-node::after { content: attr(data-remaining); margin-left: 5px; color: #f0e5bd; font-variant-numeric: tabular-nums; }
+.rts-task { position: fixed; left: 24px; bottom: 164px; min-width: 220px; padding: 8px 12px; background: #17251ee6; border: 1px solid #d2b77e88; color: #eee8d6; font-size: 12px; letter-spacing: .03em; font-variant-numeric: tabular-nums; }
 .rts-stockpile { position: fixed; left: 24px; bottom: 126px; min-width: 104px; padding: 8px 12px; background: #17251ee6; border: 1px solid #9fbd7b88; color: #d8efbd; font-size: 12px; letter-spacing: .04em; font-variant-numeric: tabular-nums; }
 [hidden] { display: none !important; }
 @media (max-width: 700px) { .shell { padding: 20px 20px 150px; } pre { position: static; max-width: 355px; } footer { left: 10px; right: 10px; } footer button { padding: 10px; } }
