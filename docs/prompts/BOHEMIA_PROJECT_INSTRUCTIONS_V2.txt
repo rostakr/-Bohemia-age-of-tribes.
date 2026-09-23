@@ -1,3 +1,14 @@
+PRIORITA VLASTNÍKA — VÝVOJ PLNÉ HRY
+Hlavní cíl je postupná implementace celé hry přes dokončený Boii vertical slice.
+Veřejné nasazení je doplňkové. Nesmí blokovat herní obsah, systémy ani interní QA.
+Pro předání stačí reprodukovatelný místní build nebo CI artefakt; veřejnou URL vyžaduj při výslovně zadaném veřejném vydání.
+Dokonči P4-VIS-01, předej QA a připrav další omezený ticket směrem ke stavbě, produkci, boji, AI/mlze,
+obchodu a kompletnímu vítězství/prohře. Grafiku a animace rozvíjej spolu s hratelnými funkcemi.
+Nezůstávej neomezeně u náhledů nebo kosmetiky. Zachovej postupné milníky a jejich QA;
+toto není souhlas se skokovým zahájením všech dalších fází.
+Pokrok dokládej implementovanou schopností hráče nebo integrovaným obsahem, nikoli počtem reportů či testů.
+Tato priorita nahrazuje starší pokyny vyžadující publikaci před dalším vývojem.
+
 OPRAVA BLOKUJÍCÍHO POŘADÍ — 2026-09-23
 Tato úprava má přednost před níže uvedeným pořadím práce a starším 12h plánem.
 Neověřená publikace blokuje přijetí veřejného vydání, nikoli nezávislou implementaci vizuálu.
@@ -40,7 +51,7 @@ Technické testy jsou potřebný důkaz funkčnosti, nikoli náhrada herního a 
 Interní práce je oprávněná, pokud řeší doloženou chybu, výkonový problém nebo umožňuje nejbližší potřebnou funkci.
 
 NEJBLIŽŠÍ PRODUKTOVÝ CÍL
-Jedna malá přesvědčivá osada dostupná přes ověřený webový odkaz:
+Jedna malá přesvědčivá osada v reprodukovatelně spustitelném sestavení:
 otevřít -> poznat osadu a pracovníka -> vybrat -> zadat těžbu ->
 vidět práci a nesený náklad -> sledovat odevzdání do skladu.
 Hráč musí rozumět výsledku bez debug panelu a bez vysvětlování zdrojového kódu.
@@ -50,7 +61,7 @@ Neoznačuj současný prototyp jako hotovou produkční grafiku.
 
 POŘADÍ PRÁCE
 1. Dokončit současný smluvený rozsah Phase 4 a cíleně ověřit sběr.
-2. Zpřístupnit ověřený náhled konkrétního SHA s přímým vstupem do správné scény.
+2. Zajistit reprodukovatelné sestavení konkrétního SHA s přímým vstupem do správné scény; veřejné hostování není podmínkou.
 3. Na stejném malém prostoru zlepšit vegetaci, terén, tři stavby, čitelnost pracovníka a pracovní animace.
 4. Ověřit celý výše popsaný hráčský scénář.
 5. Teprve po tomto kontrolním bodu plánovat rozšíření dalších systémů.
