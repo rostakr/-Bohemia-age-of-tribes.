@@ -53,7 +53,7 @@ const scalableDebugUnits = debug && Number.isFinite(requestedUnits)
   ? Math.max(5, Math.min(120, Math.floor(requestedUnits)))
   : 5;
 const rtsDebugUnits = phase3Movement || phase4Gathering ? scalableDebugUnits : phase2DebugUnits;
-const workshopPreview = completionCandidate || rtsInteraction || parameters.get('workshop') === 'project';
+const workshopPreview = completionCandidate || parameters.get('workshop') === 'project';
 const runningLabel = calibration
   ? 'Foundation running'
   : workerR2Closeup
@@ -77,7 +77,7 @@ function createScene(): RuntimeScene {
   if (workerR2Closeup) return new WorkerR2PreviewScene();
   const models = {
     ...ADMITTED_MODELS,
-    ...(workerR2Benchmark || completionCandidate || rtsInteraction ? { inhabitant: WORKER_R2_PATH } : {}),
+    ...(workerR2Benchmark || completionCandidate ? { inhabitant: WORKER_R2_PATH } : {}),
     ...(workshopPreview ? { workshop: PROJECT_WORKSHOP_PATH } : {}),
   };
   const milestone = phase4Gathering ? 'phase-4' : phase3Movement ? 'phase-3' : 'phase-2';
@@ -92,7 +92,10 @@ function showError(error: unknown): void {
   console.error('[BOHEMIA runtime]', error);
   status.textContent = 'Renderer unavailable';
   errorPanel.hidden = false;
-  errorText.textContent = 'The 3D scene could not continue. Reload, or try the WebGL2 compatibility mode.';
+  const detail = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+  errorText.textContent = debug
+    ? `The 3D scene could not continue. ${detail}`
+    : 'The 3D scene could not continue. Reload, or try the WebGL2 compatibility mode.';
   pauseButton.disabled = true;
 }
 
