@@ -3,6 +3,7 @@ import type { EntityId } from '../core/contracts';
 import type { GatherCoordinator } from '../core/gather-coordinator';
 
 interface WorkerVisual {
+  worker: Entity;
   root: Entity;
   roleMarker: Entity;
   cargo: Entity;
@@ -58,17 +59,20 @@ export class WorkerGatherVisuals {
       }
       cargo.enabled = false;
 
+      // Deposit feedback is deliberately not parented to the moving worker. On a real
+      // economy receipt we snapshot the worker's world position and leave the pulse at
+      // that handoff point, so the feedback reads as a storehouse deposit rather than
+      // following the worker as the next gather route begins.
       const depositPulse = new Entity(`Worker ${id} deposit feedback`);
       depositPulse.addComponent('render', { type: 'cylinder' });
       depositPulse.render!.material = this.pulseMaterial;
       depositPulse.setLocalScale(0.95, 0.035, 0.95);
-      depositPulse.setLocalPosition(0, -1.08, 0);
       depositPulse.enabled = false;
-      root.addChild(depositPulse);
+      worker.parent?.addChild(depositPulse);
 
       const initialDepositSequence = coordinator.workerState(id)?.depositSequence ?? 0;
       this.visuals.set(id, {
-        root, roleMarker, cargo, depositPulse,
+        worker, root, roleMarker, cargo, depositPulse,
         previousDepositSequence: initialDepositSequence,
         pulseSeconds: 0,
       });
@@ -89,7 +93,11 @@ export class WorkerGatherVisuals {
       // a renderer-side inference from cargo/stockpile deltas. Command replacement
       // therefore cannot fabricate a deposit flash when carried cargo is preserved.
       const depositSequence = state?.depositSequence ?? visual.previousDepositSequence;
-      if (depositSequence > visual.previousDepositSequence) visual.pulseSeconds = DEPOSIT_PULSE_SECONDS;
+      if (depositSequence > visual.previousDepositSequence) {
+        visual.pulseSeconds = DEPOSIT_PULSE_SECONDS;
+        const handoff = visual.worker.getPosition();
+        visual.depositPulse.setPosition(handoff.x, handoff.y + 0.08, handoff.z);
+      }
       visual.previousDepositSequence = depositSequence;
 
       visual.pulseSeconds = Math.max(0, visual.pulseSeconds - Math.max(0, dtSeconds));
@@ -115,7 +123,10 @@ export class WorkerGatherVisuals {
   }
 
   destroy(): void {
-    for (const visual of this.visuals.values()) visual.root.destroy();
+    for (const visual of this.visuals.values()) {
+      visual.root.destroy();
+      visual.depositPulse.destroy();
+    }
     this.visuals.clear();
   }
 }
