@@ -32,6 +32,8 @@ jobs:
         run: npm run smoke:supplied-storehouse
       - name: Supplied storehouse close-up smoke
         run: npm run smoke:supplied-storehouse-closeup
+      - name: P4-VIS-01 targeted worker cycle
+        run: npm run smoke:phase4
       - uses: actions/upload-artifact@v4
         with:
           name: bohemia-static-build
@@ -59,5 +61,12 @@ jobs:
           path: |
             artifacts/phase1/supplied-storehouse-webgl2-1920x1080.png
             artifacts/phase1/supplied-storehouse-closeup-1920x1080.png
+          if-no-files-found: warn
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase4-worker-cycle-evidence
+          path: artifacts/phase4/*.png
           if-no-files-found: warn
           retention-days: 7
