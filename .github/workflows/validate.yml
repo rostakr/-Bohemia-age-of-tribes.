@@ -18,6 +18,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run validate
+      # Run the task-specific browser evidence first. On hosted runners the
+      # later sequence of independent headless GPU processes can exhaust the
+      # software renderer even though earlier WebGL2 scenes passed.
+      - name: P4-VIS-01 targeted worker cycle
+        run: npm run smoke:phase4
       - name: Phase 0 WebGL2 browser smoke
         run: npm run smoke:webgl2
       - name: Phase 0 interaction smoke
@@ -32,8 +37,6 @@ jobs:
         run: npm run smoke:supplied-storehouse
       - name: Supplied storehouse close-up smoke
         run: npm run smoke:supplied-storehouse-closeup
-      - name: P4-VIS-01 targeted worker cycle
-        run: npm run smoke:phase4
       - uses: actions/upload-artifact@v4
         with:
           name: bohemia-static-build
