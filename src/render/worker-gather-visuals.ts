@@ -11,6 +11,8 @@ interface WorkerVisual {
   pulseSeconds: number;
 }
 
+const DEPOSIT_PULSE_SECONDS = 1.2;
+
 /** Phase 4 presentation. Reads authoritative gather/economy snapshots only. */
 export class WorkerGatherVisuals {
   private readonly visuals = new Map<EntityId, WorkerVisual>();
@@ -40,14 +42,17 @@ export class WorkerGatherVisuals {
       roleMarker.setLocalPosition(0, -1.1, 0);
       root.addChild(roleMarker);
 
+      // Keep the bundle beside the torso rather than inside the worker silhouette so
+      // the empty/carry states remain distinguishable at the normal gameplay camera.
       const cargo = new Entity(`Worker ${id} authoritative wood cargo`);
+      cargo.setLocalPosition(0.38, 0.06, -0.18);
       root.addChild(cargo);
       for (let index = -1; index <= 1; index++) {
         const billet = new Entity(`Worker ${id} wood billet ${index + 2}`);
         billet.addComponent('render', { type: 'box' });
         billet.render!.material = this.cargoMaterial;
-        billet.setLocalScale(0.16, 0.16, 0.72);
-        billet.setLocalPosition(index * 0.17, 0.02 + Math.abs(index) * 0.03, -0.28);
+        billet.setLocalScale(0.19, 0.19, 0.78);
+        billet.setLocalPosition(index * 0.2, 0.03 + Math.abs(index) * 0.04, 0);
         billet.setLocalEulerAngles(0, 8 * index, 0);
         cargo.addChild(billet);
       }
@@ -84,14 +89,14 @@ export class WorkerGatherVisuals {
       // a renderer-side inference from cargo/stockpile deltas. Command replacement
       // therefore cannot fabricate a deposit flash when carried cargo is preserved.
       const depositSequence = state?.depositSequence ?? visual.previousDepositSequence;
-      if (depositSequence > visual.previousDepositSequence) visual.pulseSeconds = 0.7;
+      if (depositSequence > visual.previousDepositSequence) visual.pulseSeconds = DEPOSIT_PULSE_SECONDS;
       visual.previousDepositSequence = depositSequence;
 
       visual.pulseSeconds = Math.max(0, visual.pulseSeconds - Math.max(0, dtSeconds));
       visual.depositPulse.enabled = visual.pulseSeconds > 0;
       if (visual.depositPulse.enabled) {
-        const phase = 1 - visual.pulseSeconds / 0.7;
-        const scale = 0.85 + phase * 0.7;
+        const phase = 1 - visual.pulseSeconds / DEPOSIT_PULSE_SECONDS;
+        const scale = 0.9 + phase * 1.0;
         visual.depositPulse.setLocalScale(scale, 0.035, scale);
       }
     }
