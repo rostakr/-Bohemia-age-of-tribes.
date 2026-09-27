@@ -341,7 +341,7 @@ export class BenchmarkScene implements RuntimeScene {
       const positions: [number, number][] = [[-5, 1], [-2, 3], [4, -5], [-10, 9], [12, 1]];
       for (const [index, [x, z]] of positions.entries()) {
         const entity = index === 0 ? candidate.entity : candidate.entity.clone();
-        entity.name = `Boii inhabitant readability prototype ${index + 1}`;
+        entity.name = `Inhabitant ${index + 1}`;
         const scale = 0.97 + index * 0.012;
         entity.setLocalScale(scale, scale, scale);
         entity.setPosition(x, landscape.heightAt(x, z), z);
