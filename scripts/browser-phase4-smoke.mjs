@@ -221,6 +221,8 @@ try {
     Number(value.snapshot.phase4DebugUnits) === 5 &&
     value.snapshot.phase4QaFast === true &&
     Number(value.snapshot.resourceNodes) >= 1 &&
+    Number(value.snapshot.workerRoleMarkers) === 5 &&
+    Number(value.snapshot.workersShowingCargo) === 0 &&
     Number(value.snapshot.woodStockpile) === 0 &&
     value.resources.some(resource => !resource.hidden && resource.width > 0 && resource.height > 0) &&
     value.taskHidden === true &&
@@ -248,16 +250,29 @@ try {
   'Phase 4 gather command feedback', 12_000, 40);
   const beforeDepositScreenshot = await capture(cdp, 'phase4-gather-command-webgl2.png');
 
-  let sawCargo = false;
+  const cargoState = await waitFor(cdp, value =>
+    Number(value?.snapshot?.carriedWoodTotal) > 0 &&
+    Number(value.snapshot.workersShowingCargo) > 0,
+  'Phase 4 authoritative visible cargo', 45_000, 40);
+  const cargoScreenshot = await capture(cdp, 'phase4-worker-carrying-webgl2.png');
+  const sawCargo = Number(cargoState.snapshot.workersShowingCargo) > 0;
+
+  let sawDepositPulse = false;
   const depositState = await waitFor(cdp, value => {
-    if (Number(value?.snapshot?.carriedWoodTotal) > 0 || Number(value?.taskCargo) > 0) sawCargo = true;
+    if (Number(value?.snapshot?.activeDepositPulses) > 0) sawDepositPulse = true;
     return Number(value?.snapshot?.woodRemaining) < initialWoodRemaining &&
       Number(value.snapshot.woodStockpile) > 0 &&
       Number(value.stockpileWood) > 0;
-  }, 'Phase 4 extraction and storehouse deposit', 70_000, 60);
+  }, 'Phase 4 extraction and storehouse deposit', 70_000, 40);
   if (!sawCargo && Number(depositState.snapshot.woodRemaining) >= initialWoodRemaining) {
     throw new Error('Phase 4 never observed resource extraction or carried cargo');
   }
+  if (!sawDepositPulse && Number(depositState.snapshot.activeDepositPulses) <= 0) {
+    const pulseState = await waitFor(cdp, value => Number(value?.snapshot?.activeDepositPulses) > 0,
+      'Phase 4 authoritative deposit feedback', 12_000, 25);
+    sawDepositPulse = Number(pulseState.snapshot.activeDepositPulses) > 0;
+  }
+  if (!sawDepositPulse) throw new Error('Phase 4 never observed authoritative deposit feedback');
   const afterDepositScreenshot = await capture(cdp, 'phase4-wood-deposited-webgl2.png');
 
   await rightClick(cdp, 1500, 690);
@@ -290,6 +305,8 @@ try {
     depositedWood: depositState.snapshot.woodStockpile,
     remainingAfterDeposit: depositState.snapshot.woodRemaining,
     sawCargo,
+    sawDepositPulse,
+    cargoScreenshot,
     taskAfterGather: state.taskText,
     taskAfterMove: moved.taskText,
     beforeDepositScreenshot,

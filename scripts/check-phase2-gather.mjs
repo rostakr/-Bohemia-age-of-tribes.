@@ -9,6 +9,7 @@ test('worker harvests only in range, carries a bounded load, then deposits it', 
   loop.orderGather([1], 100);
   loop.fixedUpdate(1);
   assert.equal(loop.state(1)?.carriedAmount, 0);
+  assert.equal(loop.state(1)?.depositSequence, 0);
   loop.setWorkerPosition(1, { x: 5, z: 4 });
   loop.fixedUpdate(1);
   assert.equal(loop.state(1)?.carriedAmount, 5);
@@ -18,7 +19,10 @@ test('worker harvests only in range, carries a bounded load, then deposits it', 
   assert.equal(economy.stockpile(1).resources.wood, 0);
   assert.equal(loop.deposit(1), 10);
   assert.equal(economy.stockpile(1).resources.wood, 10);
+  assert.equal(loop.state(1)?.depositSequence, 1);
   assert.equal(loop.state(1)?.status, 'gathering');
+  assert.equal(loop.deposit(1), 0);
+  assert.equal(loop.state(1)?.depositSequence, 1);
 });
 
 test('multiple workers deplete a shared node deterministically without duplicating resources', () => {
@@ -36,6 +40,8 @@ test('multiple workers deplete a shared node deterministically without duplicati
   assert.equal(loop.state(2)?.status, 'returning');
   loop.deposit(1); loop.deposit(2);
   assert.equal(economy.stockpile(1).resources.food, 6);
+  assert.equal(loop.state(1)?.depositSequence, 1);
+  assert.equal(loop.state(2)?.depositSequence, 1);
 });
 
 test('invalid gather targets do not alter worker state', () => {
@@ -44,4 +50,5 @@ test('invalid gather targets do not alter worker state', () => {
   loop.orderGather([1], 999);
   assert.equal(loop.state(1)?.status, 'idle');
   assert.equal(loop.state(1)?.targetNodeId, null);
+  assert.equal(loop.state(1)?.depositSequence, 0);
 });
