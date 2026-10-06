@@ -45,7 +45,7 @@ const workerR2Benchmark = parameters.get('worker') === 'r2';
 const completionCandidate = parameters.get('candidate') === 'phase1';
 const phase2Interaction = parameters.get('phase2') === '1';
 const phase3Movement = parameters.get('phase3') === '1';
-const explicitLegacyScene = calibration || workerR2Closeup || workerR2Benchmark || completionCandidate || phase2Interaction || phase3Movement || parameters.has('phase4');
+const explicitLegacyScene = calibration || workerR2Closeup || workerR2Benchmark || completionCandidate || phase2Interaction || phase3Movement || parameters.has('phase4') || parameters.get('storehouse') === 'supplied' || parameters.get('workshop') === 'project';
 const settlementDemo = !explicitLegacyScene;
 const phase4Gathering = parameters.get('phase4') === '1' || settlementDemo;
 const rtsInteraction = phase2Interaction || phase3Movement || phase4Gathering;
