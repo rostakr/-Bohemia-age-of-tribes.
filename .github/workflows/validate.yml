@@ -18,6 +18,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run validate
+      - name: BOII-SETTLEMENT-01 default-entry smoke
+        run: npm run smoke:default-settlement
       # Run the task-specific browser evidence first. On hosted runners the
       # later sequence of independent headless GPU processes can exhaust the
       # software renderer even though earlier WebGL2 scenes passed.
