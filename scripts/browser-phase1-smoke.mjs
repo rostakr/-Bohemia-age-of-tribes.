@@ -7,7 +7,7 @@ import { join, resolve } from 'node:path';
 const host = '127.0.0.1';
 const previewPort = 4176;
 const debugPort = 9226;
-const baseUrl = `http://${host}:${previewPort}/?candidate=phase1&renderer=webgl2&debug=1&storehouse=supplied`;
+const baseUrl = `http://${host}:${previewPort}/?phase4=0&renderer=webgl2&debug=1&storehouse=supplied`;
 const debugBase = `http://${host}:${debugPort}`;
 const artifactsDir = resolve('artifacts', 'phase1');
 mkdirSync(artifactsDir, { recursive: true });
