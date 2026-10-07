@@ -258,7 +258,7 @@ try {
   // The production player scenario follows one worker through the full cycle.
   // Keep the all-worker selection above as the five-worker scene/readability contract,
   // then replace it with a bounded normal box-select around the deterministic left worker.
-  await dragSelect(cdp, { x: 610, y: 420 }, { x: 700, y: 500 });
+  await dragSelect(cdp, { x: 720, y: 480 }, { x: 820, y: 590 });
   state = await waitFor(cdp, value => value.selectedText === '1 selected' && value.taskSelected === 1,
     'Default Boii settlement single-worker selection', 15_000);
 
