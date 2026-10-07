@@ -48,6 +48,13 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
+          name: default-settlement-production-evidence
+          path: artifacts/settlement/*.png
+          if-no-files-found: warn
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
           name: phase0-webgl2-evidence
           path: artifacts/phase0-webgl2-1920x1080.png
           if-no-files-found: warn
