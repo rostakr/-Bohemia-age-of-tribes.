@@ -50,9 +50,13 @@ class Cdp {
     this.socket = socket;
     this.id = 0;
     this.pending = new Map();
+    this.handlers = new Map();
     socket.addEventListener('message', event => {
       const message = JSON.parse(String(event.data));
-      if (!message.id) return;
+      if (!message.id) {
+        for (const handler of this.handlers.get(message.method) ?? []) handler(message.params ?? {});
+        return;
+      }
       const pending = this.pending.get(message.id);
       if (!pending) return;
       this.pending.delete(message.id);
@@ -66,6 +70,11 @@ class Cdp {
       this.pending.set(id, { resolve: resolvePromise, reject });
       this.socket.send(JSON.stringify({ id, method, params }));
     });
+  }
+  on(method, handler) {
+    const handlers = this.handlers.get(method) ?? [];
+    handlers.push(handler);
+    this.handlers.set(method, handlers);
   }
   close() { this.socket.close(); }
 }
@@ -154,15 +163,28 @@ async function dragSelectAll(cdp) {
 }
 
 async function rightClick(cdp, x, y) {
-  await evaluate(cdp, `(() => {
-    const canvas = document.querySelector('#viewport');
-    if (!canvas) throw new Error('RTS canvas missing');
-    return canvas.dispatchEvent(new PointerEvent('pointerup', {
-      bubbles: true, cancelable: true, view: window,
-      clientX: ${x}, clientY: ${y}, button: 2, buttons: 0,
-      pointerId: 1, pointerType: 'mouse', isPrimary: true,
-    }));
+  await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y, button: 'none', buttons: 0 });
+  await cdp.send('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'right', buttons: 2, clickCount: 1 });
+  await cdp.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'right', buttons: 0, clickCount: 1 });
+}
+
+async function clickSelector(cdp, selector) {
+  const rect = await evaluate(cdp, `(() => {
+    const element = document.querySelector(${JSON.stringify(selector)});
+    if (!element) throw new Error('Missing click target: ' + ${JSON.stringify(selector)});
+    const rect = element.getBoundingClientRect();
+    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
   })()`);
+  await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: rect.x, y: rect.y, button: 'none', buttons: 0 });
+  await cdp.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: rect.x, y: rect.y, button: 'left', buttons: 1, clickCount: 1 });
+  await cdp.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: rect.x, y: rect.y, button: 'left', buttons: 0, clickCount: 1 });
+}
+
+async function capture(cdp, filename) {
+  const image = await cdp.send('Page.captureScreenshot', { format: 'png', fromSurface: true, captureBeyondViewport: false });
+  const path = resolve(artifactsDir, filename);
+  writeFileSync(path, Buffer.from(image.data, 'base64'));
+  return path;
 }
 
 const preview = spawn(process.execPath, [resolve('node_modules/vite/bin/vite.js'), 'preview', '--host', host, '--port', String(previewPort), '--strictPort'], {
@@ -171,6 +193,8 @@ const preview = spawn(process.execPath, [resolve('node_modules/vite/bin/vite.js'
 const profileDir = mkdtempSync(join(tmpdir(), 'bohemia-default-settlement-chrome-'));
 let chrome;
 let cdp;
+const consoleErrors = [];
+const networkErrors = [];
 
 try {
   await waitForHttp(defaultUrl);
@@ -187,6 +211,22 @@ try {
   cdp = await connectCdp(page.webSocketDebuggerUrl);
   await cdp.send('Runtime.enable');
   await cdp.send('Page.enable');
+  await cdp.send('Log.enable');
+  await cdp.send('Network.enable');
+  cdp.on('Runtime.exceptionThrown', params => {
+    consoleErrors.push(params.exceptionDetails?.text || 'Runtime exception');
+  });
+  cdp.on('Log.entryAdded', params => {
+    if (params.entry?.level === 'error') consoleErrors.push(params.entry.text || 'Console error');
+  });
+  cdp.on('Network.loadingFailed', params => {
+    if (!params.canceled) networkErrors.push(`${params.errorText || 'loading failed'} ${params.type || ''}`.trim());
+  });
+  cdp.on('Network.responseReceived', params => {
+    const status = Number(params.response?.status || 0);
+    const url = params.response?.url || '';
+    if (status >= 400 && !/favicon\.ico(?:$|\?)/.test(url)) networkErrors.push(`${status} ${url}`);
+  });
   await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1920, height: 1080, deviceScaleFactor: 1, mobile: false });
   await cdp.send('Page.navigate', { url: defaultUrl });
 
@@ -201,34 +241,62 @@ try {
     value.resources.some(resource => !resource.hidden && resource.width > 0 && resource.height > 0),
   'Default Boii settlement startup');
 
+  await clickSelector(cdp, '#pause');
+  await waitFor(cdp, value => / · Simulation paused$/.test(value.status) && value.diagnosticsHidden === true,
+    'Default Boii settlement pause', 10_000);
+  await sleep(300);
+  await clickSelector(cdp, '#pause');
+  state = await waitFor(cdp, value => / · Boii settlement running$/.test(value.status) && value.diagnosticsHidden === true,
+    'Default Boii settlement resume', 10_000);
+
   await dragSelectAll(cdp);
   state = await waitFor(cdp, value => value.selectedText === '5 selected' && value.taskSelected === 5,
     'Default Boii settlement five-worker selection', 15_000);
 
   const resource = state.resources.find(candidate => !candidate.hidden && candidate.width > 0 && candidate.height > 0);
   if (!resource) throw new Error(`No visible mapped wood target: ${JSON.stringify(state.resources)}`);
+  const initialRemaining = state.resources.reduce((sum, candidate) => sum + candidate.remaining, 0);
   await rightClick(cdp, resource.x + 3, resource.y + 3);
-  state = await waitFor(cdp, value => value.feedback === 'Gather wood' && value.taskSelected === 5 && value.taskGathering >= 1,
+  const gatherState = await waitFor(cdp, value => value.feedback === 'Gather wood' && value.taskSelected === 5 && value.taskGathering >= 1,
     'Default Boii settlement gather command', 15_000);
+  const gatherScreenshot = await capture(cdp, 'default-settlement-gather-1920x1080.png');
 
-  const capture = await cdp.send('Page.captureScreenshot', { format: 'png', fromSurface: true, captureBeyondViewport: false });
-  const screenshotPath = resolve(artifactsDir, 'default-settlement-webgl2-1920x1080.png');
-  writeFileSync(screenshotPath, Buffer.from(capture.data, 'base64'));
+  const cargoState = await waitFor(cdp, value =>
+    value.taskCargo > 0 &&
+    value.resources.reduce((sum, candidate) => sum + candidate.remaining, 0) < initialRemaining,
+  'Default Boii settlement visible production cargo', 90_000, 75);
+  const cargoScreenshot = await capture(cdp, 'default-settlement-carrying-1920x1080.png');
 
-  console.log('BOII-SETTLEMENT-01 default-entry smoke passed.');
+  const depositState = await waitFor(cdp, value =>
+    value.stockpileWood > 0 &&
+    value.diagnosticsHidden === true &&
+    value.debugBridgePresent === false,
+  'Default Boii settlement production deposit', 120_000, 50);
+  const depositScreenshot = await capture(cdp, 'default-settlement-deposited-1920x1080.png');
+
+  if (consoleErrors.length > 0) throw new Error(`Default settlement console errors: ${JSON.stringify(consoleErrors)}`);
+  if (networkErrors.length > 0) throw new Error(`Default settlement network errors: ${JSON.stringify(networkErrors)}`);
+
+  console.log('BOII-SETTLEMENT-01 default-entry production cycle passed.');
   console.log(JSON.stringify({
     url: defaultUrl,
-    query: state.search,
-    rendererStatus: state.status,
-    workersSelected: state.taskSelected,
-    resourceNodes: state.resources.length,
+    query: depositState.search,
+    rendererStatus: depositState.status,
+    workersSelected: depositState.taskSelected,
+    resourceNodes: depositState.resources.length,
     resourceAmountEach: 100,
-    stockpileWood: state.stockpileWood,
-    command: state.feedback,
-    diagnosticsHidden: state.diagnosticsHidden,
-    debugBridgePresent: state.debugBridgePresent,
-    screenshot: screenshotPath,
-    note: 'The empty-query entry keeps Phase 4 production constants because debug and milestone parameters are absent.',
+    carriedWoodObserved: cargoState.taskCargo,
+    stockpileWood: depositState.stockpileWood,
+    command: gatherState.feedback,
+    diagnosticsHidden: depositState.diagnosticsHidden,
+    debugBridgePresent: depositState.debugBridgePresent,
+    pauseResume: 'passed',
+    consoleErrors,
+    networkErrors,
+    gatherScreenshot,
+    cargoScreenshot,
+    depositScreenshot,
+    note: 'Empty-query production timing and normal CDP mouse input; no debug or milestone parameters.',
   }, null, 2));
 } finally {
   cdp?.close();
