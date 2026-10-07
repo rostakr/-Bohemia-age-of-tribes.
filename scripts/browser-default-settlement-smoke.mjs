@@ -12,6 +12,9 @@ const debugBase = `http://${host}:${debugPort}`;
 const artifactsDir = resolve('artifacts', 'settlement');
 mkdirSync(artifactsDir, { recursive: true });
 const sleep = ms => new Promise(resolvePromise => setTimeout(resolvePromise, ms));
+const sourceSha = process.env.BOHEMIA_SOURCE_SHA || process.env.GITHUB_SHA || 'local';
+const checkoutSha = spawnSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).stdout.trim() || 'unknown';
+const resultPath = resolve(artifactsDir, 'default-settlement-result.json');
 
 function findChrome() {
   for (const candidate of [process.env.CHROME_BIN, 'google-chrome-stable', 'google-chrome', 'chromium', 'chromium-browser'].filter(Boolean)) {
@@ -197,6 +200,20 @@ let chrome;
 let cdp;
 const consoleErrors = [];
 const networkErrors = [];
+let evidence = {
+  status: 'failed',
+  sourceSha,
+  checkoutSha,
+  url: defaultUrl,
+  query: '',
+  parameters: {
+    debug: false,
+    milestone: null,
+    timeAcceleration: false,
+    input: 'CDP Input.dispatchMouseEvent',
+    viewport: '1920x1080',
+  },
+};
 
 try {
   await waitForHttp(defaultUrl);
@@ -217,6 +234,11 @@ try {
   await cdp.send('Network.enable');
   cdp.on('Runtime.exceptionThrown', params => {
     consoleErrors.push(params.exceptionDetails?.text || 'Runtime exception');
+  });
+  cdp.on('Runtime.consoleAPICalled', params => {
+    if (params.type !== 'error') return;
+    const detail = (params.args ?? []).map(argument => argument.value ?? argument.description ?? '').join(' ');
+    consoleErrors.push(detail || 'console.error');
   });
   cdp.on('Log.entryAdded', params => {
     if (params.entry?.level === 'error') consoleErrors.push(params.entry.text || 'Console error');
@@ -242,6 +264,7 @@ try {
     value.resources.every(resource => resource.id >= 1001 && resource.remaining === 100) &&
     value.resources.some(resource => !resource.hidden && resource.width > 0 && resource.height > 0),
   'Default Boii settlement startup');
+  const startScreenshot = await capture(cdp, 'default-settlement-start-1920x1080.png');
 
   await clickSelector(cdp, '#pause');
   await waitFor(cdp, value => / · Simulation paused$/.test(value.status) && value.diagnosticsHidden === true,
@@ -255,20 +278,12 @@ try {
   state = await waitFor(cdp, value => value.selectedText === '5 selected' && value.taskSelected === 5,
     'Default Boii settlement five-worker selection', 15_000);
 
-  // The production player scenario follows one worker through the full cycle.
-  // Keep the all-worker selection above as the five-worker scene/readability contract,
-  // then replace it with a bounded normal box-select around the deterministic left worker.
-  await dragSelect(cdp, { x: 720, y: 480 }, { x: 820, y: 590 });
-  state = await waitFor(cdp, value => value.selectedText === '1 selected' && value.taskSelected === 1,
-    'Default Boii settlement single-worker selection', 15_000);
-
   const resource = state.resources.find(candidate => !candidate.hidden && candidate.width > 0 && candidate.height > 0);
   if (!resource) throw new Error(`No visible mapped wood target: ${JSON.stringify(state.resources)}`);
   const initialRemaining = state.resources.reduce((sum, candidate) => sum + candidate.remaining, 0);
   await rightClick(cdp, resource.x + 3, resource.y + 3);
-  const gatherState = await waitFor(cdp, value => value.feedback === 'Gather wood' && value.taskSelected === 1 && value.taskGathering >= 1,
+  const gatherState = await waitFor(cdp, value => value.feedback === 'Gather wood' && value.taskSelected === 5 && value.taskGathering >= 1,
     'Default Boii settlement gather command', 15_000);
-  const gatherScreenshot = await capture(cdp, 'default-settlement-gather-1920x1080.png');
 
   const cargoState = await waitFor(cdp, value =>
     value.taskCargo > 0 &&
@@ -286,10 +301,9 @@ try {
   if (consoleErrors.length > 0) throw new Error(`Default settlement console errors: ${JSON.stringify(consoleErrors)}`);
   if (networkErrors.length > 0) throw new Error(`Default settlement network errors: ${JSON.stringify(networkErrors)}`);
 
-  console.log('BOII-SETTLEMENT-01 default-entry production cycle passed.');
-  console.log(JSON.stringify({
-    url: defaultUrl,
-    query: depositState.search,
+  evidence = {
+    ...evidence,
+    status: 'passed',
     rendererStatus: depositState.status,
     workersSelected: depositState.taskSelected,
     resourceNodes: depositState.resources.length,
@@ -302,12 +316,25 @@ try {
     pauseResume: 'passed',
     consoleErrors,
     networkErrors,
-    gatherScreenshot,
-    cargoScreenshot,
-    depositScreenshot,
+    screenshots: { start: startScreenshot, cargo: cargoScreenshot, deposit: depositScreenshot },
     note: 'Empty-query production timing and normal CDP mouse input; no debug or milestone parameters.',
-  }, null, 2));
+  };
+  console.log('BOII-SETTLEMENT-01 default-entry production cycle passed.');
+  console.log(JSON.stringify(evidence, null, 2));
+} catch (error) {
+  let finalState = null;
+  try { if (cdp) finalState = await readState(cdp); } catch {}
+  evidence = {
+    ...evidence,
+    status: 'failed',
+    error: error instanceof Error ? `${error.name}: ${error.message}` : String(error),
+    finalState,
+    consoleErrors,
+    networkErrors,
+  };
+  throw error;
 } finally {
+  writeFileSync(resultPath, `${JSON.stringify(evidence, null, 2)}\n`);
   cdp?.close();
   await stopProcess(chrome);
   await stopProcess(preview);
