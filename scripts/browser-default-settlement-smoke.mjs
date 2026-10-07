@@ -147,9 +147,7 @@ async function waitFor(cdp, predicate, label, timeoutMs = 60_000, intervalMs = 1
   throw new Error(`${label} timed out. Last state: ${JSON.stringify(latest)}`);
 }
 
-async function dragSelectAll(cdp) {
-  const start = { x: 280, y: 110 };
-  const end = { x: 1820, y: 970 };
+async function dragSelect(cdp, start, end) {
   await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: start.x, y: start.y, button: 'none', buttons: 0 });
   await cdp.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: start.x, y: start.y, button: 'left', buttons: 1, clickCount: 1 });
   for (let step = 1; step <= 8; step++) {
@@ -160,6 +158,10 @@ async function dragSelectAll(cdp) {
     });
   }
   await cdp.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: end.x, y: end.y, button: 'left', buttons: 0, clickCount: 1 });
+}
+
+async function dragSelectAll(cdp) {
+  await dragSelect(cdp, { x: 280, y: 110 }, { x: 1820, y: 970 });
 }
 
 async function rightClick(cdp, x, y) {
@@ -253,11 +255,18 @@ try {
   state = await waitFor(cdp, value => value.selectedText === '5 selected' && value.taskSelected === 5,
     'Default Boii settlement five-worker selection', 15_000);
 
+  // The production player scenario follows one worker through the full cycle.
+  // Keep the all-worker selection above as the five-worker scene/readability contract,
+  // then replace it with a bounded normal box-select around the deterministic left worker.
+  await dragSelect(cdp, { x: 610, y: 420 }, { x: 700, y: 500 });
+  state = await waitFor(cdp, value => value.selectedText === '1 selected' && value.taskSelected === 1,
+    'Default Boii settlement single-worker selection', 15_000);
+
   const resource = state.resources.find(candidate => !candidate.hidden && candidate.width > 0 && candidate.height > 0);
   if (!resource) throw new Error(`No visible mapped wood target: ${JSON.stringify(state.resources)}`);
   const initialRemaining = state.resources.reduce((sum, candidate) => sum + candidate.remaining, 0);
   await rightClick(cdp, resource.x + 3, resource.y + 3);
-  const gatherState = await waitFor(cdp, value => value.feedback === 'Gather wood' && value.taskSelected === 5 && value.taskGathering >= 1,
+  const gatherState = await waitFor(cdp, value => value.feedback === 'Gather wood' && value.taskSelected === 1 && value.taskGathering >= 1,
     'Default Boii settlement gather command', 15_000);
   const gatherScreenshot = await capture(cdp, 'default-settlement-gather-1920x1080.png');
 
