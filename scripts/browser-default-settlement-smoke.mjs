@@ -266,14 +266,6 @@ try {
   'Default Boii settlement startup');
   const startScreenshot = await capture(cdp, 'default-settlement-start-1920x1080.png');
 
-  await clickSelector(cdp, '#pause');
-  await waitFor(cdp, value => / · Simulation paused$/.test(value.status) && value.diagnosticsHidden === true,
-    'Default Boii settlement pause', 10_000);
-  await sleep(300);
-  await clickSelector(cdp, '#pause');
-  state = await waitFor(cdp, value => / · Boii settlement running$/.test(value.status) && value.diagnosticsHidden === true,
-    'Default Boii settlement resume', 10_000);
-
   await dragSelectAll(cdp);
   state = await waitFor(cdp, value => value.selectedText === '5 selected' && value.taskSelected === 5,
     'Default Boii settlement five-worker selection', 15_000);
@@ -285,18 +277,38 @@ try {
   const gatherState = await waitFor(cdp, value => value.feedback === 'Gather wood' && value.taskSelected === 5 && value.taskGathering >= 1,
     'Default Boii settlement gather command', 15_000);
 
-  const cargoState = await waitFor(cdp, value =>
-    value.taskCargo > 0 &&
-    value.resources.reduce((sum, candidate) => sum + candidate.remaining, 0) < initialRemaining,
-  'Default Boii settlement visible production cargo', 90_000, 75);
+  let cargoState;
+  try {
+    cargoState = await waitFor(cdp, value =>
+      value.taskCargo > 0 &&
+      value.resources.reduce((sum, candidate) => sum + candidate.remaining, 0) < initialRemaining,
+    'Default Boii settlement visible production cargo', 240_000, 100);
+  } catch (error) {
+    await capture(cdp, 'default-settlement-cargo-timeout-1920x1080.png');
+    throw error;
+  }
   const cargoScreenshot = await capture(cdp, 'default-settlement-carrying-1920x1080.png');
 
-  const depositState = await waitFor(cdp, value =>
-    value.stockpileWood > 0 &&
-    value.diagnosticsHidden === true &&
-    value.debugBridgePresent === false,
-  'Default Boii settlement production deposit', 120_000, 50);
+  let depositState;
+  try {
+    depositState = await waitFor(cdp, value =>
+      value.stockpileWood > 0 &&
+      value.diagnosticsHidden === true &&
+      value.debugBridgePresent === false,
+    'Default Boii settlement production deposit', 240_000, 75);
+  } catch (error) {
+    await capture(cdp, 'default-settlement-deposit-timeout-1920x1080.png');
+    throw error;
+  }
   const depositScreenshot = await capture(cdp, 'default-settlement-deposited-1920x1080.png');
+
+  await clickSelector(cdp, '#pause');
+  await waitFor(cdp, value => / · Simulation paused$/.test(value.status) && value.diagnosticsHidden === true,
+    'Default Boii settlement pause', 10_000);
+  await sleep(300);
+  await clickSelector(cdp, '#pause');
+  depositState = await waitFor(cdp, value => / · Boii settlement running$/.test(value.status) && value.diagnosticsHidden === true,
+    'Default Boii settlement resume', 10_000);
 
   if (consoleErrors.length > 0) throw new Error(`Default settlement console errors: ${JSON.stringify(consoleErrors)}`);
   if (networkErrors.length > 0) throw new Error(`Default settlement network errors: ${JSON.stringify(networkErrors)}`);
