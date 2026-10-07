@@ -20,6 +20,7 @@
     "smoke:phase2": "node scripts/browser-phase2-smoke.mjs",
     "smoke:phase3": "node scripts/browser-phase3-smoke.mjs",
     "smoke:phase4": "node scripts/browser-phase4-smoke.mjs",
+    "smoke:default-settlement": "node scripts/browser-default-settlement-smoke.mjs",
     "smoke:supplied-storehouse": "node scripts/browser-supplied-storehouse-smoke.mjs",
     "smoke:supplied-storehouse-closeup": "node scripts/browser-supplied-storehouse-closeup.mjs",
     "check:glb": "node scripts/check-glb.mjs",
